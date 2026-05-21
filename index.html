@@ -3,106 +3,321 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PhotoCheck Docs｜照片轉可編輯表格 V1.4</title>
-  <meta name="description" content="上傳進貨單、報表、菜單或手寫紀錄，AI 辨識文字 + 版面線條偵測，輸出可編輯 Excel 與原版面 SVG。" />
+  <title>PhotoCheck Docs — 照片轉可編輯表格</title>
+  <meta name="description" content="Upload receipts, menus, or reports — AI reads the text and reconstructs the table layout. Export clean Excel data or an editable SVG." />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta property="og:title" content="PhotoCheck Docs｜照片轉可編輯表格" />
-  <meta property="og:description" content="AI 產草稿，人類做判斷。未經確認，不自動視為正式資料。" />
+  <meta property="og:description" content="AI 產草稿，人類做判斷。" />
   <meta property="og:image" content="/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{--cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1A18;--muted:#8A8A80;--line:#E0D8C8;--gold:#C8A96E;--gold2:#E8D5A8;--green:#4A6741}
-    body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--ink)}
-    .serif{font-family:'Playfair Display',serif}
-    .btn{border:0;border-radius:2px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer}
-    .btn.dark{background:var(--ink);color:white}
-    .btn.gold{background:var(--gold);color:var(--ink)}
-    .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
-    nav{display:flex;justify-content:space-between;align-items:center;padding:18px 48px;border-bottom:1px solid var(--line);background:var(--warm);position:sticky;top:0;z-index:5}
-    .brand{font:600 18px 'Playfair Display',serif}
-    .sub{font-size:11px;letter-spacing:.08em;color:var(--muted)}
-    .navlinks{display:flex;gap:24px;align-items:center}
-    .navlinks button{background:none;border:0;font-size:14px;cursor:pointer;color:#444}
-    .hero{max-width:980px;margin:auto;padding:78px 48px 64px;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
-    .tag{display:inline-block;background:var(--gold2);color:#765922;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.06em;margin-bottom:22px}
-    h1{font-size:clamp(38px,5vw,58px);line-height:1.12;letter-spacing:-.03em;margin-bottom:22px}
-    .hero p{max-width:410px;line-height:1.8;color:#4A4A45;margin-bottom:30px}
-    .mock{width:270px;margin:auto;background:#1A1A18;border-radius:34px;padding:14px;box-shadow:0 28px 60px rgba(0,0,0,.18)}
-    .mockin{background:var(--warm);border-radius:24px;overflow:hidden}
-    .mocktop{background:var(--ink);color:#fff;padding:18px}
-    .mockbody{padding:16px}
-    .minirow{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}
-    .minirow span{background:white;border-radius:3px;padding:4px 6px;font-size:9px}
-    .section{max-width:980px;margin:auto;padding:64px 48px}
-    .center{text-align:center}
-    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:38px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:26px;line-height:1.7}
-    .principle{background:var(--ink);color:#fff}
-    .principle .card{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
-    .road{background:#161615;color:#fff;text-align:center}
-    .roadbox{background:rgba(255,255,255,.08);border-radius:10px;text-align:left;max-width:620px;margin:32px auto;padding:28px;line-height:2.2}
-    .small{font-size:12px;color:var(--muted)}
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* === APP === */
-    .app{display:none;max-width:960px;margin:auto;padding:34px 24px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;background:var(--warm);border-bottom:1px solid var(--line);padding:16px 32px}
-    .drop{border:2px dashed var(--ink);border-radius:10px;background:var(--warm);padding:36px;text-align:center;cursor:pointer;margin-bottom:24px;transition:.15s}
-    .drop:hover{background:#ede7d8}
-    .imgprev{display:flex;gap:24px;align-items:center;text-align:left}
-    .imgprev img{max-width:220px;max-height:140px;border:1px solid var(--line);border-radius:4px;object-fit:contain}
-    .error{background:#fff0ed;border:1px solid #ffccc7;color:#b03922;padding:14px;border-radius:6px;margin:18px 0}
-    .info{background:#fff;border:1px solid var(--line);color:var(--ink);padding:14px;border-radius:6px;margin:18px 0}
+    /* ── Design tokens ── */
+    :root {
+      --cream:   #F5F0E8;
+      --warm:    #FDFAF5;
+      --ink:     #18181A;
+      --ink2:    #2E2E32;
+      --muted:   #86867A;
+      --line:    #E2D9C8;
+      --gold:    #C8A96E;
+      --gold2:   #E8D5A8;
+      --green:   #2D7A45;
+      --radius:  8px;
+      --shadow:  0 2px 16px rgba(0,0,0,.07);
+
+      /* typography */
+      --font-body:    'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Playfair Display', 'Noto Serif TC', Georgia, serif;
+
+      /* spacing scale */
+      --sp-xs: 6px;   --sp-s: 12px;  --sp-m: 20px;
+      --sp-l:  32px;  --sp-xl: 48px; --sp-2xl: 72px;
+    }
+
+    /* ── Base ── */
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Type helpers ── */
+    .serif { font-family: var(--font-display); }
+    .small  { font-size: 12px; color: var(--muted); }
+    .label  { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 0; border-radius: 4px; padding: 13px 26px;
+      font-family: var(--font-body); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+      white-space: nowrap; text-decoration: none;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn.dark  { background: var(--ink);  color: #fff; }
+    .btn.dark:hover { opacity: .88; }
+    .btn.gold  { background: var(--gold); color: var(--ink2); }
+    .btn.gold:hover { opacity: .88; }
+    .btn.ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink2); }
+    .btn.ghost:hover { border-color: var(--ink2); }
+
+    /* ── Pill / badge ── */
+    .tag {
+      display: inline-block; background: var(--gold2); color: #7A5C1E;
+      border-radius: 99px; padding: 5px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: .07em;
+      margin-bottom: var(--sp-m);
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 var(--sp-xl); height: 64px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(253,250,245,.96);
+      backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .nav-brand .name { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--ink); }
+    .nav-brand .sub  { font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+    .navlinks { display: flex; align-items: center; gap: var(--sp-m); }
+    .navlinks .nl {
+      background: none; border: 0; font-family: var(--font-body);
+      font-size: 13px; font-weight: 500; color: var(--ink2);
+      cursor: pointer; padding: 4px 2px; opacity: .7;
+    }
+    .navlinks .nl:hover { opacity: 1; }
+    .lang-btn {
+      border: 1.5px solid var(--line); border-radius: 20px;
+      padding: 4px 12px; font-size: 11px; font-weight: 700;
+      letter-spacing: .06em; cursor: pointer;
+      background: transparent; color: var(--muted);
+      font-family: var(--font-body); transition: .15s;
+    }
+    .lang-btn:hover { border-color: var(--ink2); color: var(--ink2); }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 1020px; margin: 0 auto;
+      padding: var(--sp-2xl) var(--sp-xl) 64px;
+      display: grid; grid-template-columns: 1.15fr .85fr;
+      gap: 56px; align-items: center;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 4.8vw, 54px);
+      line-height: 1.22;
+      letter-spacing: .01em;       /* CJK 正值比較自然 */
+      color: var(--ink);
+      margin-bottom: var(--sp-m);
+      font-weight: 600;
+    }
+    h1 em { font-style: italic; color: var(--gold); }
+    /* English h1: tighter tracking */
+    body.en h1 {
+      letter-spacing: -.02em;
+      line-height: 1.12;
+    }
+    .hero-desc {
+      max-width: 420px;
+      font-size: 15px; line-height: 1.75;
+      color: #4A4A45; margin-bottom: var(--sp-l);
+    }
+    .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero-note { margin-top: var(--sp-m); font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+    /* ── Mock phone ── */
+    .mock {
+      width: 268px; margin: auto;
+      background: var(--ink2); border-radius: 32px;
+      padding: 12px; box-shadow: 0 32px 64px rgba(0,0,0,.2);
+    }
+    .mockin { background: var(--warm); border-radius: 22px; overflow: hidden; }
+    .mocktop { background: var(--ink); color: #fff; padding: 16px 18px; }
+    .mocktop .mt-label { font-size: 10px; letter-spacing: .08em; opacity: .55; }
+    .mocktop .mt-title { font-family: var(--font-display); font-size: 17px; margin-top: 4px; }
+    .mockbody { padding: 14px 16px; }
+    .minirow { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-top: 8px; }
+    .minirow span {
+      background: #fff; border-radius: 3px; padding: 5px 7px;
+      font-size: 9px; color: var(--ink);
+    }
+    .minirow .hd { background: var(--ink); color: #fff; font-weight: 700; }
+    .mock-badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .mock-badge {
+      font-size: 9px; border-radius: 4px; padding: 3px 9px;
+      font-weight: 700; letter-spacing: .04em;
+    }
+    .mock-badge.green { background: #e4f3ea; color: var(--green); }
+    .mock-badge.dark  { background: var(--ink); color: #fff; }
+
+    /* ── Sections ── */
+    .section { max-width: 1020px; margin: 0 auto; padding: 72px var(--sp-xl); }
+    .section.center { text-align: center; }
+    h2.section-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 3vw, 36px);
+      line-height: 1.25; letter-spacing: .01em;
+      margin-top: var(--sp-s); margin-bottom: 36px;
+      color: var(--ink);
+    }
+    body.en h2.section-title { letter-spacing: -.015em; line-height: 1.15; }
+
+    /* ── Cards ── */
+    .cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .card {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 26px 24px;
+      line-height: 1.72; font-size: 14px;
+    }
+    .card b { display: block; font-size: 15px; margin-bottom: 8px; }
+    .principle { background: var(--ink); color: #fff; }
+    .principle .card { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); }
+    .principle .section-title { color: #fff; }
+    .principle .label { color: var(--gold); }
+
+    /* ── Roadmap ── */
+    .road { background: #141416; color: #fff; text-align: center; }
+    .road .section-title { color: #fff; letter-spacing: .01em; }
+    .roadbox {
+      background: rgba(255,255,255,.07); border-radius: var(--radius);
+      text-align: left; max-width: 600px; margin: 28px auto 32px;
+      padding: 26px 30px; line-height: 2.1; font-size: 14px;
+    }
+
+    /* ── APP shell ── */
+    .app { display: none; max-width: 960px; margin: 0 auto; padding: 0 var(--sp-m) var(--sp-2xl); }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--warm); border-bottom: 1px solid var(--line);
+      padding: 14px var(--sp-l); margin: 0 calc(-1 * var(--sp-m));
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar .brand { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+    .topbar .sub   { font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+    .remain-badge  { font-size: 13px; color: var(--ink2); }
+    .remain-badge b { color: var(--ink); }
+
+    /* Upload zone */
+    .drop {
+      border: 2px dashed var(--line); border-radius: 12px;
+      background: var(--warm); padding: 36px 24px;
+      text-align: center; cursor: pointer;
+      margin: var(--sp-l) 0 var(--sp-m);
+      transition: border-color .15s, background .15s;
+    }
+    .drop:hover { border-color: var(--ink2); background: #ede7d8; }
+    .drop-label { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .drop-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .imgprev { display: flex; gap: var(--sp-m); align-items: center; text-align: left; }
+    .imgprev img {
+      max-width: 200px; max-height: 130px;
+      border: 1px solid var(--line); border-radius: var(--radius);
+      object-fit: contain;
+    }
+
+    /* Convert button */
+    .convert-btn {
+      width: 100%; padding: 15px; font-size: 15px;
+      letter-spacing: .02em;
+    }
+
+    /* Messages */
+    .msg-error { background: #fff0ed; border: 1px solid #ffccc7; color: #b03922; padding: 13px 16px; border-radius: var(--radius); margin: 14px 0; }
+    .msg-info  { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 13px 16px; border-radius: var(--radius); margin: 14px 0; }
+
+    /* Detect badge */
+    .detect-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; padding: 5px 13px; border-radius: 99px;
+      margin: var(--sp-m) 0 0; font-weight: 600;
+    }
+    .detect-ok       { background: #e4f3ea; color: var(--green); }
+    .detect-fallback { background: #fef7df; color: #8a6700; }
 
     /* Preview tabs */
-    .vtabs{display:flex;border-bottom:2px solid var(--line);margin:28px 0 0}
-    .vtab{background:none;border:0;border-bottom:2.5px solid transparent;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);margin-bottom:-2px;transition:.1s}
-    .vtab.active{color:var(--ink);border-bottom-color:var(--ink)}
-    .vpane{display:none;padding-top:16px}
-    .vpane.on{display:block}
-    .pane-hint{font-size:12px;color:var(--muted);margin-bottom:12px}
+    .vtabs { display: flex; border-bottom: 2px solid var(--line); margin: var(--sp-l) 0 0; }
+    .vtab {
+      background: none; border: 0; border-bottom: 2.5px solid transparent;
+      padding: 11px 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--muted); margin-bottom: -2px;
+      font-family: var(--font-body); transition: color .1s;
+    }
+    .vtab.active { color: var(--ink); border-bottom-color: var(--ink); }
+    .vpane { display: none; padding-top: 14px; }
+    .vpane.on { display: block; }
+    .pane-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
 
     /* Data table */
-    .tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
-    table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}
-    th{background:var(--warm);text-align:left;padding:10px;border-bottom:2px solid var(--line);white-space:nowrap;font-weight:700}
-    td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:top}
-    .cell-edit{width:100%;min-height:34px;border:0;background:transparent;padding:8px 10px;outline:0;resize:none;overflow:hidden;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.45;color:var(--ink);white-space:pre-wrap}
-    .cell-edit:focus{background:var(--cream)}
-    .col-num{width:7%}.col-main{width:45%}.col-default{width:28%}
+    .tablewrap { overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: fixed; }
+    th { background: var(--warm); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--line); font-weight: 700; white-space: nowrap; }
+    td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0; vertical-align: top; }
+    .cell-edit {
+      width: 100%; min-height: 34px; border: 0; background: transparent;
+      padding: 8px 10px; outline: 0; resize: none; overflow: hidden;
+      font-family: var(--font-body); font-size: 13px; line-height: 1.5;
+      color: var(--ink); white-space: pre-wrap;
+    }
+    .cell-edit:focus { background: var(--cream); }
+    .col-num { width: 7%; } .col-main { width: 45%; } .col-default { width: 28%; }
 
-    /* Visual preview */
-    .svg-wrap{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto;min-height:300px;padding:12px;text-align:center}
-    .svg-wrap svg{max-width:100%;height:auto}
-    .no-preview{color:var(--muted);font-size:14px;padding:40px}
+    /* SVG preview */
+    .svg-wrap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: auto; min-height: 280px; padding: 12px; text-align: center; }
+    .svg-wrap svg { max-width: 100%; height: auto; }
+    .no-preview { color: var(--muted); font-size: 14px; padding: 48px; }
 
     /* Download modes */
-    .dl-section{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:28px 0 16px}
-    .dl-mode{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px}
-    .dl-mode-v{background:var(--ink);color:#fff;border-color:var(--ink)}
-    .dl-mode-title{font-weight:700;font-size:15px;margin-bottom:3px}
-    .dl-mode-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-    .dl-mode-v .dl-mode-sub{color:rgba(255,255,255,.55)}
-    .dl-btns{display:flex;gap:8px;flex-wrap:wrap}
-    .dl-btn{border:1.5px solid var(--line);border-radius:4px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--ink);transition:.12s}
-    .dl-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
-    .dl-mode-v .dl-btn{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}
-    .dl-mode-v .dl-btn:hover{background:rgba(255,255,255,.18)}
-    .beta-tag{font-size:10px;opacity:.6;margin-left:3px}
+    .dl-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: var(--sp-l) 0 var(--sp-m); }
+    .dl-mode { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; }
+    .dl-mode-v { background: var(--ink2); color: #fff; border-color: var(--ink2); }
+    .dl-mode-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .dl-mode-sub   { font-size: 12px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; }
+    .dl-mode-v .dl-mode-sub { color: rgba(255,255,255,.5); }
+    .dl-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dl-btn {
+      border: 1.5px solid var(--line); border-radius: 4px;
+      padding: 8px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; background: #fff; color: var(--ink);
+      font-family: var(--font-body); transition: .12s;
+    }
+    .dl-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .dl-mode-v .dl-btn { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
+    .dl-mode-v .dl-btn:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.5); }
+    .dl-btn-pdf-disabled { opacity: .55; cursor: not-allowed; }
+    .dl-btn-pdf-disabled:hover { background: rgba(255,255,255,.07) !important; border-color: rgba(255,255,255,.3) !important; }
+    .beta-tag { font-size: 10px; opacity: .6; margin-left: 3px; }
 
-    /* Grid detect badge */
-    .detect-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:99px;margin-bottom:14px;font-weight:600}
-    .detect-ok{background:#e6f4ea;color:#2d7a45}
-    .detect-fallback{background:#fef7e0;color:#8a6700}
-
-    @media(max-width:760px){
-      nav{padding:16px 22px}.navlinks{gap:10px}.navlinks button:not(.trial){display:none}
-      .hero{grid-template-columns:1fr;padding:48px 28px}.cards{grid-template-columns:1fr}
-      .section{padding:50px 28px}.topbar{padding:14px 22px}
-      .imgprev{flex-direction:column;align-items:flex-start}
-      .btn{width:100%}.dl-section{grid-template-columns:1fr}
+    /* ── Responsive ── */
+    @media (max-width: 780px) {
+      nav { padding: 0 var(--sp-m); }
+      .navlinks .nl { display: none; }
+      .navlinks .nl.trial { display: inline-flex; }
+      .hero { grid-template-columns: 1fr; padding: var(--sp-xl) var(--sp-m) 48px; gap: 36px; }
+      .mock { width: 240px; }
+      h1 { font-size: clamp(32px, 8vw, 44px); }
+      .cards { grid-template-columns: 1fr; gap: 14px; }
+      .section { padding: 56px var(--sp-m); }
+      .dl-section { grid-template-columns: 1fr; }
+      .btn { width: 100%; justify-content: center; }
+      .hero-ctas .btn { width: auto; }
+    }
+    @media (max-width: 480px) {
+      h1 { font-size: clamp(28px, 9vw, 38px); }
+      .section { padding: 48px var(--sp-s); }
     }
   </style>
 </head>
@@ -110,44 +325,50 @@
 
 <!-- ======== LANDING ======== -->
 <div id="landing">
+
   <nav>
-    <div><div class="brand">PhotoCheck Docs</div><div class="sub">AI DRAFTS. YOU VERIFY.</div></div>
+    <a class="nav-brand" onclick="return false;" style="cursor:default">
+      <span class="name">PhotoCheck Docs</span>
+      <span class="sub">AI DRAFTS. YOU VERIFY.</span>
+    </a>
     <div class="navlinks">
-      <button onclick="scrollToId('features')">功能</button>
-      <button onclick="scrollToId('flow')">流程</button>
-      <button onclick="scrollToId('principle')">產品原則</button>
-      <button onclick="scrollToId('roadmap')">版本</button>
-      <button class="btn dark trial" onclick="startApp()">免費試用 →</button>
+      <button class="nl" onclick="scrollToId('features')" data-t="navFeature">功能</button>
+      <button class="nl" onclick="scrollToId('flow')"     data-t="navFlow">流程</button>
+      <button class="nl" onclick="scrollToId('principle')"data-t="navPrinciple">產品原則</button>
+      <button class="nl" onclick="scrollToId('roadmap')"  data-t="navRoadmap">版本</button>
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+      <button class="btn dark nl trial" onclick="startApp()" data-t="navCta">免費試用 →</button>
     </div>
   </nav>
 
   <section class="hero">
     <div>
-      <span class="tag">V1.4 LAYOUT RECONSTRUCTION · 版面重建模式</span>
-      <h1 class="serif">照片秒變<br><em>可編輯表格</em><br>不再手打。</h1>
-      <p>上傳菜單、進貨單、報表，AI 辨識文字同時偵測表格線條，輸出資料用 Excel / CSV，版面用 SVG 直接丟 Illustrator 編輯。</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn dark" onclick="startApp()">免費試用 5 次 →</button>
-        <button class="btn ghost" onclick="scrollToId('demo')">查看示範</button>
+      <span class="tag" data-t="heroTag">V1.4 · 版面重建模式</span>
+      <h1 class="serif" data-t="heroTitle">照片秒變<br><em>可編輯表格</em></h1>
+      <p class="hero-desc" data-t="heroDesc">不再手打。AI 辨識文字、偵測表格線條，輸出可校對 Excel 與向量 SVG，兩種格式各自獨立。</p>
+      <div class="hero-ctas">
+        <button class="btn dark" onclick="startApp()" data-t="heroCta1">免費試用 5 次 →</button>
+        <button class="btn ghost" onclick="scrollToId('demo')" data-t="heroCta2">查看示範</button>
       </div>
-      <p class="small" style="margin-top:22px">✦ AI 產草稿，人類做判斷 ✦ Data Mode: XLSX / CSV / JSON ✦ Visual Mode: SVG / PDF</p>
+      <p class="hero-note" data-t="heroNote">✦ AI 產草稿，人類做判斷 ✦ Data Mode · Visual Mode</p>
     </div>
     <div id="demo" class="mock">
       <div class="mockin">
         <div class="mocktop">
-          <div class="small">Layout Reconstruction</div>
-          <div class="serif" style="font-size:18px;margin-top:4px">版面 + 資料同步輸出</div>
+          <div class="mt-label" data-t="mockLabel">LAYOUT RECONSTRUCTION</div>
+          <div class="mt-title serif" data-t="mockTitle">版面 + 資料同步輸出</div>
         </div>
         <div class="mockbody">
-          <div class="small" style="margin-bottom:8px">菜單 · 偵測到 3 條粗框 · 8 條細格線</div>
+          <div class="small" style="margin-bottom:7px" data-t="mockDesc">菜單 · 3 條粗框 · 8 條格線</div>
           <div class="minirow">
-            <span style="background:#1A1A18;color:white">品名</span><span style="background:#1A1A18;color:white">價格</span>
+            <span class="hd" data-t="mockCol1">品名</span>
+            <span class="hd" data-t="mockCol2">價格</span>
             <span>炒飯</span><span>$80</span>
             <span>牛肉麵</span><span>$120</span>
           </div>
-          <div style="display:flex;gap:6px;margin-top:10px">
-            <span style="font-size:10px;background:#e6f4ea;color:#2d7a45;border-radius:4px;padding:3px 8px">⬇ Excel</span>
-            <span style="font-size:10px;background:#1A1A18;color:white;border-radius:4px;padding:3px 8px">⬇ SVG</span>
+          <div class="mock-badges">
+            <span class="mock-badge green">⬇ Excel</span>
+            <span class="mock-badge dark">⬇ SVG</span>
           </div>
         </div>
       </div>
@@ -155,129 +376,274 @@
   </section>
 
   <section id="features" class="section center">
-    <div class="small">FEATURES · V1.4</div>
-    <h2 class="serif" style="font-size:34px;margin-top:8px">照片 → 資料 + 版面，同步輸出</h2>
+    <div class="label" data-t="featLabel">FEATURES · V1.4</div>
+    <h2 class="section-title serif" data-t="featTitle">照片 → 資料 + 版面，同步輸出</h2>
     <div class="cards">
-      <div class="card"><b>📊 Data Mode</b><br>XLSX 欄寬依據偵測比例設定，不再全部平均。CSV / JSON 資料乾淨可直接進 ERP。</div>
-      <div class="card"><b>🖼 Visual Mode</b><br>SVG 全向量，粗框細格線都是 &lt;line&gt; 物件，可直接丟 Illustrator 編輯，不是圖片塞 SVG。</div>
-      <div class="card"><b>🔍 版面線條偵測</b><br>Canvas 灰階分析 + 黑色像素密度掃描，辨識水平 / 垂直線及粗細，不依賴 OCR 文字位置。</div>
+      <div class="card">
+        <b data-t="feat1Head">📊 Data Mode</b>
+        <span data-t="feat1Body">正式資料輸出，適合 Excel 校對與 ERP 前置整理。欄寬依原圖比例重建，不再全欄平均。</span>
+      </div>
+      <div class="card">
+        <b data-t="feat2Head">🖼 Visual Mode</b>
+        <span data-t="feat2Body">向量版面草稿，適合 Illustrator / Inkscape 後續微調。所有線條為真實向量物件，非圖片嵌入。</span>
+      </div>
+      <div class="card">
+        <b data-t="feat3Head">🔍 版面線條偵測</b>
+        <span data-t="feat3Body">Document AI 結構辨識 + Canvas 像素掃描雙引擎，水平／垂直格線自動合併過濾，減少誤判。</span>
+      </div>
     </div>
   </section>
 
   <section id="flow" class="section center">
-    <div class="small">HOW IT WORKS · V1.4 PIPELINE</div>
-    <h2 class="serif" style="font-size:34px;margin-top:8px">兩個引擎，同時執行</h2>
+    <div class="label" data-t="flowLabel">HOW IT WORKS</div>
+    <h2 class="section-title serif" data-t="flowTitle">三步驟，文件數位化</h2>
     <div class="cards">
-      <div class="card"><b>01 上傳圖片</b><br>拍照或截圖後上傳，支援 PNG / JPG / WebP，上限 5MB。</div>
-      <div class="card"><b>02 雙引擎辨識</b><br>Google Document AI 辨識文字位置，前端 Canvas 偵測表格線條，結果合併。</div>
-      <div class="card"><b>03 雙模式輸出</b><br>Data Mode 下載 Excel / CSV / JSON，Visual Mode 下載 SVG / PDF，各自獨立邏輯。</div>
+      <div class="card">
+        <b data-t="flow1Head">01 上傳圖片</b>
+        <span data-t="flow1Body">拍照或截圖後上傳，支援 PNG / JPG / WebP，上限 5&nbsp;MB。</span>
+      </div>
+      <div class="card">
+        <b data-t="flow2Head">02 AI 雙引擎辨識</b>
+        <span data-t="flow2Body">Document AI 辨識文字位置，Canvas 偵測表格線條，結果合併重建格子座標。</span>
+      </div>
+      <div class="card">
+        <b data-t="flow3Head">03 選擇輸出模式</b>
+        <span data-t="flow3Body">Data Mode 輸出 Excel / CSV / JSON 供資料整理；Visual Mode 輸出 SVG 供版面核對。</span>
+      </div>
     </div>
   </section>
 
   <section id="principle" class="section principle center">
-    <div class="small" style="color:var(--gold)">PRODUCT PRINCIPLE</div>
-    <h2 class="serif" style="font-size:34px;margin-top:8px">AI 產草稿，人類做判斷</h2>
+    <div class="label" data-t="princLabel">PRODUCT PRINCIPLE</div>
+    <h2 class="section-title serif" data-t="princTitle">AI 產草稿，人類做判斷</h2>
     <div class="cards">
-      <div class="card">未經人工確認，不自動視為正式資料。</div>
-      <div class="card">系統協助減少重打，不取代審核責任。</div>
-      <div class="card">版面重建為近似結果，需人工核對後使用。</div>
+      <div class="card" data-t="princ1">未經人工確認，不自動視為正式資料。</div>
+      <div class="card" data-t="princ2">系統協助減少重打，不取代審核責任。</div>
+      <div class="card" data-t="princ3">版面重建為近似結果，需人工核對後使用。</div>
     </div>
   </section>
 
   <section id="roadmap" class="section road">
-    <div class="small" style="color:var(--gold)">ROADMAP</div>
-    <h2 class="serif" style="font-size:42px;margin-top:10px">版本紀錄</h2>
+    <div class="label" style="color:var(--gold)" data-t="roadLabel">ROADMAP</div>
+    <h2 class="section-title serif" data-t="roadTitle">版本紀錄</h2>
     <div class="roadbox">
       ✦ V1.1：XLSX / DOCX 匯出<br>
-      ✦ V1.2：Grid 重建，欄位解析優化<br>
-      ✦ V1.3：SVG / CSV / JSON 加入，visual data 回傳<br>
+      ✦ V1.2：Grid 欄位重建與解析優化<br>
+      ✦ V1.3：SVG / CSV / JSON · visual data 回傳<br>
       ✦ <b style="color:var(--gold2)">V1.4：Layout Reconstruction Mode ← 目前版本</b><br>
-      <span style="font-size:12px;opacity:.7;margin-left:20px">Canvas 線條偵測 · 雙模式輸出 · 向量 SVG · 欄寬比例 XLSX</span><br>
+      <span style="font-size:11px;opacity:.6;margin-left:18px">Canvas 線條偵測 · 雙模式輸出 · 向量 SVG · 欄寬比例 XLSX</span><br>
+      ✦ V1.5：Typography &amp; UI Polish（本版）<br>
       ✦ V2：帳號、用量紀錄、訂閱制<br>
-      ✦ V3：線上核對、簽署、ERP 可擷取格式
+      ✦ V3：線上核對、簽署、ERP 匯出格式
     </div>
-    <button class="btn gold" onclick="startApp()">開始使用 V1.4 →</button>
+    <button class="btn gold" onclick="startApp()" data-t="roadCta">開始使用 →</button>
   </section>
-</div>
+
+</div><!-- /landing -->
 
 
 <!-- ======== APP ======== -->
 <div id="app" class="app">
   <div class="topbar">
-    <div><div class="brand">PhotoCheck Docs</div><div class="sub">V1.4 LAYOUT RECONSTRUCTION MODE</div></div>
-    <div>剩餘免費次數：<b id="remain">5</b> / 5</div>
+    <div>
+      <div class="brand">PhotoCheck Docs</div>
+      <div class="sub" data-t="appSub">V1.4 LAYOUT RECONSTRUCTION</div>
+    </div>
+    <div class="remain-badge" data-t="appRemain">剩餘次數：<b id="remain">5</b> / 5</div>
   </div>
 
-  <div style="padding:32px 0">
-    <input id="file" type="file" accept="image/*" hidden>
+  <input id="file" type="file" accept="image/*" hidden>
 
-    <div class="drop" id="dropzone" onclick="file.click()" ondragover="event.preventDefault()" ondrop="dropFile(event)">
-      <div id="dropText"><b>拖放圖片，或點擊上傳</b><br><span class="small">支援 PNG · JPG · WEBP｜上限 5MB</span></div>
-      <div id="previewBox" class="imgprev" style="display:none">
-        <img id="preview" alt="預覽">
-        <div><b>圖片已載入</b><br><span class="small">點擊此區域更換圖片</span></div>
+  <div class="drop" id="dropzone" onclick="file.click()" ondragover="event.preventDefault()" ondrop="dropFile(event)">
+    <div id="dropText">
+      <div class="drop-label" data-t="dropLabel">拖放圖片，或點擊上傳</div>
+      <div class="drop-sub" data-t="dropSub">支援 PNG · JPG · WebP｜上限 5&thinsp;MB</div>
+    </div>
+    <div id="previewBox" class="imgprev" style="display:none">
+      <img id="preview" alt="preview">
+      <div>
+        <div style="font-weight:600" data-t="previewLoaded">圖片已載入</div>
+        <div class="small" data-t="previewHint">點擊此區域更換圖片</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="msg"></div>
+
+  <button class="btn dark convert-btn" id="convert" data-t="convertBtn">✦ 啟動 AI 辨識 + 版面偵測</button>
+
+  <div id="result" style="display:none">
+
+    <div id="detectBadge" style="margin-top:var(--sp-m)"></div>
+
+    <div class="vtabs">
+      <button class="vtab active" id="tab-data"   onclick="switchPreview('data')"   data-t="tabData">📊 Data Preview（可編輯）</button>
+      <button class="vtab"        id="tab-visual" onclick="switchPreview('visual')" data-t="tabVisual">🖼 Visual Preview（版面重建）</button>
+    </div>
+
+    <div class="vpane on" id="pane-data">
+      <div class="pane-hint" data-t="dataHint">可在格子內直接修改，確認後再選擇下方格式下載。</div>
+      <div class="tablewrap" id="tablewrap"></div>
+    </div>
+
+    <div class="vpane" id="pane-visual">
+      <div class="pane-hint" data-t="visualHint">向量版面重建預覽 — 線條為 &lt;line&gt;/&lt;rect&gt; 向量物件，文字為 &lt;text&gt;，非圖片嵌入。</div>
+      <div class="svg-wrap" id="svgPreview"><div class="no-preview" data-t="noPreview">辨識後自動顯示版面預覽</div></div>
+    </div>
+
+    <div class="dl-section">
+      <div class="dl-mode">
+        <div class="dl-mode-title" data-t="dataModeTitle">📊 Data Mode</div>
+        <div class="dl-mode-sub"   data-t="dataModeSub">正式資料輸出，適合 Excel 校對與 ERP 前置整理。</div>
+        <div class="dl-btns">
+          <button class="dl-btn" onclick="dl('xlsx')" data-t="dlXlsx">⬇ Excel</button>
+          <button class="dl-btn" onclick="dl('csv')"  data-t="dlCsv">⬇ CSV</button>
+          <button class="dl-btn" onclick="dl('json')" data-t="dlJson">⬇ JSON</button>
+          <button class="dl-btn" onclick="dl('docx')" data-t="dlDocx">⬇ DOCX</button>
+        </div>
+      </div>
+      <div class="dl-mode dl-mode-v">
+        <div class="dl-mode-title" data-t="visualModeTitle">🖼 Visual Mode</div>
+        <div class="dl-mode-sub"   data-t="visualModeSub">向量版面草稿，適合 Illustrator / Inkscape 後續微調。</div>
+        <div class="dl-btns">
+          <button class="dl-btn" onclick="dl('svg')" data-t="dlSvg">⬇ SVG</button>
+          <button class="dl-btn dl-btn-pdf-disabled"
+            title="PDF 列印預覽版，適合快速查看，不作精準還原承諾"
+            onclick="alert(T[curLang].pdfAlert)"
+            data-t="dlPdf">⬇ PDF <span style="font-size:10px;opacity:.55;margin-left:2px">Beta</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <div id="msg"></div>
-
-    <button class="btn dark" id="convert" style="width:100%">✦ 啟動 AI 辨識 + 版面偵測</button>
-
-    <div id="result" style="display:none">
-
-      <!-- detect badge -->
-      <div style="margin-top:22px" id="detectBadge"></div>
-
-      <!-- preview tabs -->
-      <div class="vtabs">
-        <button class="vtab active" id="tab-data" onclick="switchPreview('data')">📊 Data Preview（可編輯）</button>
-        <button class="vtab" id="tab-visual" onclick="switchPreview('visual')">🖼 Visual Preview（版面重建）</button>
-      </div>
-
-      <!-- data pane -->
-      <div class="vpane on" id="pane-data">
-        <div class="pane-hint">可在格子內直接修改，確認後再選擇下方格式下載。</div>
-        <div class="tablewrap" id="tablewrap"></div>
-      </div>
-
-      <!-- visual pane -->
-      <div class="vpane" id="pane-visual">
-        <div class="pane-hint">向量版面重建預覽 — 所有線條為 &lt;line&gt;/&lt;rect&gt; 物件，文字為 &lt;text&gt; 物件，非圖片嵌入。</div>
-        <div class="svg-wrap" id="svgPreview"><div class="no-preview">辨識後自動顯示版面預覽</div></div>
-      </div>
-
-      <!-- download section -->
-      <div class="dl-section">
-        <div class="dl-mode">
-          <div class="dl-mode-title">📊 Data Mode</div>
-          <div class="dl-mode-sub">資料乾淨可編輯，適合 ERP 匯入。XLSX 欄寬依偵測比例設定。</div>
-          <div class="dl-btns">
-            <button class="dl-btn" onclick="dl('xlsx')">⬇ Excel</button>
-            <button class="dl-btn" onclick="dl('csv')">⬇ CSV</button>
-            <button class="dl-btn" onclick="dl('json')">⬇ JSON</button>
-            <button class="dl-btn" onclick="dl('docx')">⬇ DOCX</button>
-          </div>
-        </div>
-        <div class="dl-mode dl-mode-v">
-          <div class="dl-mode-title">🖼 Visual Mode</div>
-          <div class="dl-mode-sub">保留原圖版面比例，粗框細格線皆向量，可丟 Illustrator 直接編輯。</div>
-          <div class="dl-btns">
-            <button class="dl-btn" onclick="dl('svg')">⬇ SVG</button>
-            <button class="dl-btn dl-btn-pdf-disabled"
-              title="PDF 輸出校正中，請使用 SVG 後自行轉換"
-              onclick="alert('PDF 輸出目前校正中。\n請先下載 SVG，再用 Illustrator / macOS 預覽 / 瀏覽器列印功能轉成 PDF。')">
-              ⬇ PDF <span class="beta-tag" style="background:#c0392b;color:white;border-radius:3px;padding:1px 5px;font-size:10px;margin-left:4px">暫停</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /result -->
-  </div>
+  </div><!-- /result -->
 </div><!-- /app -->
 
-
 <script>
+
+// ─── V1.5 Bilingual / Translation ────────────────────────────
+let curLang = 'zh';
+
+const T = {
+  zh: {
+    navFeature:'功能', navFlow:'流程', navPrinciple:'產品原則',
+    navRoadmap:'版本', navCta:'免費試用 →',
+    heroTag:'V1.4 · 版面重建模式',
+    heroTitle:'照片秒變<br><em>可編輯表格</em>',
+    heroDesc:'不再手打。AI 辨識文字、偵測表格線條，輸出可校對 Excel 與向量 SVG，兩種格式各自獨立。',
+    heroCta1:'免費試用 5 次 →', heroCta2:'查看示範',
+    heroNote:'✦ AI 產草稿，人類做判斷 ✦ Data Mode · Visual Mode',
+    mockLabel:'LAYOUT RECONSTRUCTION', mockTitle:'版面 + 資料同步輸出',
+    mockDesc:'菜單 · 3 條粗框 · 8 條格線',
+    mockCol1:'品名', mockCol2:'價格',
+    featLabel:'FEATURES · V1.4', featTitle:'照片 → 資料 + 版面，同步輸出',
+    feat1Head:'📊 Data Mode',
+    feat1Body:'正式資料輸出，適合 Excel 校對與 ERP 前置整理。欄寬依原圖比例重建，不再全欄平均。',
+    feat2Head:'🖼 Visual Mode',
+    feat2Body:'向量版面草稿，適合 Illustrator / Inkscape 後續微調。所有線條為真實向量物件，非圖片嵌入。',
+    feat3Head:'🔍 版面線條偵測',
+    feat3Body:'Document AI 結構辨識 + Canvas 像素掃描雙引擎，水平／垂直格線自動合併過濾，減少誤判。',
+    flowLabel:'HOW IT WORKS', flowTitle:'三步驟，文件數位化',
+    flow1Head:'01 上傳圖片',
+    flow1Body:'拍照或截圖後上傳，支援 PNG / JPG / WebP，上限 5\u00A0MB。',
+    flow2Head:'02 AI 雙引擎辨識',
+    flow2Body:'Document AI 辨識文字位置，Canvas 偵測表格線條，結果合併重建格子座標。',
+    flow3Head:'03 選擇輸出模式',
+    flow3Body:'Data Mode 輸出 Excel / CSV / JSON 供資料整理；Visual Mode 輸出 SVG 供版面核對。',
+    princLabel:'PRODUCT PRINCIPLE', princTitle:'AI 產草稿，人類做判斷',
+    princ1:'未經人工確認，不自動視為正式資料。',
+    princ2:'系統協助減少重打，不取代審核責任。',
+    princ3:'版面重建為近似結果，需人工核對後使用。',
+    roadLabel:'ROADMAP', roadTitle:'版本紀錄', roadCta:'開始使用 →',
+    appSub:'V1.4 LAYOUT RECONSTRUCTION',
+    appRemain:'剩餘次數：',
+    dropLabel:'拖放圖片，或點擊上傳',
+    dropSub:'支援 PNG · JPG · WebP｜上限 5\u202FMB',
+    previewLoaded:'圖片已載入', previewHint:'點擊此區域更換圖片',
+    convertBtn:'✦ 啟動 AI 辨識 + 版面偵測',
+    tabData:'📊 Data Preview（可編輯）', tabVisual:'🖼 Visual Preview（版面重建）',
+    dataHint:'可在格子內直接修改，確認後再選擇下方格式下載。',
+    visualHint:'向量版面重建預覽 — 線條為向量物件，文字為 <text>，非圖片嵌入。',
+    noPreview:'辨識後自動顯示版面預覽',
+    dataModeTitle:'📊 Data Mode',
+    dataModeSub:'正式資料輸出，適合 Excel 校對與 ERP 前置整理。',
+    visualModeTitle:'🖼 Visual Mode',
+    visualModeSub:'向量版面草稿，適合 Illustrator / Inkscape 後續微調。',
+    dlXlsx:'⬇ Excel', dlCsv:'⬇ CSV', dlJson:'⬇ JSON',
+    dlDocx:'⬇ DOCX', dlSvg:'⬇ SVG',
+    dlPdf:'⬇ PDF <span style="font-size:10px;opacity:.55;margin-left:2px">Beta</span>',
+    pdfAlert:'PDF 列印預覽版（Beta）\n\n適合快速查看，不作精準還原承諾。\n請先下載 SVG，再用 Illustrator / 瀏覽器列印轉 PDF。',
+  },
+  en: {
+    navFeature:'Features', navFlow:'How it works',
+    navPrinciple:'Principles', navRoadmap:'Roadmap', navCta:'Try free →',
+    heroTag:'V1.4 · Layout Reconstruction',
+    heroTitle:'Photos become<br><em>editable tables</em>',
+    heroDesc:'No more manual re-typing. AI reads the text and detects table structure, producing clean Excel data and a vector SVG layout — two modes, independent outputs.',
+    heroCta1:'Try free — 5 uses →', heroCta2:'See demo',
+    heroNote:'✦ AI drafts. You verify. ✦ Data Mode · Visual Mode',
+    mockLabel:'LAYOUT RECONSTRUCTION', mockTitle:'Data + Layout, in sync',
+    mockDesc:'Menu · 3 thick borders · 8 grid lines',
+    mockCol1:'Item', mockCol2:'Price',
+    featLabel:'FEATURES · V1.4', featTitle:'Photo → Data + Layout, simultaneously',
+    feat1Head:'📊 Data Mode',
+    feat1Body:'Structured data output for Excel review and ERP-ready cleanup. Column widths reconstructed from original proportions.',
+    feat2Head:'🖼 Visual Mode',
+    feat2Body:'Editable vector layout draft for Illustrator / Inkscape refinement. All lines are true vector objects, not embedded images.',
+    feat3Head:'🔍 Grid Line Detection',
+    feat3Body:'Document AI structure recognition + Canvas pixel scanning — duplicate lines are filtered and merged to reduce false splits.',
+    flowLabel:'HOW IT WORKS', flowTitle:'Three steps to digitise documents',
+    flow1Head:'01 Upload photo',
+    flow1Body:'Upload a photo or screenshot. Supports PNG / JPG / WebP, up to 5\u00A0MB.',
+    flow2Head:'02 Dual-engine recognition',
+    flow2Body:'Document AI detects text positions; Canvas detects table grid lines. Both results are merged into cell coordinates.',
+    flow3Head:'03 Choose output mode',
+    flow3Body:'Data Mode exports Excel / CSV / JSON for data work. Visual Mode exports SVG for layout review.',
+    princLabel:'PRODUCT PRINCIPLE', princTitle:'AI drafts. You decide.',
+    princ1:'AI output is a draft — never treated as verified data without human review.',
+    princ2:'The system reduces manual transcription; it does not replace your review responsibility.',
+    princ3:'Layout reconstruction is approximate. Always verify before using in production.',
+    roadLabel:'ROADMAP', roadTitle:'Version history', roadCta:'Start using →',
+    appSub:'V1.4 LAYOUT RECONSTRUCTION',
+    appRemain:'Credits remaining:',
+    dropLabel:'Drop image here, or click to upload',
+    dropSub:'PNG · JPG · WebP · max 5\u202FMB',
+    previewLoaded:'Image loaded', previewHint:'Click to replace',
+    convertBtn:'✦ Start AI Recognition + Layout Detection',
+    tabData:'📊 Data Preview (editable)', tabVisual:'🖼 Visual Preview (layout)',
+    dataHint:'Edit cells directly on screen, then choose a format to download.',
+    visualHint:'Vector layout preview — all lines are <line>/<rect> elements, text is <text>, no image embed.',
+    noPreview:'Layout preview will appear after recognition',
+    dataModeTitle:'📊 Data Mode',
+    dataModeSub:'Structured data output for Excel review and ERP-ready cleanup.',
+    visualModeTitle:'🖼 Visual Mode',
+    visualModeSub:'Editable vector layout draft for Illustrator / Inkscape refinement.',
+    dlXlsx:'⬇ Excel', dlCsv:'⬇ CSV', dlJson:'⬇ JSON',
+    dlDocx:'⬇ DOCX', dlSvg:'⬇ SVG',
+    dlPdf:'⬇ PDF <span style="font-size:10px;opacity:.55;margin-left:2px">Beta</span>',
+    pdfAlert:'PDF / Print Beta\n\nBrowser print preview for quick review — not pixel-perfect reconstruction.\nDownload SVG and use Illustrator or browser print to generate a PDF.',
+  }
+};
+
+function applyLang(lang) {
+  curLang = lang;
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+  document.body.classList.toggle('en', lang === 'en');
+  const btn = document.getElementById('langBtn');
+  if (btn) btn.textContent = lang === 'zh' ? 'EN' : '中文';
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.dataset.t;
+    const val = T[lang][key];
+    if (val !== undefined) el.innerHTML = val;
+  });
+}
+
+function toggleLang() {
+  applyLang(curLang === 'zh' ? 'en' : 'zh');
+}
+
+// ─────────────────────────────────────────────────────────────
+
 // ─── state ───────────────────────────────────────────────
 let imageData = null, tableData = null, visualData = null, layoutGrid = null, layoutData = null;
 const LIMIT = 5, USAGE_KEY = 'photocheck_usage';

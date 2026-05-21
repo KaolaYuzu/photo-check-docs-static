@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhotoCheck Docs V2 — Image-to-Excel Layout Reconstruction Engine</title>
+<meta name="description" content="上傳表格照片，AI 解析成可校對的 Table Schema，一鍵匯出 XLSX。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   RESET & DESIGN TOKENS
+   ========================================================= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Brand */
+  --gold:#C8A96E;--gold-lt:#E8D5A8;--gold-dim:rgba(200,169,110,.15);
+  --green:#4A6741;--green-dim:rgba(74,103,65,.25);
+  /* Dark theme (landing) */
+  --dk:#0C0E14;--dk-s:#131620;--dk-c:#191D2A;
+  --dk-b:rgba(200,169,110,.13);--dk-bs:rgba(255,255,255,.06);
+  --dkt:#F0EDE6;--dkm:#6A6A64;--dks:#9A9890;
+  /* Light theme (app) */
+  --cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1A18;
+  --line:#E0D8C8;--mut:#8A8A80;
+  /* Type */
+  --serif:'Playfair Display',serif;
+  --sans:'DM Sans','Noto Sans TC',sans-serif;
+  /* Spacing */
+  --sp-xs:8px;--sp-sm:16px;--sp-md:24px;--sp-lg:48px;--sp-xl:88px;
+  /* Radius */
+  --r-s:4px;--r-m:8px;--r-l:14px;--r-xl:20px;--r-pill:999px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-smoothing:antialiased}
+
+/* =========================================================
+   SHARED
+   ========================================================= */
+.serif{font-family:var(--serif)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  border:0;border-radius:var(--r-s);padding:13px 26px;
+  font-size:14px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;white-space:nowrap
+}
+.btn-gold{background:var(--gold);color:var(--dk)}
+.btn-gold:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1.5px solid var(--dk-b);color:var(--dkt)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:#2a2a28}
+.btn-sm{padding:9px 18px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* =========================================================
+   LANDING
+   ========================================================= */
+#landing{min-height:100vh}
+
+/* — Nav — */
+.lnav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 56px;
+  background:rgba(12,14,20,.9);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--dk-b);
+  position:sticky;top:0;z-index:100
+}
+.brand-wrap{display:flex;flex-direction:column;gap:3px}
+.brand-name{font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:-.01em}
+.brand-sub{font-size:9.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.lnav-links{display:flex;align-items:center;gap:4px}
+.lnav-link{
+  background:none;border:0;color:var(--dks);font-size:13.5px;
+  font-family:var(--sans);padding:8px 14px;cursor:pointer;
+  border-radius:var(--r-s);transition:color .18s
+}
+.lnav-link:hover{color:var(--dkt)}
+.lang-pill{
+  display:flex;align-items:center;
+  background:var(--dk-c);border:1px solid var(--dk-b);
+  border-radius:var(--r-pill);padding:3px;gap:2px;margin-right:6px
+}
+.lang-btn{
+  border:0;background:transparent;color:var(--dkm);
+  font-size:11.5px;font-weight:600;font-family:var(--sans);
+  padding:5px 11px;border-radius:var(--r-pill);cursor:pointer;
+  transition:all .18s
+}
+.lang-btn.active{background:var(--gold);color:var(--dk)}
+
+/* — Hero — */
+.hero{
+  max-width:1120px;margin:0 auto;
+  padding:var(--sp-xl) 56px;
+  display:grid;grid-template-columns:1fr 420px;
+  gap:72px;align-items:center
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--gold-dim);border:1px solid rgba(200,169,110,.22);
+  border-radius:var(--r-pill);padding:6px 16px;
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:28px
+}
+.hero-eyebrow::before{content:'✦'}
+.hero h1{
+  font-family:var(--serif);
+  font-size:clamp(38px,5.2vw,62px);
+  line-height:1.09;letter-spacing:-.03em;
+  margin-bottom:22px;color:var(--dkt)
+}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero-desc{
+  font-size:16px;line-height:1.85;color:var(--dks);
+  max-width:440px;margin-bottom:34px
+}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.hero-notes{
+  display:flex;gap:0;flex-wrap:wrap;
+  border-top:1px solid var(--dk-bs);padding-top:20px
+}
+.hero-note-item{
+  font-size:11.5px;color:var(--dkm);
+  padding:0 18px;border-right:1px solid var(--dk-bs)
+}
+.hero-note-item:first-child{padding-left:0}
+.hero-note-item:last-child{border-right:0}
+
+/* — Schema card (hero visual) — */
+.schema-card{
+  background:var(--dk-c);
+  border:1px solid var(--dk-b);
+  border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:0 40px 96px rgba(0,0,0,.55),0 0 0 1px var(--dk-b)
+}
+.sc-header{
+  background:var(--dk-s);padding:13px 18px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--dk-b)
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot-r{background:#FF5F57}.dot-y{background:#FFBD2E}.dot-g{background:#28CA41}
+.sc-label{font-size:10px;letter-spacing:.1em;color:var(--dkm);text-transform:uppercase;margin-left:auto}
+.sc-body{padding:20px 22px}
+.sc-key{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px}
+.sc-pulse{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dkm);margin-bottom:16px}
+.pulse-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  animation:pulse 2.2s ease-in-out infinite
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.8)}}
+.mini-tbl{border:1px solid var(--dk-b);border-radius:var(--r-s);overflow:hidden;margin-bottom:18px;font-size:11px}
+.mini-row{display:grid;grid-template-columns:2fr 1fr 1fr;border-bottom:1px solid var(--dk-b)}
+.mini-row:last-child{border-bottom:0}
+.mini-cell{padding:7px 10px;border-right:1px solid var(--dk-b);color:var(--dks)}
+.mini-cell:last-child{border-right:0}
+.mini-cell.hd{background:var(--dk-s);color:var(--gold);font-weight:700;font-size:9.5px;text-transform:uppercase}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px}
+.badge{
+  border-radius:var(--r-pill);padding:3px 10px;
+  font-size:10px;font-weight:600;letter-spacing:.04em
+}
+.badge-gold{background:var(--gold-dim);border:1px solid rgba(200,169,110,.28);color:var(--gold)}
+.badge-green{background:var(--green-dim);border:1px solid rgba(74,103,65,.45);color:#7DB870}
+
+/* — Sections — */
+.section{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.s-eyebrow{font-size:10.5px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;font-weight:700;margin-bottom:12px}
+.s-title{font-family:var(--serif);font-size:clamp(26px,3.5vw,40px);line-height:1.14;letter-spacing:-.025em;color:var(--dkt)}
+.s-desc{font-size:15px;color:var(--dks);line-height:1.75;margin-top:14px;max-width:560px}
+.s-desc.center{margin:14px auto 0}
+.center{text-align:center}
+
+/* — Feature grid — */
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:44px}
+.feat-card{
+  background:var(--dk-c);border:1px solid var(--dk-bs);
+  border-radius:var(--r-l);padding:26px 22px;
+  transition:border-color .2s,transform .2s
+}
+.feat-card:hover{border-color:var(--dk-b);transform:translateY(-2px)}
+.feat-icon{font-size:22px;margin-bottom:14px}
+.feat-title{font-size:14.5px;font-weight:600;color:var(--dkt);margin-bottom:9px}
+.feat-desc{font-size:12.5px;color:var(--dkm);line-height:1.75}
+
+/* — Workflow steps — */
+.wf-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:44px}
+.wf-step{background:var(--dk-c);border:1px solid var(--dk-bs);padding:34px 28px}
+.wf-step:first-child{border-radius:var(--r-l) 0 0 var(--r-l)}
+.wf-step:last-child{border-radius:0 var(--r-l) var(--r-l) 0}
+.wf-num{font-family:var(--serif);font-size:52px;color:var(--gold-dim);font-weight:700;line-height:1;margin-bottom:14px}
+.wf-title{font-size:15px;font-weight:600;color:var(--dkt);margin-bottom:9px}
+.wf-desc{font-size:12.5px;color:var(--dkm);line-height:1.75}
+
+/* — Architecture band — */
+.arch-band{
+  background:var(--dk-s);
+  border-top:1px solid var(--dk-b);border-bottom:1px solid var(--dk-b)
+}
+.arch-inner{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.arch-code{
+  background:var(--dk);border:1px solid var(--dk-b);
+  border-radius:var(--r-m);padding:24px 22px;
+  font-family:'Courier New',monospace;font-size:12px;line-height:1.85;
+  color:var(--dks);overflow-x:auto
+}
+.ak{color:var(--gold)}.av{color:#7DB870}.as{color:#E8A87C}.am{color:var(--dkm)}
+
+/* — Export grid — */
+.exp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:44px}
+.exp-card{
+  background:var(--dk-c);border:1px solid var(--dk-bs);
+  border-radius:var(--r-m);padding:24px 16px;text-align:center
+}
+.exp-card.primary{border-color:var(--gold);background:var(--gold-dim)}
+.exp-tag{display:inline-block;background:var(--gold);color:var(--dk);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-bottom:10px}
+.exp-fmt{font-family:'Courier New',monospace;font-size:18px;font-weight:700;margin-bottom:7px}
+.exp-card.primary .exp-fmt{color:var(--gold)}
+.exp-info{font-size:11px;color:var(--dkm);line-height:1.6}
+
+/* — Roadmap — */
+.road-band{background:var(--ink)}
+.road-inner{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.road-items{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px}
+.road-item{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r-l);padding:26px
+}
+.road-item.active{border-color:var(--gold)}
+.road-v{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:8px}
+.road-title{font-size:14.5px;color:#fff;font-weight:600;margin-bottom:8px}
+.road-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.7}
+
+/* — Footer — */
+.lfoot{
+  border-top:1px solid var(--dk-b);
+  padding:28px 56px;
+  display:flex;justify-content:space-between;align-items:center
+}
+.lfoot-note{font-size:11.5px;color:var(--dkm)}
+
+/* =========================================================
+   APP PROTOTYPE
+   ========================================================= */
+#app-view{
+  display:none;background:var(--warm);
+  min-height:100vh;color:var(--ink)
+}
+.anav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 32px;background:#fff;
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:50
+}
+.anav-left{display:flex;align-items:center;gap:14px}
+.back-btn{
+  background:none;border:1px solid var(--line);
+  border-radius:var(--r-s);padding:7px 14px;
+  font-size:12.5px;cursor:pointer;color:var(--mut);
+  font-family:var(--sans);transition:all .15s
+}
+.back-btn:hover{border-color:var(--ink);color:var(--ink)}
+.app-brand{font-family:var(--serif);font-size:16px}
+.app-sub-txt{font-size:9.5px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.credits-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--cream);border:1px solid var(--line);
+  border-radius:var(--r-pill);padding:6px 14px;font-size:13px
+}
+.credits-n{font-weight:700;color:var(--ink)}
+.credits-of{color:var(--mut)}
+
+/* App layout */
+.app-main{max-width:880px;margin:0 auto;padding:36px 24px}
+
+/* Upload zone */
+.drop-zone{
+  border:2px dashed var(--line);border-radius:var(--r-xl);
+  background:#fff;padding:60px 40px;text-align:center;
+  cursor:pointer;transition:all .2s;margin-bottom:20px;
+  position:relative
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:var(--warm)}
+.dz-icon{font-size:38px;margin-bottom:16px;opacity:.5}
+.dz-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.dz-hint{font-size:12.5px;color:var(--mut)}
+
+/* Upload preview */
+.upload-prev{
+  display:none;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r-l);
+  padding:18px 20px;margin-bottom:20px;
+  align-items:center;gap:20px
+}
+.prev-img{max-width:160px;max-height:110px;object-fit:contain;border:1px solid var(--line);border-radius:var(--r-s)}
+.prev-info{flex:1}
+.prev-name{font-weight:600;font-size:14px;margin-bottom:4px;color:var(--ink)}
+.prev-meta{font-size:11.5px;color:var(--mut)}
+.prev-change{
+  background:none;border:1px solid var(--line);border-radius:var(--r-s);
+  padding:7px 13px;font-size:12px;cursor:pointer;color:var(--mut);
+  font-family:var(--sans);transition:all .15s
+}
+.prev-change:hover{border-color:var(--ink);color:var(--ink)}
+
+/* Recognize button */
+.recog-btn{
+  width:100%;background:var(--ink);color:#fff;
+  border:0;border-radius:var(--r-m);padding:17px;
+  font-size:15px;font-weight:700;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px
+}
+.recog-btn:hover{background:#2a2a28;transform:translateY(-1px)}
+.recog-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.demo-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px 24px;border-radius:var(--r-m);
+  background:transparent;border:1.5px dashed var(--gold-dim);
+  color:var(--gold);font-size:14px;font-weight:500;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;margin-top:10px;
+}
+.demo-btn:hover{border-color:var(--gold);background:var(--gold-dim)}
+.demo-note{
+  text-align:center;font-size:12px;color:var(--mut);
+  margin-top:8px;line-height:1.5;padding:0 8px;
+}
+
+/* Processing */
+#step-processing{
+  display:none;background:#fff;border:1px solid var(--line);
+  border-radius:var(--r-xl);padding:56px 40px;
+  text-align:center;margin-top:20px
+}
+.spinner{
+  width:44px;height:44px;border:3px solid var(--line);
+  border-top-color:var(--ink);border-radius:50%;
+  animation:spin .75s linear infinite;margin:0 auto 20px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-size:17px;font-weight:600;margin-bottom:7px}
+.proc-note{font-size:13px;color:var(--mut)}
+
+/* App message */
+.app-msg{
+  padding:13px 16px;border-radius:var(--r-m);
+  margin-top:14px;font-size:13.5px;display:none
+}
+.app-msg.err{background:#FFF0ED;border:1px solid #FFCCC7;color:#B03922}
+.app-msg.info{background:#F0F9FF;border:1px solid #BAE6FD;color:#1A5F8A}
+.app-msg.ok{background:#F0FAF0;border:1px solid #A3D9A5;color:#1E6B2E}
+.app-msg.show{display:block}
+
+/* Results */
+#step-results{display:none;margin-top:20px}
+.res-tabs{
+  display:flex;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r-m);
+  overflow:hidden;margin-bottom:14px
+}
+.res-tab{
+  flex:1;background:none;border:0;border-right:1px solid var(--line);
+  padding:13px 18px;font-size:13.5px;font-weight:500;
+  font-family:var(--sans);cursor:pointer;color:var(--mut);
+  transition:all .15s
+}
+.res-tab:last-child{border-right:0}
+.res-tab.active{background:var(--ink);color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Data panel */
+.data-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.dp-header{
+  padding:14px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between
+}
+.dp-title{font-weight:600;font-size:14.5px;color:var(--ink)}
+.dp-meta{font-size:11.5px;color:var(--mut);margin-top:2px}
+.dp-export-btn{
+  background:var(--gold);color:var(--ink);border:0;
+  border-radius:var(--r-s);padding:8px 16px;
+  font-size:12.5px;font-weight:700;cursor:pointer;
+  font-family:var(--sans);transition:all .15s
+}
+.dp-export-btn:hover{background:var(--gold-lt)}
+.tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto}
+.schema-tbl{border-collapse:collapse;width:100%;font-size:12.5px;min-width:400px}
+.schema-tbl th{
+  background:var(--cream);padding:10px 13px;font-weight:700;
+  text-align:left;border-bottom:2px solid var(--line);
+  border-right:1px solid var(--line);font-size:11.5px;
+  white-space:nowrap;position:sticky;top:0;z-index:2
+}
+.schema-tbl th:last-child{border-right:0}
+.schema-tbl td{
+  border-bottom:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:0;vertical-align:top
+}
+.schema-tbl td:last-child{border-right:0}
+.cell-edit{
+  width:100%;border:0;background:transparent;
+  padding:8px 13px;font-family:var(--sans);font-size:12.5px;
+  color:var(--ink);resize:none;outline:0;line-height:1.55;
+  min-height:34px;display:block
+}
+.cell-edit:focus{background:#FEFCF8}
+.tbl-toolbar{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 18px;border-top:1px solid var(--line);
+  background:var(--cream);flex-wrap:wrap
+}
+.tbar-btn{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-s);
+  padding:5px 11px;font-size:11.5px;cursor:not-allowed;color:var(--mut);
+  font-family:var(--sans);opacity:.6;
+  position:relative
+}
+.tbar-btn::after{
+  content:'Coming in production';
+  position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:var(--ink);color:#fff;
+  font-size:10px;padding:4px 8px;border-radius:3px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s
+}
+.tbar-btn:hover::after{opacity:1}
+.tbar-info{font-size:11px;color:var(--mut);margin-left:auto;font-style:italic}
+
+/* Visual panel */
+.visual-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.vis-header{
+  padding:13px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between
+}
+.vis-title{font-weight:600;font-size:14.5px}
+.vis-badge{
+  font-size:10.5px;background:var(--cream);
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:3px 10px;color:var(--mut)
+}
+.vis-body{padding:20px;overflow:auto;background:var(--warm)}
+#svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
+
+/* Export panel */
+.export-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:24px}
+.exp-primary{margin-bottom:22px}
+.exp-main-btn{
+  width:100%;background:var(--ink);color:#fff;border:0;
+  border-radius:var(--r-m);padding:17px;font-size:14.5px;
+  font-weight:700;font-family:var(--sans);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s
+}
+.exp-main-btn:hover{background:#2a2a28}
+.exp-main-note{text-align:center;font-size:11.5px;color:var(--mut);margin-top:8px}
+.exp-secondary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.exp-sec{
+  border:1.5px solid var(--line);border-radius:var(--r-m);
+  padding:16px 12px;background:#fff;cursor:pointer;
+  text-align:center;font-family:var(--sans);
+  transition:all .15s
+}
+.exp-sec:hover{border-color:var(--ink)}
+.exp-sec.beta{border-style:dashed}
+.exp-sec-fmt{font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.exp-sec-lbl{font-size:10.5px;color:var(--mut)}
+.exp-sec.beta .exp-sec-lbl{color:var(--gold)}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media(max-width:960px){
+  .lnav{padding:16px 24px}
+  .lnav-link:not(.show-mobile){display:none}
+  .hero{grid-template-columns:1fr;padding:56px 24px 40px}
+  .schema-card{display:none}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .wf-steps{grid-template-columns:1fr}
+  .wf-step:first-child{border-radius:var(--r-l) var(--r-l) 0 0}
+  .wf-step:last-child{border-radius:0 0 var(--r-l) var(--r-l)}
+  .arch-grid{grid-template-columns:1fr}
+  .exp-grid{grid-template-columns:repeat(3,1fr)}
+  .road-items{grid-template-columns:1fr}
+  .section,.arch-inner,.road-inner{padding-left:24px;padding-right:24px}
+  .lfoot{flex-direction:column;gap:10px;text-align:center;padding:24px}
+  .exp-secondary{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .feat-grid{grid-template-columns:1fr}
+  .exp-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     LANDING PAGE
+     ======================================================== -->
+<div id="landing">
+
+<!-- NAV -->
+<nav class="lnav">
+  <div class="brand-wrap">
+    <div class="brand-name">PhotoCheck Docs</div>
+    <div class="brand-sub">Image-to-Excel Engine · V2</div>
+  </div>
+  <div class="lnav-links">
+    <button class="lnav-link" onclick="scrollById('features')">
+      <span class="zh">功能</span><span class="en">Features</span>
+    </button>
+    <button class="lnav-link" onclick="scrollById('workflow')">
+      <span class="zh">流程</span><span class="en">How It Works</span>
+    </button>
+    <button class="lnav-link" onclick="scrollById('architecture')">
+      <span class="zh">架構</span><span class="en">Architecture</span>
+    </button>
+    <button class="lnav-link show-mobile" onclick="scrollById('roadmap')">
+      <span class="zh">版本</span><span class="en">Roadmap</span>
+    </button>
+    <div class="lang-pill">
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="showApp()">
+      <span class="zh">免費試用 →</span><span class="en">Try Free →</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow">
+      V2 Prototype · Image-to-Excel Layout Reconstruction Engine
+    </div>
+    <h1 class="serif">
+      <span class="zh">照片秒變<br><em>結構化表格</em><br>OCR 只呼叫一次。</span>
+      <span class="en">Photos become<br><em>structured tables.</em><br>One OCR call only.</span>
+    </h1>
+    <p class="hero-desc">
+      <span class="zh">上傳表格照片，AI 解析成可校對的 Table Schema，後續所有編輯與匯出都在瀏覽器本機完成。不重複呼叫 API，不把資料送出裝置。</span>
+      <span class="en">Upload a table photo. AI parses it into a reviewable Table Schema. All editing and export happen locally in the browser. No repeated API calls. Data stays on device.</span>
+    </p>
+    <div class="hero-ctas">
+      <button class="btn btn-gold" onclick="showApp()">
+        <span class="zh">✦ 免費試用 5 次</span>
+        <span class="en">✦ Try 5 times free</span>
+      </button>
+      <button class="btn btn-outline" onclick="scrollById('architecture')">
+        <span class="zh">了解 V2 架構</span>
+        <span class="en">V2 Architecture</span>
+      </button>
+    </div>
+    <div class="hero-notes">
+      <span class="hero-note-item"><span class="zh">XLSX 正式主輸出</span><span class="en">XLSX primary output</span></span>
+      <span class="hero-note-item"><span class="zh">SVG 向量草稿</span><span class="en">SVG vector draft</span></span>
+      <span class="hero-note-item"><span class="zh">PDF Print Beta</span><span class="en">PDF Print Beta</span></span>
+      <span class="hero-note-item"><span class="zh">No-build · 純靜態</span><span class="en">No-build · Pure static</span></span>
+    </div>
+  </div>
+
+  <!-- Schema card mockup -->
+  <div class="schema-card" aria-hidden="true">
+    <div class="sc-header">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <div class="sc-label">tableSchema v2</div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-pulse">
+        <div class="pulse-dot"></div>
+        ocrEngine: google-document-ai &nbsp;·&nbsp; 1 call total
+      </div>
+      <div class="sc-key">Columns</div>
+      <div class="mini-tbl">
+        <div class="mini-row">
+          <div class="mini-cell hd">label</div>
+          <div class="mini-cell hd">width</div>
+          <div class="mini-cell hd">locked</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">品名 / Item</div>
+          <div class="mini-cell">160</div>
+          <div class="mini-cell">false</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">數量 / Qty</div>
+          <div class="mini-cell">80</div>
+          <div class="mini-cell">false</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">單價 / Price</div>
+          <div class="mini-cell">100</div>
+          <div class="mini-cell">false</div>
+        </div>
+      </div>
+      <div class="sc-key">Export → from same schema</div>
+      <div class="badge-row">
+        <span class="badge badge-gold">XLSX ★ Primary</span>
+        <span class="badge badge-green">SVG Draft</span>
+        <span class="badge badge-green">PDF Beta</span>
+        <span class="badge badge-green">CSV</span>
+        <span class="badge badge-green">JSON</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="section">
+  <div class="section-hd center" style="margin-bottom:0">
+    <div class="s-eyebrow">Features</div>
+    <h2 class="s-title serif center">
+      <span class="zh">從照片到可校對資料</span>
+      <span class="en">Photo to reviewable structured data</span>
+    </h2>
+    <p class="s-desc center">
+      <span class="zh">V2 的核心不是格式轉換，而是把照片中的表格重建成可編輯、可審查的結構化 Schema。</span>
+      <span class="en">V2 is not about format conversion. It reconstructs table photos into editable, reviewable structured data.</span>
+    </p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon">📷</div>
+      <div class="feat-title"><span class="zh">照片上傳</span><span class="en">Photo Upload</span></div>
+      <div class="feat-desc">
+        <span class="zh">支援 JPG / PNG / WebP，適合進貨單、報表、菜單、手寫紀錄。最大 5MB。</span>
+        <span class="en">JPG / PNG / WebP. Invoices, reports, menus, handwritten records. Up to 5MB.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-title"><span class="zh">OCR 只呼叫一次</span><span class="en">Single OCR Call</span></div>
+      <div class="feat-desc">
+        <span class="zh">呼叫一次 Google Document AI，結果轉為本機 Table Schema，後續不重複聯網。</span>
+        <span class="en">One Google Document AI call. Result converts to local Table Schema. No repeated API calls.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🗃️</div>
+      <div class="feat-title"><span class="zh">Schema 本機校對</span><span class="en">Local Schema Review</span></div>
+      <div class="feat-desc">
+        <span class="zh">所有儲存格編輯、欄位調整都在 Browser Local State 完成。速度快、資料不離開裝置。</span>
+        <span class="en">All edits happen in browser local state. Fast. Data stays on device.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title"><span class="zh">多格式匯出</span><span class="en">Multi-Format Export</span></div>
+      <div class="feat-desc">
+        <span class="zh">從同一份 Schema 匯出 XLSX（正式）、SVG（向量草稿）、PDF Beta、CSV、JSON。</span>
+        <span class="en">XLSX (primary), SVG (draft), PDF Beta, CSV, JSON — all from one schema.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow" class="section" style="padding-top:0">
+  <div class="center" style="margin-bottom:0">
+    <div class="s-eyebrow">How It Works</div>
+    <h2 class="s-title serif center">
+      <span class="zh">三步驟，文件數位化</span>
+      <span class="en">Three steps to digitize documents</span>
+    </h2>
+  </div>
+  <div class="wf-steps" style="margin-top:44px">
+    <div class="wf-step">
+      <div class="wf-num">01</div>
+      <div class="wf-title"><span class="zh">上傳表格照片</span><span class="en">Upload the photo</span></div>
+      <div class="wf-desc">
+        <span class="zh">把紙本進貨單、報表、菜單拍照或截圖，直接拖入上傳區。</span>
+        <span class="en">Photograph or screenshot any paper document. Drag it into the upload zone.</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">02</div>
+      <div class="wf-title"><span class="zh">AI 解析 → Schema</span><span class="en">AI parse → Schema</span></div>
+      <div class="wf-desc">
+        <span class="zh">系統呼叫一次 OCR，將辨識結果轉換為本機 Table Schema。辨識完成後不再聯網。</span>
+        <span class="en">One OCR call converts the result to a local Table Schema. No more network calls.</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">03</div>
+      <div class="wf-title"><span class="zh">校對並匯出</span><span class="en">Review &amp; export</span></div>
+      <div class="wf-desc">
+        <span class="zh">在網頁直接修改儲存格，確認後一鍵匯出 XLSX / SVG / PDF / CSV / JSON。</span>
+        <span class="en">Edit cells in the browser. Export XLSX / SVG / PDF / CSV / JSON in one click.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<div id="architecture" class="arch-band">
+  <div class="arch-inner">
+    <div class="arch-grid">
+      <div>
+        <div class="s-eyebrow">V2 Architecture</div>
+        <h2 class="s-title serif">
+          <span class="zh">Schema 優先，<br>不重複呼叫 API</span>
+          <span class="en">Schema-first.<br>No repeated API calls.</span>
+        </h2>
+        <p class="s-desc" style="margin-top:18px">
+          <span class="zh">V2 設計原則：OCR 只呼叫一次，結果轉成前端 Local Table Schema，後續所有調整都在 Browser Local State 完成。未來可接 Vision API / Document AI / open-source OCR routing，但 export 邏輯不變。</span>
+          <span class="en">V2 design principle: OCR is called once. The result becomes a local Table Schema. All subsequent edits happen in browser local state. Future-ready for Vision API / Document AI / open-source OCR routing without changing the export layer.</span>
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:22px">
+          <span class="badge badge-gold">OCR Once</span>
+          <span class="badge badge-green">Local State</span>
+          <span class="badge badge-green">Schema-driven Export</span>
+          <span class="badge badge-green">No Build Required</span>
+        </div>
+      </div>
+      <div>
+        <div class="arch-code">
+<span class="ak">tableSchema</span> = {<br>
+&nbsp;&nbsp;<span class="ak">version</span>: <span class="as">"v2"</span>,<br>
+&nbsp;&nbsp;<span class="ak">source</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">imageName</span>, <span class="ak">imageWidth</span>, <span class="ak">imageHeight</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">ocrEngine</span>: <span class="as">"google-document-ai"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;<span class="ak">columns</span>: [ <span class="am">// id, x, width, label, locked</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="ak">id</span>, <span class="ak">label</span>, <span class="ak">width</span>, <span class="ak">locked</span>: <span class="av">false</span> }<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="ak">rows</span>: [ <span class="am">// id, y, height, type</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="ak">id</span>, <span class="ak">y</span>, <span class="ak">height</span>, <span class="ak">type</span>: <span class="as">"header"</span>|<span class="as">"data"</span> }<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="ak">cells</span>: [{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">id</span>, <span class="ak">rowId</span>, <span class="ak">colId</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">text</span>, <span class="ak">rowSpan</span>, <span class="ak">colSpan</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">confidence</span>, <span class="ak">bbox</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">style</span>: { <span class="ak">bold</span>, <span class="ak">align</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">borderTop</span>|<span class="ak">Right</span>|<span class="ak">Bottom</span>|<span class="ak">Left</span> }<br>
+&nbsp;&nbsp;}],<br>
+&nbsp;&nbsp;<span class="ak">meta</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">createdAt</span>, <span class="ak">language</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">reconstructionMode</span><br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT STRATEGY -->
+<section class="section">
+  <div class="center">
+    <div class="s-eyebrow">Export Strategy</div>
+    <h2 class="s-title serif center">
+      <span class="zh">同一份 Schema，五種輸出</span>
+      <span class="en">One schema, five outputs</span>
+    </h2>
+    <p class="s-desc center">
+      <span class="zh">所有格式都從同一份 tableSchema 匯出。XLSX 是正式核心輸出，其餘為補充格式。</span>
+      <span class="en">All formats export from the same tableSchema. XLSX is the primary output. Others are supplemental.</span>
+    </p>
+  </div>
+  <div class="exp-grid">
+    <div class="exp-card primary">
+      <div class="exp-tag">PRIMARY</div>
+      <div class="exp-fmt">XLSX</div>
+      <div class="exp-info">
+        <span class="zh">正式主輸出<br>欄寬可讀性優先<br>保留邊框結構</span>
+        <span class="en">Primary output<br>Readability-first columns<br>Border structure preserved</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--gold)">SVG</div>
+      <div class="exp-info">
+        <span class="zh">向量版面草稿<br>可在 Illustrator 編輯<br>&lt;line&gt; / &lt;rect&gt; / &lt;text&gt;</span>
+        <span class="en">Vector layout draft<br>Editable in Illustrator<br>&lt;line&gt; / &lt;rect&gt; / &lt;text&gt;</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dkm)">PDF</div>
+      <div class="exp-info" style="color:var(--gold)">
+        Print Beta<br>
+        <span style="color:var(--dkm)">
+          <span class="zh">瀏覽器列印<br>不承諾像素還原</span>
+          <span class="en">Browser print<br>No pixel-perfect promise</span>
+        </span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dks)">CSV</div>
+      <div class="exp-info">
+        <span class="zh">純文字<br>帶 BOM，可直接在<br>Excel 開啟中文</span>
+        <span class="en">Plain text<br>BOM included for<br>Excel compatibility</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dks)">JSON</div>
+      <div class="exp-info">
+        <span class="zh">完整 Schema 原始資料<br>可接後端 API<br>或 future OCR routing</span>
+        <span class="en">Full schema raw data<br>Ready for backend APIs<br>or future OCR routing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<div id="roadmap" class="road-band">
+  <div class="road-inner">
+    <div class="center">
+      <div class="s-eyebrow" style="color:var(--gold)">Roadmap</div>
+      <h2 class="s-title serif center" style="color:#fff">
+        <span class="zh">版本規劃</span><span class="en">Version Roadmap</span>
+      </h2>
+    </div>
+    <div class="road-items">
+      <div class="road-item">
+        <div class="road-v">V1 · Released</div>
+        <div class="road-title"><span class="zh">OCR 草稿測試</span><span class="en">OCR Draft Testing</span></div>
+        <div class="road-desc">
+          <span class="zh">Google Document AI 辨識，CSV / JSON / XLSX / DOCX 匯出，人工校對流程。</span>
+          <span class="en">Google Document AI recognition, CSV / JSON / XLSX / DOCX export, manual review flow.</span>
+        </div>
+      </div>
+      <div class="road-item active">
+        <div class="road-v">V2 · Prototype ★ Current</div>
+        <div class="road-title"><span class="zh">Schema 引擎 + 版面重建</span><span class="en">Schema Engine + Layout Reconstruction</span></div>
+        <div class="road-desc">
+          <span class="zh">OCR 一次，轉 Local Table Schema，XLSX 主輸出，SVG 向量草稿，PDF Print Beta，雙語 UI。</span>
+          <span class="en">OCR once, local Table Schema, XLSX primary, SVG vector draft, PDF Print Beta, bilingual UI.</span>
+        </div>
+      </div>
+      <div class="road-item">
+        <div class="road-v">V3 · Planned</div>
+        <div class="road-title"><span class="zh">帳號、訂閱、團隊協作</span><span class="en">Accounts, Subscriptions, Teams</span></div>
+        <div class="road-desc">
+          <span class="zh">線上核對、簽署、ERP 格式、Vision API / open-source OCR routing。</span>
+          <span class="en">Online review, signing, ERP formats, Vision API / open-source OCR routing.</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <button class="btn btn-gold" onclick="showApp()">
+        <span class="zh">立即試用 V2 Prototype →</span>
+        <span class="en">Try V2 Prototype Now →</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="lfoot">
+  <div>
+    <div class="brand-name" style="font-size:15px">PhotoCheck Docs</div>
+    <div class="lfoot-note" style="margin-top:4px">V2 Prototype · Image-to-Excel Layout Reconstruction Engine</div>
+  </div>
+  <div class="lfoot-note">
+    <span class="zh">AI 產草稿，人類做判斷。未經確認，不自動視為正式資料。</span>
+    <span class="en">AI drafts. Humans verify. Unconfirmed results are not official records.</span>
+  </div>
+</footer>
+
+</div><!-- /#landing -->
+
+
+<!-- ========================================================
+     APP PROTOTYPE
+     ======================================================== -->
+<div id="app-view">
+
+  <nav class="anav">
+    <div class="anav-left">
+      <button class="back-btn" onclick="showLanding()">
+        <span class="zh">← 返回首頁</span><span class="en">← Back</span>
+      </button>
+      <div>
+        <div class="app-brand">PhotoCheck Docs</div>
+        <div class="app-sub-txt">V2 · AI Drafts. You Verify.</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="lang-pill" style="background:var(--cream);border-color:var(--line)">
+        <button class="lang-btn" data-lang="zh" onclick="setLang('zh')" style="color:var(--ink)">中</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="color:var(--ink)">EN</button>
+      </div>
+      <div class="credits-badge">
+        <span class="zh">剩餘次數：</span>
+        <span class="en">Credits:</span>
+        <span class="credits-n" id="credits-n">5</span>
+        <span class="credits-of">/ 5</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="app-main">
+
+    <!-- Step: Upload -->
+    <div id="step-upload">
+      <input type="file" id="file-input" accept="image/*" style="display:none">
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="dz-icon">🗂️</div>
+        <div class="dz-title">
+          <span class="zh">拖放圖片，或點擊上傳</span>
+          <span class="en">Drop image here, or click to upload</span>
+        </div>
+        <div class="dz-hint">
+          <span class="zh">支援 PNG · JPG · WebP｜上限 5MB</span>
+          <span class="en">PNG · JPG · WebP · Max 5MB</span>
+        </div>
+      </div>
+
+      <div class="upload-prev" id="upload-prev">
+        <img class="prev-img" id="prev-img" alt="preview">
+        <div class="prev-info">
+          <div class="prev-name" id="prev-name"></div>
+          <div class="prev-meta" id="prev-meta"></div>
+        </div>
+        <button class="prev-change" id="prev-change">
+          <span class="zh">更換圖片</span><span class="en">Change image</span>
+        </button>
+      </div>
+
+      <button class="recog-btn" id="recog-btn">
+        <span>✦</span>
+        <span class="zh">啟動 AI 辨識</span>
+        <span class="en">Start AI Recognition</span>
+      </button>
+
+      <button class="demo-btn" id="demo-btn" onclick="startDemoMode()">
+        <span>⬡</span>
+        <span class="zh">使用範例資料（Demo Mode）</span>
+        <span class="en">Use sample data (Demo Mode)</span>
+      </button>
+      <div class="demo-note">
+        <span class="zh">Demo Mode 不呼叫 API，適合在 Claude Preview 或本機預覽時使用。</span>
+        <span class="en">Demo Mode skips the API call — use it in Claude Preview or local testing.</span>
+      </div>
+
+      <div class="app-msg" id="app-msg"></div>
+    </div>
+
+    <!-- Step: Processing -->
+    <div id="step-processing">
+      <div class="spinner"></div>
+      <div class="proc-title">
+        <span class="zh">AI 辨識中，請稍候…</span>
+        <span class="en">Recognizing… please wait</span>
+      </div>
+      <div class="proc-note">
+        <span class="zh">正在呼叫 OCR API（僅此一次）。完成後所有操作在本機進行。</span>
+        <span class="en">Calling OCR API (one time only). All operations are local after this.</span>
+      </div>
+    </div>
+
+    <!-- Step: Results -->
+    <div id="step-results">
+      <div class="res-tabs">
+        <button class="res-tab active" data-tab="data" onclick="showTab('data')">
+          <span class="zh">📋 資料預覽</span><span class="en">📋 Data Preview</span>
+        </button>
+        <button class="res-tab" data-tab="visual" onclick="showTab('visual')">
+          <span class="zh">🖼️ 視覺預覽</span><span class="en">🖼️ Visual Preview</span>
+        </button>
+        <button class="res-tab" data-tab="export" onclick="showTab('export')">
+          <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
+        </button>
+      </div>
+
+      <!-- Data Preview -->
+      <div class="tab-panel active" id="tab-data">
+        <div class="data-panel">
+          <div class="dp-header">
+            <div>
+              <div class="dp-title">
+                <span class="zh">辨識結果 · 可直接編輯儲存格</span>
+                <span class="en">Recognition result · Cells directly editable</span>
+              </div>
+              <div class="dp-meta" id="dp-meta"></div>
+            </div>
+            <button class="dp-export-btn" onclick="showTab('export')">
+              <span class="zh">匯出 →</span><span class="en">Export →</span>
+            </button>
+          </div>
+          <div class="tbl-wrap">
+            <table class="schema-tbl" id="schema-tbl"></table>
+          </div>
+          <div class="tbl-toolbar">
+            <span class="tbar-btn"><span class="zh">合併儲存格</span><span class="en">Merge cells</span></span>
+            <span class="tbar-btn"><span class="zh">調整欄寬</span><span class="en">Adjust column width</span></span>
+            <span class="tbar-btn"><span class="zh">新增列</span><span class="en">Add row</span></span>
+            <span class="tbar-btn"><span class="zh">編輯欄標題</span><span class="en">Edit column label</span></span>
+            <span class="tbar-info">
+              <span class="zh">Prototype 版本 · 完整功能於 Production 實作</span>
+              <span class="en">Prototype · Full features in production</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Preview -->
+      <div class="tab-panel" id="tab-visual">
+        <div class="visual-panel">
+          <div class="vis-header">
+            <div class="vis-title">
+              <span class="zh">SVG 向量版面草稿</span>
+              <span class="en">SVG Vector Layout Draft</span>
+            </div>
+            <span class="vis-badge">
+              <span class="zh">Editable vector draft · 可在 Illustrator 開啟</span>
+              <span class="en">Editable vector draft · Openable in Illustrator</span>
+            </span>
+          </div>
+          <div class="vis-body">
+            <div id="svg-preview"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="tab-panel" id="tab-export">
+        <div class="export-panel">
+          <div class="exp-primary">
+            <button class="exp-main-btn" id="btn-xlsx">
+              ⬇&nbsp;
+              <span class="zh">下載 XLSX（正式主輸出）</span>
+              <span class="en">Download XLSX (Primary Output)</span>
+            </button>
+            <div class="exp-main-note">
+              <span class="zh">欄寬可讀性優先 · 保留邊框 · 從 tableSchema 匯出</span>
+              <span class="en">Readability-first column widths · Borders preserved · Exported from tableSchema</span>
+            </div>
+          </div>
+          <div class="exp-secondary">
+            <div class="exp-sec" id="btn-svg">
+              <div class="exp-sec-fmt">SVG</div>
+              <div class="exp-sec-lbl"><span class="zh">向量草稿</span><span class="en">Vector draft</span></div>
+            </div>
+            <div class="exp-sec beta" id="btn-pdf">
+              <div class="exp-sec-fmt">PDF</div>
+              <div class="exp-sec-lbl">Print Beta</div>
+            </div>
+            <div class="exp-sec" id="btn-csv">
+              <div class="exp-sec-fmt">CSV</div>
+              <div class="exp-sec-lbl"><span class="zh">純文字</span><span class="en">Plain text</span></div>
+            </div>
+            <div class="exp-sec" id="btn-json">
+              <div class="exp-sec-fmt">JSON</div>
+              <div class="exp-sec-lbl"><span class="zh">完整 Schema</span><span class="en">Full schema</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#step-results -->
+
+  </main>
+</div><!-- /#app-view -->
+
+<!-- ========================================================
+     JAVASCRIPT
+     ======================================================== -->
+<script>
+'use strict';
+
+/* ===========================================================
+   LANGUAGE SYSTEM
+   =========================================================== */
+let lang = localStorage.getItem('pcd_v2_lang') || 'zh';
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('pcd_v2_lang', l);
+  document.querySelectorAll('.zh').forEach(el => el.style.display = l === 'zh' ? '' : 'none');
+  document.querySelectorAll('.en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === l);
+  });
+  document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  if (tableSchema) updateDpMeta();
+}
+
+/* ===========================================================
+   USAGE / CREDITS
+   =========================================================== */
+const USAGE_KEY = 'pcd_v2_usage';
+const LIMIT = 5;
+
+function getUsage() { return Number(localStorage.getItem(USAGE_KEY) || 0); }
+function incUsage() { localStorage.setItem(USAGE_KEY, String(getUsage() + 1)); refreshCredits(); }
+function refreshCredits() {
+  const el = document.getElementById('credits-n');
+  if (el) el.textContent = Math.max(0, LIMIT - getUsage());
+}
+
+/* ===========================================================
+   NAVIGATION
+   =========================================================== */
+function showApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app-view').style.display = 'block';
+  refreshCredits();
+  window.scrollTo({ top: 0 });
+}
+function showLanding() {
+  document.getElementById('landing').style.display = '';
+  document.getElementById('app-view').style.display = 'none';
+  window.scrollTo({ top: 0 });
+}
+function scrollById(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ===========================================================
+   TAB SYSTEM
+   =========================================================== */
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.res-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name)?.classList.add('active');
+  document.querySelector(`.res-tab[data-tab="${name}"]`)?.classList.add('active');
+  if (name === 'visual' && tableSchema) renderSVGPreview();
+}
+
+/* ===========================================================
+   FILE UPLOAD
+   =========================================================== */
+let imageData = null;
+let imageFile = null;
+
+const fileInput  = document.getElementById('file-input');
+const dropZone   = document.getElementById('drop-zone');
+const uploadPrev = document.getElementById('upload-prev');
+
+// Click to open file dialog
+dropZone.addEventListener('click', () => fileInput.click());
+document.getElementById('prev-change').addEventListener('click', () => fileInput.click());
+
+// Drag-and-drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(f) {
+  if (!f) return;
+  if (!f.type.startsWith('image/')) {
+    showMsg(lang === 'zh' ? '請選擇圖片檔案（JPG / PNG / WebP）。' : 'Please select an image file (JPG / PNG / WebP).', 'err');
+    return;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    showMsg(lang === 'zh' ? '圖片超過 5MB，請先壓縮後再上傳。' : 'Image over 5MB. Please compress it first.', 'err');
+    return;
+  }
+  imageFile = f;
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageData = reader.result;
+    document.getElementById('prev-img').src = imageData;
+    document.getElementById('prev-name').textContent = f.name;
+    document.getElementById('prev-meta').textContent =
+      (f.size / 1024).toFixed(0) + ' KB · ' + (f.type.split('/')[1] || '').toUpperCase();
+    dropZone.style.display = 'none';
+    uploadPrev.style.display = 'flex';
+    showMsg('', '');
+    document.getElementById('step-results').style.display = 'none';
+    tableSchema = null;
+  };
+  reader.readAsDataURL(f);
+  fileInput.value = ''; // allow re-selecting same file
+}
+
+/* ===========================================================
+   TABLE SCHEMA  —  Core V2 Data Structure
+   =========================================================== */
+let tableSchema = null;
+
+/**
+ * Create an empty tableSchema skeleton.
+ */
+function createSchema(imageName = 'unknown') {
+  return {
+    version: 'v2',
+    source: {
+      imageName,
+      imageWidth: 0,
+      imageHeight: 0,
+      ocrEngine: 'google-document-ai'
+    },
+    columns: [],
+    rows: [],
+    cells: [],
+    meta: {
+      createdAt: new Date().toISOString(),
+      language: lang,
+      reconstructionMode: 'auto'
+    }
+  };
+}
+
+/* ===========================================================
+   OCR → SCHEMA MAPPING
+   =========================================================== */
+/**
+ * Map raw OCR response to tableSchema.
+ * Priority:
+ *   1. ocrResponse.layoutData.gridCandidates[0]
+ *   2. ocrResponse.rows  (array of row objects)
+ *   3. ocrResponse itself (flat array)
+ *   4. Fallback empty row
+ */
+function mapOCRToSchema(ocrResponse, file) {
+  const schema = createSchema(file?.name || 'uploaded-image');
+
+  // Capture image natural dimensions if available
+  const img = document.getElementById('prev-img');
+  if (img) {
+    schema.source.imageWidth  = img.naturalWidth  || 0;
+    schema.source.imageHeight = img.naturalHeight || 0;
+  }
+
+  if (ocrResponse.layoutData?.gridCandidates?.length) {
+    schema.meta.reconstructionMode = 'gridCandidates';
+    mapFromGridCandidates(ocrResponse.layoutData.gridCandidates[0], schema);
+  } else if (Array.isArray(ocrResponse.rows) && ocrResponse.rows.length) {
+    schema.meta.reconstructionMode = 'rows';
+    mapFromRows(ocrResponse.rows, schema);
+  } else if (Array.isArray(ocrResponse) && ocrResponse.length) {
+    schema.meta.reconstructionMode = 'flat';
+    mapFromRows(ocrResponse, schema);
+  } else {
+    schema.meta.reconstructionMode = 'fallback';
+    mapFromRows([{
+      [lang === 'zh' ? '警告' : 'Warning']:
+      lang === 'zh' ? '辨識結果為空，請確認圖片品質' : 'Empty result — check image quality'
+    }], schema);
+  }
+
+  return schema;
+}
+
+function mapFromGridCandidates(grid, schema) {
+  // gridCandidates may contain columns, rows, cells
+  if (Array.isArray(grid.columns)) {
+    schema.columns = grid.columns.map((c, i) => ({
+      id: `col_${i}`, x: c.x || i,
+      width: c.width || 120, label: c.label || `Col ${i + 1}`, locked: false
+    }));
+  }
+  if (Array.isArray(grid.rows)) {
+    schema.rows = grid.rows.map((r, i) => ({
+      id: `row_${i}`, y: r.y || i,
+      height: r.height || 32, type: i === 0 ? 'header' : 'data'
+    }));
+  }
+  if (Array.isArray(grid.cells) && grid.cells.length) {
+    schema.cells = grid.cells.map((c, i) => ({
+      id: `cell_${i}`,
+      rowId: c.rowId || `row_${c.row || 0}`,
+      colId: c.colId || `col_${c.col || 0}`,
+      text: c.text || '', rowSpan: c.rowSpan || 1, colSpan: c.colSpan || 1,
+      confidence: c.confidence || null, bbox: c.bbox || null,
+      style: {
+        borderTop: c.style?.borderTop || 'thin',
+        borderRight: c.style?.borderRight || 'thin',
+        borderBottom: c.style?.borderBottom || 'thin',
+        borderLeft: c.style?.borderLeft || 'thin',
+        bold: c.style?.bold || false, align: c.style?.align || 'left'
+      }
+    }));
+  } else {
+    // No cells in grid — fall back to row-based mapping if rows have data
+    mapFromRows([], schema);
+  }
+}
+
+function mapFromRows(rows, schema) {
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  if (!keys.length) return;
+
+  // Columns
+  schema.columns = keys.map((k, i) => ({
+    id: `col_${i}`, x: i,
+    width: estimateColWidth(k, rows), label: k, locked: false
+  }));
+
+  // Rows (header + data)
+  schema.rows = [{ id: 'row_header', y: 0, height: 36, type: 'header' }];
+  rows.forEach((_, i) => schema.rows.push({ id: `row_${i}`, y: i + 1, height: 32, type: 'data' }));
+
+  // Header cells
+  keys.forEach((k, j) => schema.cells.push({
+    id: `cell_h_${j}`, rowId: 'row_header', colId: `col_${j}`,
+    text: k, rowSpan: 1, colSpan: 1, confidence: 1.0, bbox: null,
+    style: { bold: true, align: 'left', borderBottom: 'medium' }
+  }));
+
+  // Data cells
+  rows.forEach((r, i) => {
+    keys.forEach((k, j) => schema.cells.push({
+      id: `cell_${i}_${j}`, rowId: `row_${i}`, colId: `col_${j}`,
+      text: String(r[k] != null ? r[k] : ''),
+      rowSpan: 1, colSpan: 1, confidence: null, bbox: null,
+      style: { bold: false, align: 'left' }
+    }));
+  });
+}
+
+function estimateColWidth(key, rows) {
+  const hLen = key.length;
+  const maxD = rows.reduce((m, r) => Math.max(m, String(r[key] || '').length), 0);
+  const max  = Math.max(hLen, maxD);
+  if (max <= 5) return 72;
+  if (max <= 10) return 110;
+  if (max <= 20) return 160;
+  if (max <= 36) return 210;
+  return 260;
+}
+
+/* ===========================================================
+   OCR API CALL
+   =========================================================== */
+document.getElementById('recog-btn').addEventListener('click', startOCR);
+
+/* ===========================================================
+   MOCK DATA — used by Demo Mode (no API call)
+   =========================================================== */
+const MOCK_SCHEMA = {
+  version: "v2",
+  source: { imageName: "sample-invoice.jpg", imageWidth: 800, imageHeight: 600, ocrEngine: "mock" },
+  columns: [
+    { id: "c1", x: 0,   width: 140, label: "項目 / Item",   locked: false },
+    { id: "c2", x: 140, width: 120, label: "數量 / Qty",    locked: false },
+    { id: "c3", x: 260, width: 130, label: "單價 / Price",  locked: false },
+    { id: "c4", x: 390, width: 130, label: "小計 / Subtotal",locked: false },
+    { id: "c5", x: 520, width: 140, label: "備註 / Remark", locked: false }
+  ],
+  rows: [
+    { id: "r0", y: 0,   height: 36, type: "header" },
+    { id: "r1", y: 36,  height: 32, type: "data" },
+    { id: "r2", y: 68,  height: 32, type: "data" },
+    { id: "r3", y: 100, height: 32, type: "data" },
+    { id: "r4", y: 132, height: 32, type: "data" },
+    { id: "r5", y: 164, height: 32, type: "data" }
+  ],
+  cells: [
+    {id:"h-c1",rowId:"r0",colId:"c1",text:"項目 / Item",   rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c2",rowId:"r0",colId:"c2",text:"數量 / Qty",    rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c3",rowId:"r0",colId:"c3",text:"單價 / Price",  rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c4",rowId:"r0",colId:"c4",text:"小計 / Subtotal",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c5",rowId:"r0",colId:"c5",text:"備註 / Remark",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"d1-c1",rowId:"r1",colId:"c1",text:"A4 影印紙",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"left"}},
+    {id:"d1-c2",rowId:"r1",colId:"c2",text:"10",rowSpan:1,colSpan:1,confidence:.98,bbox:null,style:{align:"center"}},
+    {id:"d1-c3",rowId:"r1",colId:"c3",text:"NT$120",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d1-c4",rowId:"r1",colId:"c4",text:"NT$1,200",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d1-c5",rowId:"r1",colId:"c5",text:"含稅",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"left"}},
+    {id:"d2-c1",rowId:"r2",colId:"c1",text:"USB-C 傳輸線",rowSpan:1,colSpan:1,confidence:.94,bbox:null,style:{align:"left"}},
+    {id:"d2-c2",rowId:"r2",colId:"c2",text:"5",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d2-c3",rowId:"r2",colId:"c3",text:"NT$350",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"right"}},
+    {id:"d2-c4",rowId:"r2",colId:"c4",text:"NT$1,750",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"right"}},
+    {id:"d2-c5",rowId:"r2",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d3-c1",rowId:"r3",colId:"c1",text:"筆記本",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"left"}},
+    {id:"d3-c2",rowId:"r3",colId:"c2",text:"20",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d3-c3",rowId:"r3",colId:"c3",text:"NT$85",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d3-c4",rowId:"r3",colId:"c4",text:"NT$1,700",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d3-c5",rowId:"r3",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d4-c1",rowId:"r4",colId:"c1",text:"原子筆（12入）",rowSpan:1,colSpan:1,confidence:.93,bbox:null,style:{align:"left"}},
+    {id:"d4-c2",rowId:"r4",colId:"c2",text:"3",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d4-c3",rowId:"r4",colId:"c3",text:"NT$240",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"right"}},
+    {id:"d4-c4",rowId:"r4",colId:"c4",text:"NT$720",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"right"}},
+    {id:"d4-c5",rowId:"r4",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d5-c1",rowId:"r5",colId:"c1",text:"合計",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"right"}},
+    {id:"d5-c2",rowId:"r5",colId:"c2",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}},
+    {id:"d5-c3",rowId:"r5",colId:"c3",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}},
+    {id:"d5-c4",rowId:"r5",colId:"c4",text:"NT$5,370",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"right"}},
+    {id:"d5-c5",rowId:"r5",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}}
+  ],
+  meta: { createdAt: new Date().toISOString(), language: "zh-Hant", reconstructionMode: "mock" }
+};
+
+/* ===========================================================
+   DEMO MODE — load mock schema without API call
+   =========================================================== */
+function startDemoMode() {
+  tableSchema = JSON.parse(JSON.stringify(MOCK_SCHEMA));
+  tableSchema.meta.createdAt = new Date().toISOString();
+
+  document.getElementById('step-processing').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+
+  renderTableFromSchema();
+  updateDpMeta();
+  showTab('data');
+  showMsg(
+    lang === 'zh'
+      ? '⬡ Demo Mode：已載入範例資料，所有匯出功能皆可使用。'
+      : '⬡ Demo Mode: sample data loaded. All export functions are available.',
+    'ok'
+  );
+  document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ===========================================================
+   OCR with API guard
+   =========================================================== */
+async function startOCR() {
+  if (!imageData) {
+    showMsg(lang === 'zh' ? '請先上傳圖片。' : 'Please upload an image first.', 'err');
+    return;
+  }
+  if (getUsage() >= LIMIT) {
+    showMsg(lang === 'zh' ? '免費次數已用完。' : 'Free credits exhausted.', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('recog-btn');
+  btn.disabled = true;
+  document.getElementById('step-processing').style.display = 'block';
+  document.getElementById('step-results').style.display = 'none';
+  showMsg('', '');
+
+  try {
+    const res = await fetch('/api/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+
+    // ★ API Guard: read text first, check for HTML fallback
+    const raw = await res.text();
+    const trimmed = raw.trimStart();
+    const isHTML = trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<!doctype');
+
+    if (isHTML || !res.ok) {
+      const msg = lang === 'zh'
+        ? '目前預覽環境無法連接 OCR API。請部署到 Vercel 同網域後測試，或點擊「使用範例資料」體驗完整功能。'
+        : 'OCR API is not available in preview mode. Deploy this file under the same Vercel domain to test recognition, or click "Use sample data" to explore all features.';
+      throw new Error(msg);
+    }
+
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (parseErr) {
+      throw new Error(
+        lang === 'zh'
+          ? 'OCR API 回傳非預期格式，請確認 /api/ocr 是否正常運作。'
+          : 'OCR API returned an unexpected format. Please verify /api/ocr is working correctly.'
+      );
+    }
+
+    if (json.error) throw new Error(json.error);
+
+    // ★ Map OCR response → tableSchema (one time only)
+    tableSchema = mapOCRToSchema(json, imageFile);
+
+    incUsage();
+    renderTableFromSchema();
+    updateDpMeta();
+
+    document.getElementById('step-processing').style.display = 'none';
+    document.getElementById('step-results').style.display   = 'block';
+    showTab('data');
+    document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    showMsg(err.message, 'err');
+    document.getElementById('step-processing').style.display = 'none';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ===========================================================
+   RENDER TABLE FROM SCHEMA
+   =========================================================== */
+function renderTableFromSchema() {
+  if (!tableSchema) return;
+  const { columns: cols, rows, cells } = tableSchema;
+
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+
+  let html = '<colgroup>';
+  cols.forEach(col => { html += `<col style="width:${col.width}px;min-width:${Math.min(col.width, 80)}px">`; });
+  html += '</colgroup>';
+
+  if (headerRow) {
+    html += '<thead><tr>';
+    cols.forEach(col => {
+      const c = cmap[`${headerRow.id}|${col.id}`];
+      html += `<th>${escH(c ? c.text : col.label)}</th>`;
+    });
+    html += '</tr></thead>';
+  }
+
+  html += '<tbody>';
+  dataRows.forEach((row, ri) => {
+    html += '<tr>';
+    cols.forEach((col, ci) => {
+      const c  = cmap[`${row.id}|${col.id}`];
+      const id = c ? c.id : `_${ri}_${ci}`;
+      html += `<td><textarea class="cell-edit" data-cid="${escA(id)}" rows="1"
+        oninput="onCellInput(this)">${escH(c ? c.text : '')}</textarea></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+
+  const tbl = document.getElementById('schema-tbl');
+  tbl.innerHTML = html;
+  tbl.querySelectorAll('.cell-edit').forEach(autoGrow);
+}
+
+function onCellInput(el) {
+  autoGrow(el);
+  if (!tableSchema) return;
+  const id = el.dataset.cid;
+  const cell = tableSchema.cells.find(c => c.id === id);
+  if (cell) cell.text = el.value;
+}
+
+function updateDpMeta() {
+  const el = document.getElementById('dp-meta');
+  if (!el || !tableSchema) return;
+  const nCols = tableSchema.columns.length;
+  const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
+  const mode  = tableSchema.meta.reconstructionMode;
+  el.textContent = lang === 'zh'
+    ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
+    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`;
+}
+
+/* ===========================================================
+   SVG PREVIEW
+   =========================================================== */
+function renderSVGPreview() {
+  const container = document.getElementById('svg-preview');
+  if (!container || !tableSchema) return;
+  const blob = buildSVGFromSchema(tableSchema);
+  const url  = URL.createObjectURL(blob);
+  container.innerHTML = `<img src="${url}" alt="SVG Vector Layout Draft">`;
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+}
+
+/* ===========================================================
+   EXPORT FUNCTIONS
+   =========================================================== */
+document.getElementById('btn-xlsx').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-export.xlsx', buildXLSXFromSchema(tableSchema)); });
+document.getElementById('btn-svg').addEventListener('click',  () => { if (tableSchema) saveBlob('photocheck-v2-layout.svg',  buildSVGFromSchema(tableSchema)); });
+document.getElementById('btn-csv').addEventListener('click',  () => { if (tableSchema) saveBlob('photocheck-v2-export.csv',  buildCSVFromSchema(tableSchema)); });
+document.getElementById('btn-json').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-schema.json', new Blob([JSON.stringify(tableSchema, null, 2)], { type: 'application/json' })); });
+document.getElementById('btn-pdf').addEventListener('click',  () => { if (tableSchema) exportPDF(); });
+
+/* ===========================================================
+   BUILD XLSX FROM SCHEMA
+   =========================================================== */
+function buildXLSXFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+  const allRows   = [];
+
+  if (headerRow) allRows.push(cols.map(col => {
+    const c = cmap[`${headerRow.id}|${col.id}`];
+    return c ? c.text : col.label;
+  }));
+  dataRows.forEach(row => allRows.push(cols.map(col => {
+    const c = cmap[`${row.id}|${col.id}`];
+    return c ? c.text : '';
+  })));
+
+  // Column widths: px → Excel char units (approx)
+  const colXml = '<cols>' + cols.map((col, i) => {
+    const w = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
+    return `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`;
+  }).join('') + '</cols>';
+
+  const sheetData = allRows.map((row, ri) => {
+    const isH  = ri === 0 && !!headerRow;
+    const maxL = Math.max(...row.map(v => String(v||'').length), 1);
+    const ht   = isH ? 22 : Math.min(120, Math.max(20, Math.ceil(maxL / 22) * 16));
+    return `<row r="${ri+1}" ht="${ht}" customHeight="1">` +
+      row.map((v, ci) =>
+        `<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${isH ? 2 : 1}">` +
+        `<is><t xml:space="preserve">${escX(v)}</t></is></c>`
+      ).join('') + '</row>';
+  }).join('');
+
+  const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData></worksheet>`;
+
+  const styles = `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font></fonts>
+<fills count="3">
+  <fill><patternFill patternType="none"/></fill>
+  <fill><patternFill patternType="gray125"/></fill>
+  <fill><patternFill patternType="solid"><fgColor rgb="FFF5F0E8"/><bgColor indexed="64"/></patternFill></fill>
+</fills>
+<borders count="2">
+  <border><left/><right/><top/><bottom/><diagonal/></border>
+  <border>
+    <left style="thin"><color rgb="FFE0D8C8"/></left>
+    <right style="thin"><color rgb="FFE0D8C8"/></right>
+    <top style="thin"><color rgb="FFE0D8C8"/></top>
+    <bottom style="thin"><color rgb="FFE0D8C8"/></bottom>
+    <diagonal/>
+  </border>
+</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="3">
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  return zipFiles([
+    ['[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml',`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck V2" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', styles],
+    ['xl/worksheets/sheet1.xml', sheet]
+  ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+
+/* ===========================================================
+   BUILD SVG FROM SCHEMA
+   =========================================================== */
+function buildSVGFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const MARGIN = 40, ROW_H = 30, HDR_H = 38;
+  const tableW  = cols.reduce((s, c) => s + c.width, 0);
+  const dataRows = rows.filter(r => r.type === 'data');
+  const tableH  = HDR_H + dataRows.length * ROW_H;
+  const svgW    = tableW + MARGIN * 2;
+  const svgH    = tableH + MARGIN * 2 + 30;
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
+  svg += `<rect width="100%" height="100%" fill="white"/>`;
+  svg += `<text x="${MARGIN}" y="20" font-size="10" font-family="Arial,'Noto Sans TC',sans-serif" fill="#999">`;
+  svg += `PhotoCheck Docs V2 · SVG Vector Layout Draft · Editable in Illustrator</text>`;
+
+  const OX = MARGIN, OY = MARGIN + 10;
+
+  // Outer border
+  svg += `<rect x="${OX}" y="${OY}" width="${tableW}" height="${tableH}" fill="none" stroke="#1A1A18" stroke-width="2"/>`;
+
+  // Header background
+  svg += `<rect x="${OX}" y="${OY}" width="${tableW}" height="${HDR_H}" fill="#F5F0E8"/>`;
+
+  // Zebra stripes
+  dataRows.forEach((_, i) => {
+    if (i % 2 === 0) {
+      svg += `<rect x="${OX}" y="${OY + HDR_H + i * ROW_H}" width="${tableW}" height="${ROW_H}" fill="#FDFAF5"/>`;
+    }
+  });
+
+  // Column vertical lines
+  let cx = OX;
+  cols.slice(0, -1).forEach(col => {
+    cx += col.width;
+    svg += `<line x1="${cx}" y1="${OY}" x2="${cx}" y2="${OY + tableH}" stroke="#E0D8C8" stroke-width="1"/>`;
+  });
+
+  // Header bottom line
+  svg += `<line x1="${OX}" y1="${OY + HDR_H}" x2="${OX + tableW}" y2="${OY + HDR_H}" stroke="#1A1A18" stroke-width="1.5"/>`;
+
+  // Row horizontal lines
+  dataRows.forEach((_, i) => {
+    const ly = OY + HDR_H + (i + 1) * ROW_H;
+    svg += `<line x1="${OX}" y1="${ly}" x2="${OX + tableW}" y2="${ly}" stroke="#E0D8C8" stroke-width="0.75"/>`;
+  });
+
+  // Header text
+  const headerRow = rows.find(r => r.type === 'header');
+  if (headerRow) {
+    let hx = OX;
+    cols.forEach(col => {
+      const c    = cmap[`${headerRow.id}|${col.id}`];
+      const text = truncStr(c ? c.text : col.label, Math.floor(col.width / 7.5));
+      svg += `<text x="${hx + 8}" y="${OY + HDR_H / 2 + 5}" font-size="12" font-weight="bold" font-family="Arial,'Noto Sans TC',sans-serif" fill="#1A1A18">${escX(text)}</text>`;
+      hx += col.width;
+    });
+  }
+
+  // Data text
+  dataRows.forEach((row, ri) => {
+    let dx = OX;
+    cols.forEach(col => {
+      const c    = cmap[`${row.id}|${col.id}`];
+      const text = truncStr(c ? c.text : '', Math.floor(col.width / 7));
+      const ty   = OY + HDR_H + ri * ROW_H + ROW_H / 2 + 4;
+      svg += `<text x="${dx + 7}" y="${ty}" font-size="11" font-family="Arial,'Noto Sans TC',sans-serif" fill="#333">${escX(text)}</text>`;
+      dx += col.width;
+    });
+  });
+
+  svg += '</svg>';
+  return new Blob([svg], { type: 'image/svg+xml' });
+}
+
+/* ===========================================================
+   BUILD CSV FROM SCHEMA
+   =========================================================== */
+function buildCSVFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const allRows = [];
+  const headerRow = rows.find(r => r.type === 'header');
+  if (headerRow) allRows.push(headerRow);
+  rows.filter(r => r.type === 'data').forEach(r => allRows.push(r));
+
+  const csv = allRows.map(row =>
+    cols.map(col => {
+      const c    = cmap[`${row.id}|${col.id}`];
+      const text = c ? c.text : (row.type === 'header' ? col.label : '');
+      return '"' + text.replace(/"/g, '""') + '"';
+    }).join(',')
+  ).join('\r\n');
+
+  // \uFEFF BOM for Excel Chinese compatibility
+  return new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+}
+
+/* ===========================================================
+   PDF EXPORT (Browser Print Fallback)
+   =========================================================== */
+function exportPDF() {
+  const { columns: cols, rows, cells } = tableSchema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+
+  let tbl = `<table style="border-collapse:collapse;width:100%;font-family:Arial,'Noto Sans TC',sans-serif;font-size:12px">`;
+  if (headerRow) {
+    tbl += '<thead><tr>';
+    cols.forEach(col => {
+      const c = cmap[`${headerRow.id}|${col.id}`];
+      tbl += `<th style="border:1.5px solid #333;padding:8px 10px;background:#F5F0E8;text-align:left;font-weight:700">${escH(c ? c.text : col.label)}</th>`;
+    });
+    tbl += '</tr></thead>';
+  }
+  tbl += '<tbody>';
+  dataRows.forEach(row => {
+    tbl += '<tr>';
+    cols.forEach(col => {
+      const c = cmap[`${row.id}|${col.id}`];
+      tbl += `<td style="border:1px solid #ccc;padding:7px 10px;vertical-align:top">${escH(c ? c.text : '')}</td>`;
+    });
+    tbl += '</tr>';
+  });
+  tbl += '</tbody></table>';
+
+  const note = lang === 'zh'
+    ? '快速列印預覽 · PDF Print Beta · 不承諾像素級還原 · PhotoCheck Docs V2'
+    : 'Quick print preview · PDF Print Beta · No pixel-perfect promise · PhotoCheck Docs V2';
+
+  const win = window.open('', '_blank');
+  if (!win) { alert(lang === 'zh' ? '請允許彈出視窗以列印。' : 'Please allow popups to print.'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>PhotoCheck Docs V2 · PDF Print Beta</title>
+<style>body{font-family:Arial,'Noto Sans TC',sans-serif;margin:24px}
+.note{font-size:11px;color:#777;padding:8px 12px;background:#fff8e1;border-left:3px solid #C8A96E;margin-bottom:18px}
+@media print{.note{display:none}}</style></head><body>
+<div class="note">${escH(note)}</div>${tbl}
+<script>window.onload=()=>window.print();<\/script></body></html>`);
+  win.document.close();
+}
+
+/* ===========================================================
+   UTILITIES
+   =========================================================== */
+function escH(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+function escA(s) {
+  return String(s ?? '').replace(/"/g, '&quot;');
+}
+function escX(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;' }[c]));
+}
+function truncStr(s, max) {
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(Math.max(el.scrollHeight, 32), 200) + 'px';
+}
+function saveBlob(name, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+}
+function showMsg(text, type) {
+  const el = document.getElementById('app-msg');
+  if (!el) return;
+  if (!text) { el.className = 'app-msg'; return; }
+  el.className = `app-msg ${type} show`;
+  el.textContent = text;
+}
+function xlCol(n) {
+  let s = ''; n++;
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+/* ===========================================================
+   ZIP BUILDER (for XLSX — no external dependencies)
+   =========================================================== */
+function crc32(bytes) {
+  let c = ~0;
+  for (let i = 0; i < bytes.length; i++) {
+    c ^= bytes[i];
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+  }
+  return ~c >>> 0;
+}
+
+function zipFiles(files, mime = 'application/zip') {
+  const enc = new TextEncoder();
+  const entries = []; let offset = 0;
+  for (const [name, content] of files) {
+    const nb = enc.encode(name), data = enc.encode(content), crc = crc32(data);
+    entries.push({ nb, data, crc, offset });
+    offset += 30 + nb.length + data.length;
+  }
+  const csz = entries.reduce((s, e) => s + 46 + e.nb.length, 0);
+  const out  = new Uint8Array(offset + csz + 22);
+  const dv   = new DataView(out.buffer); let p = 0;
+  const w16 = v => { dv.setUint16(p, v, true); p += 2; };
+  const w32 = v => { dv.setUint32(p, v >>> 0, true); p += 4; };
+  const put = b => { out.set(b, p); p += b.length; };
+  for (const e of entries) {
+    e.lhOff = p;
+    w32(0x04034b50); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.data.length); w32(e.data.length);
+    w16(e.nb.length); w16(0); put(e.nb); put(e.data);
+  }
+  const cs = p;
+  for (const e of entries) {
+    w32(0x02014b50); w16(20); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.data.length); w32(e.data.length);
+    w16(e.nb.length); w16(0); w16(0); w16(0); w16(0);
+    w32(0); w32(e.lhOff); put(e.nb);
+  }
+  const ce = p;
+  w32(0x06054b50); w16(0); w16(0);
+  w16(entries.length); w16(entries.length);
+  w32(ce - cs); w32(cs); w16(0);
+  return new Blob([out], { type: mime });
+}
+
+/* ===========================================================
+   INIT
+   =========================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(lang);
+  refreshCredits();
+});
+</script>
+</body>
+</html>

@@ -263,7 +263,11 @@
           <div class="dl-mode-sub">保留原圖版面比例，粗框細格線皆向量，可丟 Illustrator 直接編輯。</div>
           <div class="dl-btns">
             <button class="dl-btn" onclick="dl('svg')">⬇ SVG</button>
-            <button class="dl-btn" onclick="dl('pdf')">⬇ PDF<span class="beta-tag">β</span></button>
+            <button class="dl-btn dl-btn-pdf-disabled"
+              title="PDF 輸出校正中，請使用 SVG 後自行轉換"
+              onclick="alert('PDF 輸出目前校正中。\n請先下載 SVG，再用 Illustrator / macOS 預覽 / 瀏覽器列印功能轉成 PDF。')">
+              ⬇ PDF <span class="beta-tag" style="background:#c0392b;color:white;border-radius:3px;padding:1px 5px;font-size:10px;margin-left:4px">暫停</span>
+            </button>
           </div>
         </div>
       </div>
@@ -442,8 +446,12 @@ function buildGridFromLayoutData(ld, vis) {
   const hasGrid = verticalLines.length >= 2 && horizontalLines.length >= 2;
   if (!hasGrid) return null;
 
-  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
-  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+  // Filter first: merge near-duplicate lines within 1.75% tolerance
+  const sortedV = filterGridLines(verticalLines,   pageWidth,  'x');
+  const sortedH = filterGridLines(horizontalLines, pageHeight, 'y');
+
+  // Need at least 2 lines each after filtering
+  if (sortedV.length < 2 || sortedH.length < 2) return null;
 
   const tableX0 = sortedV[0].x,   tableX1 = sortedV[sortedV.length - 1].x;
   const tableY0 = sortedH[0].y,   tableY1 = sortedH[sortedH.length - 1].y;
@@ -456,8 +464,20 @@ function buildGridFromLayoutData(ld, vis) {
   const vB = sortedV.map(l => nx(l.x));
   const hB = sortedH.map(l => ny(l.y));
 
-  const vLines = sortedV.slice(1, -1).map(l => ({ norm: nx(l.x), isThick: false, thickness: 1 }));
-  const hLines = sortedH.slice(1, -1).map(l => ({ norm: ny(l.y), isThick: false, thickness: 1 }));
+  // Classify weights for SVG rendering
+  const vW = classifyLineWeights(sortedV.map(l => l.x));
+  const hW = classifyLineWeights(sortedH.map(l => l.y));
+
+  const vLines = sortedV.slice(1, -1).map((l, i) => ({
+    norm: nx(l.x),
+    isThick: vW[i + 1] === 'major',
+    thickness: vW[i + 1] === 'major' ? 2 : 1,
+  }));
+  const hLines = sortedH.slice(1, -1).map((l, i) => ({
+    norm: ny(l.y),
+    isThick: hW[i + 1] === 'major',
+    thickness: hW[i + 1] === 'major' ? 2 : 1,
+  }));
 
   const items = (textBlocks || []).map(b => ({
     text:  b.text,
@@ -604,42 +624,144 @@ function renderVisualPreview() {
 //   Used when layoutData is unavailable.
 // ─────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────
+// V1.4 Phase 2B: Grid Line Calibration Utilities
+//
+// filterGridLines — merges lines that are too close together.
+//   Threshold: 1.75% of the total page dimension.
+//   Reason: Document AI cell edges can be off by a few px,
+//   creating phantom extra columns/rows. Merging nearby lines
+//   collapses duplicates into a single representative line.
+//
+// classifyLineWeights — assigns visual weight to each internal
+//   line based on gap size relative to the average gap.
+//   outer  → thick  (table border frame)
+//   major  → medium (section dividers, large gap on one side)
+//   minor  → thin   (regular grid lines)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * filterGridLines(lines, totalSize, posKey)
+ *
+ * lines     — array of {x,y1,y2} (vertical) or {y,x1,x2} (horizontal)
+ * totalSize — pageWidth for vertical lines, pageHeight for horizontal
+ * posKey    — 'x' for vertical lines, 'y' for horizontal
+ *
+ * Returns a new sorted array with nearby lines merged.
+ */
+function filterGridLines(lines, totalSize, posKey) {
+  if (!lines || lines.length === 0) return [];
+
+  const tol = totalSize * 0.0175; // 1.75 % tolerance
+  const sorted = [...lines].sort((a, b) => a[posKey] - b[posKey]);
+
+  const groups = [[sorted[0]]];
+  for (let i = 1; i < sorted.length; i++) {
+    const last  = groups[groups.length - 1];
+    const prev  = last[last.length - 1];
+    if (sorted[i][posKey] - prev[posKey] <= tol) {
+      last.push(sorted[i]);
+    } else {
+      groups.push([sorted[i]]);
+    }
+  }
+
+  return groups.map(g => {
+    const avgPos = g.reduce((s, l) => s + l[posKey], 0) / g.length;
+    if (posKey === 'x') {
+      // vertical lines: merge y-span
+      const y1 = Math.min(...g.map(l => l.y1 !== undefined ? l.y1 : 0));
+      const y2 = Math.max(...g.map(l => l.y2 !== undefined ? l.y2 : 99999));
+      return { x: avgPos, y1, y2 };
+    } else {
+      // horizontal lines: merge x-span
+      const x1 = Math.min(...g.map(l => l.x1 !== undefined ? l.x1 : 0));
+      const x2 = Math.max(...g.map(l => l.x2 !== undefined ? l.x2 : 99999));
+      return { y: avgPos, x1, x2 };
+    }
+  });
+}
+
+/**
+ * classifyLineWeights(sortedPositions)
+ *
+ * Takes a sorted array of numeric line positions (just the primary coord).
+ * Returns a parallel array of 'outer' | 'major' | 'minor'.
+ *
+ * Major threshold: a line is "major" if at least one adjacent gap is
+ * more than 1.6× the median gap (i.e. it separates a large section).
+ */
+function classifyLineWeights(sortedPositions) {
+  const n = sortedPositions.length;
+  if (n === 0) return [];
+  if (n === 1) return ['outer'];
+
+  const gaps = [];
+  for (let i = 1; i < n; i++) gaps.push(sortedPositions[i] - sortedPositions[i - 1]);
+
+  // Median gap
+  const sorted = [...gaps].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const majorThresh = median * 1.6;
+
+  return sortedPositions.map((_, i) => {
+    if (i === 0 || i === n - 1) return 'outer';
+    const leftGap  = gaps[i - 1] || 0;
+    const rightGap = gaps[i]     || 0;
+    if (Math.max(leftGap, rightGap) >= majorThresh) return 'major';
+    return 'minor';
+  });
+}
+
 function buildSVGFromLayoutData(ld) {
   const { pageWidth, pageHeight, textBlocks, gridCandidates } = ld;
-  const { verticalLines, horizontalLines } = gridCandidates;
 
-  // stroke-width in page-coordinate units (browser scales with viewBox)
-  const outerSW = (pageWidth / 300).toFixed(2);
-  const innerSW = (pageWidth / 1000).toFixed(2);
-  const fontMax  = pageWidth / 60;
-  const fontMin  = pageWidth / 160;
+  // ── Filter lines: merge duplicates within 1.75% of page size ──────────────
+  const filteredV = filterGridLines(gridCandidates.verticalLines,   pageWidth,  'x');
+  const filteredH = filterGridLines(gridCandidates.horizontalLines, pageHeight, 'y');
+
+  // stroke-width in page-coordinate units (viewBox handles scaling)
+  const outerSW = (pageWidth / 260).toFixed(2); // thick outer frame
+  const majorSW = (pageWidth / 500).toFixed(2); // medium section dividers
+  const innerSW = (pageWidth / 980).toFixed(2); // thin regular grid lines
+  const fontMax  = pageWidth / 58;
+  const fontMin  = pageWidth / 155;
 
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pageWidth} ${pageHeight}" preserveAspectRatio="xMidYMid meet">`;
   s += `<rect width="${pageWidth}" height="${pageHeight}" fill="white"/>`;
 
-  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
-  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+  const sortedV = filteredV; // already sorted by filterGridLines
+  const sortedH = filteredH;
 
   if (sortedV.length >= 2 && sortedH.length >= 2) {
-    const x0 = sortedV[0].x,                   x1 = sortedV[sortedV.length - 1].x;
-    const y0 = sortedH[0].y,                   y1 = sortedH[sortedH.length - 1].y;
-    const tableW = x1 - x0, tableH = y1 - y0;
+    const x0 = sortedV[0].x,              x1 = sortedV[sortedV.length - 1].x;
+    const y0 = sortedH[0].y,              y1 = sortedH[sortedH.length - 1].y;
 
-    // Outer border (thick rect)
-    s += `<rect x="${x0}" y="${y0}" width="${tableW}" height="${tableH}" fill="none" stroke="#111" stroke-width="${outerSW}"/>`;
+    // Outer border rect (thick)
+    s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="#111" stroke-width="${outerSW}"/>`;
 
-    // Internal vertical lines (thin)
-    for (const vl of sortedV.slice(1, -1)) {
-      s += `<line x1="${vl.x}" y1="${y0}" x2="${vl.x}" y2="${y1}" stroke="#111" stroke-width="${innerSW}"/>`;
+    // ── Internal vertical lines ────────────────────────────────────────────
+    const vPositions = sortedV.map(l => l.x);
+    const vWeights   = classifyLineWeights(vPositions);
+
+    for (let i = 1; i < sortedV.length - 1; i++) {
+      const vl = sortedV[i];
+      const sw = vWeights[i] === 'major' ? majorSW : innerSW;
+      s += `<line x1="${vl.x.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${vl.x.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#111" stroke-width="${sw}"/>`;
     }
 
-    // Internal horizontal lines (thin)
-    for (const hl of sortedH.slice(1, -1)) {
-      s += `<line x1="${x0}" y1="${hl.y}" x2="${x1}" y2="${hl.y}" stroke="#111" stroke-width="${innerSW}"/>`;
+    // ── Internal horizontal lines ──────────────────────────────────────────
+    const hPositions = sortedH.map(l => l.y);
+    const hWeights   = classifyLineWeights(hPositions);
+
+    for (let i = 1; i < sortedH.length - 1; i++) {
+      const hl = sortedH[i];
+      const sw = hWeights[i] === 'major' ? majorSW : innerSW;
+      s += `<line x1="${x0.toFixed(1)}" y1="${hl.y.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${hl.y.toFixed(1)}" stroke="#111" stroke-width="${sw}"/>`;
     }
   }
 
-  // Text blocks at original page coordinates
+  // ── Text blocks at original page coordinates ───────────────────────────────
   for (const blk of textBlocks) {
     const tx = blk.boundingBox.x + pageWidth * 0.003;
     const ty = blk.boundingBox.y + blk.boundingBox.height * 0.75;
@@ -779,7 +901,7 @@ function xlsxStyles(borderXml) {
 </fills>
 ${borderXml}
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="4">
+<cellXfs count="5">
   <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1">
     <alignment wrapText="1" vertical="top"/>
@@ -790,52 +912,79 @@ ${borderXml}
   <xf numFmtId="0" fontId="1" fillId="2" borderId="3" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
     <alignment wrapText="1" vertical="center" horizontal="center"/>
   </xf>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="4" applyBorder="1" applyAlignment="1">
+    <alignment wrapText="1" vertical="top"/>
+  </xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
 }
 
-// Border XML used by both paths
-const BORDER_XML = `<borders count="4">
+// Border XML — 5 styles
+// borderId 0: no border
+// borderId 1: thin all-around  (interior cells)
+// borderId 2: thick all-around (outer frame cells)
+// borderId 3: header style     (bold+fill, medium top/bottom thin sides)
+// borderId 4: medium all-around (major section dividers)
+const BORDER_XML = `<borders count="5">
 <border><left/><right/><top/><bottom/><diagonal/></border>
 <border>
-  <left style="thin"><color rgb="FFAAAAAA"/></left>
-  <right style="thin"><color rgb="FFAAAAAA"/></right>
-  <top style="thin"><color rgb="FFAAAAAA"/></top>
-  <bottom style="thin"><color rgb="FFAAAAAA"/></bottom>
+  <left style="thin"><color rgb="FFBBBBBB"/></left>
+  <right style="thin"><color rgb="FFBBBBBB"/></right>
+  <top style="thin"><color rgb="FFBBBBBB"/></top>
+  <bottom style="thin"><color rgb="FFBBBBBB"/></bottom>
   <diagonal/>
 </border>
 <border>
-  <left style="medium"><color rgb="FF111111"/></left>
-  <right style="medium"><color rgb="FF111111"/></right>
-  <top style="medium"><color rgb="FF111111"/></top>
-  <bottom style="medium"><color rgb="FF111111"/></bottom>
+  <left style="thick"><color rgb="FF111111"/></left>
+  <right style="thick"><color rgb="FF111111"/></right>
+  <top style="thick"><color rgb="FF111111"/></top>
+  <bottom style="thick"><color rgb="FF111111"/></bottom>
   <diagonal/>
 </border>
 <border>
-  <left style="thin"><color rgb="FFAAAAAA"/></left>
-  <right style="thin"><color rgb="FFAAAAAA"/></right>
+  <left style="thin"><color rgb="FFBBBBBB"/></left>
+  <right style="thin"><color rgb="FFBBBBBB"/></right>
+  <top style="medium"><color rgb="FF333333"/></top>
+  <bottom style="medium"><color rgb="FF333333"/></bottom>
+  <diagonal/>
+</border>
+<border>
+  <left style="medium"><color rgb="FF333333"/></left>
+  <right style="medium"><color rgb="FF333333"/></right>
   <top style="medium"><color rgb="FF333333"/></top>
   <bottom style="medium"><color rgb="FF333333"/></bottom>
   <diagonal/>
 </border>
 </borders>`;
 
-// ── Path 1: layoutData grid reconstruction ──────────────────────
-// Uses Document AI page coordinates for all measurements.
-// textBlocks are mapped to cells by bounding-box overlap.
+// ── Path 1: layoutData grid reconstruction (Phase 2B calibrated) ──────────
+// Pipeline:
+//   1. Filter grid lines  — merge lines within 1.75% tolerance
+//   2. Classify weights   — outer / major / minor for border assignment
+//   3. Map text to cells  — by bounding-box center
+//   4. Column widths      — proportional + CJK-aware minimum
+//   5. Row heights        — proportional + text-line-count minimum
+//   6. Per-cell borders   — thick outer / medium section / thin inner
 function makeXLSXFromLayoutData(tableData, ld) {
   const { pageWidth, pageHeight, textBlocks, gridCandidates } = ld;
-  const { verticalLines, horizontalLines } = gridCandidates;
 
-  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
-  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+  // ── Step 1: filter raw lines ────────────────────────────────────────────
+  const filteredV = filterGridLines(gridCandidates.verticalLines,   pageWidth,  'x');
+  const filteredH = filterGridLines(gridCandidates.horizontalLines, pageHeight, 'y');
 
-  const nc = sortedV.length - 1;  // columns
-  const nr = sortedH.length - 1;  // rows
+  const sortedV = filteredV; // already sorted
+  const sortedH = filteredH;
+
+  const nc = sortedV.length - 1; // columns
+  const nr = sortedH.length - 1; // rows
   if (nc <= 0 || nr <= 0) return null; // fallback
 
-  // ── Map textBlocks to (row, col) cells ─────────────────────
+  // ── Step 2: classify line weights ──────────────────────────────────────
+  const vWeights = classifyLineWeights(sortedV.map(l => l.x));
+  const hWeights = classifyLineWeights(sortedH.map(l => l.y));
+
+  // ── Step 3: map textBlocks → cells ────────────────────────────────────
   const cellGrid = Array.from({ length: nr }, () => Array(nc).fill(''));
 
   for (const blk of textBlocks) {
@@ -846,11 +995,12 @@ function makeXLSXFromLayoutData(tableData, ld) {
     for (let r = 0; r < nr; r++) { if (cy < sortedH[r + 1].y) { row = r; break; } }
     if (row >= 0 && row < nr && col >= 0 && col < nc) {
       const cur = cellGrid[row][col];
-      cellGrid[row][col] = cur ? cur + ' ' + blk.text : blk.text;
+      // Append with newline if the cell already has text (multi-line cell)
+      cellGrid[row][col] = cur ? cur + '\n' + blk.text : blk.text;
     }
   }
 
-  // If textBlocks gave empty cells, fall back to tableData for values
+  // Fallback: if textBlocks gave nothing, use tableData
   const hasContent = cellGrid.some(r => r.some(Boolean));
   if (!hasContent && tableData.length) {
     const keys = [...new Set(tableData.flatMap(r => Object.keys(r)))];
@@ -861,41 +1011,86 @@ function makeXLSXFromLayoutData(tableData, ld) {
     });
   }
 
-  // ── Column widths (page-coord proportional) ─────────────────
+  // ── Step 4: column widths ──────────────────────────────────────────────
+  // Proportional from page coords, then enforce CJK-aware minimum.
+  // CJK char ≈ 2 "half-width" units; ASCII ≈ 1. Min for 5-6 CJK chars = 14.
   const tableW = sortedV[nc].x - sortedV[0].x || 1;
-  const TOTAL_CW = 160; // total Excel character-width units
-  const colWidths = Array.from({ length: nc }, (_, i) => {
-    const w = sortedV[i + 1].x - sortedV[i].x;
-    return Math.max(6, Math.round((w / tableW) * TOTAL_CW));
-  });
+  const TOTAL_CW = 180; // character-width units distributed across all cols
 
-  // ── Row heights (page-coord proportional) ───────────────────
-  const tableH = sortedH[nr].y - sortedH[0].y || 1;
-  const TOTAL_RH = 600; // total point-height budget
-  const rowHeights = Array.from({ length: nr }, (_, i) => {
-    const h = sortedH[i + 1].y - sortedH[i].y;
-    return Math.max(16, Math.min(120, Math.round((h / tableH) * TOTAL_RH)));
-  });
-
-  // ── Border style per cell ────────────────────────────────────
-  // OOXML cellXf index:
-  //   3 = header (bold + fill + medium-top-bottom)
-  //   2 = medium all-around (outer boundary cells)
-  //   1 = thin all-around (interior cells)
-  //
-  // First row (row 0) is treated as header IF it looks header-like.
-  const firstRowTexts = cellGrid[0] || [];
-  const looksHeader = firstRowTexts.some(v =>
-    /品名|品項|項目|名稱|單價|金額|數量|日期|備註|內容|結果/.test(v)
-  );
-
-  function cellStyleIdx(r, c) {
-    if (r === 0 && looksHeader) return 3;                          // header
-    const outer = r === 0 || r === nr - 1 || c === 0 || c === nc - 1;
-    return outer ? 2 : 1;                                          // medium / thin
+  function cjkLen(text) {
+    // Count display width: CJK = 2, ASCII = 1
+    return [...(text || '')].reduce((s, ch) => s + (ch.charCodeAt(0) > 127 ? 2 : 1), 0);
   }
 
-  // ── Build OOXML XML ─────────────────────────────────────────
+  const colWidths = Array.from({ length: nc }, (_, ci) => {
+    // Proportional width
+    const cellW = sortedV[ci + 1].x - sortedV[ci].x;
+    const proportional = Math.round((cellW / tableW) * TOTAL_CW);
+
+    // Content-based minimum: find longest text in this column
+    const maxLen = Math.max(
+      14, // absolute CJK minimum (≈ 5-6 chars)
+      ...cellGrid.map(row => cjkLen(row[ci]))
+    );
+    const contentMin = Math.min(maxLen + 4, 60); // cap at 60
+
+    return Math.max(proportional, contentMin);
+  });
+
+  // ── Step 5: row heights ────────────────────────────────────────────────
+  // Proportional from page coords, then enforce text-line-count minimum.
+  // Rule: each text line ≈ 16 pt; wrapWidth ≈ colWidth/2 CJK chars.
+  const tableH = sortedH[nr].y - sortedH[0].y || 1;
+  const TOTAL_RH = 700; // total pt budget
+
+  const rowHeights = Array.from({ length: nr }, (_, ri) => {
+    const cellH = sortedH[ri + 1].y - sortedH[ri].y;
+    const proportional = Math.round((cellH / tableH) * TOTAL_RH);
+
+    // Estimate lines needed for the tallest cell in this row
+    const maxLines = Math.max(1, ...cellGrid[ri].map((text, ci) => {
+      if (!text) return 1;
+      const wrapAt = Math.max(10, colWidths[ci] / 2); // chars before wrap
+      return text.split('\n').reduce((sum, part) => {
+        const len = cjkLen(part);
+        return sum + Math.max(1, Math.ceil(len / wrapAt));
+      }, 0);
+    }));
+    const contentMin = Math.max(18, maxLines * 16); // 16 pt per line
+
+    return Math.min(120, Math.max(proportional, contentMin));
+  });
+
+  // ── Step 6: per-cell border style ──────────────────────────────────────
+  // Uses 5-style BORDER_XML:
+  //   3 = header  (bold + fill + medium top/bottom)
+  //   2 = thick   (outer frame cells — left/right/top/bottom edge of table)
+  //   4 = medium  (cells adjacent to a major section divider)
+  //   1 = thin    (regular interior cells)
+  const firstRowTexts = cellGrid[0] || [];
+  const looksHeader = firstRowTexts.some(v =>
+    /品名|品項|項目|名稱|單價|金額|數量|日期|備註|內容|結果|No|序/.test(v)
+  );
+
+  // Pre-compute which rows/cols are adjacent to major lines
+  const majorVcols = new Set();
+  const majorHrows = new Set();
+  vWeights.forEach((w, i) => {
+    if (w === 'major') { majorVcols.add(i - 1); majorVcols.add(i); }
+  });
+  hWeights.forEach((w, i) => {
+    if (w === 'major') { majorHrows.add(i - 1); majorHrows.add(i); }
+  });
+
+  function cellStyleIdx(r, c) {
+    if (r === 0 && looksHeader) return 3;                                // header
+    const isOuter = r === 0 || r === nr - 1 || c === 0 || c === nc - 1;
+    if (isOuter) return 2;                                               // thick outer
+    if (majorVcols.has(c) || majorHrows.has(r)) return 4;               // medium section
+    return 1;                                                            // thin interior
+  }
+
+  // ── Build OOXML ────────────────────────────────────────────────────────
   const colXml = '<cols>' +
     colWidths.map((w, i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('') +
     '</cols>';

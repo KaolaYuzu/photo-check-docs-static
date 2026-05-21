@@ -145,6 +145,78 @@ function collectLayoutItems(document) {
   return items;
 }
 
+function clusterValues(values, tolerance) {
+  const sorted = [...values].filter((v)=>Number.isFinite(v)).sort((a,b)=>a-b);
+  const clusters = [];
+  for (const v of sorted) {
+    const last = clusters[clusters.length - 1];
+    if (!last || Math.abs(last.center - v) > tolerance) clusters.push({ center: v, values: [v] });
+    else { last.values.push(v); last.center = last.values.reduce((a,b)=>a+b,0) / last.values.length; }
+  }
+  return clusters.map((c)=>c.center);
+}
+
+function parseGridReconstruction(document) {
+  const items = collectLayoutItems(document);
+  if (items.length < 10) return [];
+
+  const pageMinX = Math.min(...items.map(i=>i.minX));
+  const pageMaxX = Math.max(...items.map(i=>i.maxX));
+  const pageMinY = Math.min(...items.map(i=>i.minY));
+  const pageMaxY = Math.max(...items.map(i=>i.maxY));
+  if (pageMaxX - pageMinX < 0.35 || pageMaxY - pageMinY < 0.25) return [];
+
+  // Estimate table columns by clustering left edges. This is a practical V1.2
+  // grid reconstruction: it preserves empty-like column structure better than
+  // simple two-column OCR, without requiring image processing libraries.
+  const xCenters = clusterValues(items.map(i=>i.minX), 0.045);
+  let columns = xCenters.filter((x)=>x >= pageMinX - 0.01 && x <= pageMaxX + 0.01);
+  if (columns.length < 3) return [];
+  if (columns.length > 10) {
+    // merge overly dense OCR fragments into a safer spreadsheet width
+    columns = clusterValues(columns, 0.075);
+  }
+  if (columns.length < 3) return [];
+
+  const rowCenters = clusterValues(items.map(i=>i.y), 0.018);
+  if (rowCenters.length < 5) return [];
+
+  const rows = rowCenters.map((y, rowIndex) => {
+    const rowItems = items.filter((i)=>Math.abs(i.y - y) <= 0.022).sort((a,b)=>a.x-b.x);
+    const obj = { 行號: String(rowIndex + 1) };
+    for (let c=0; c<columns.length; c++) obj[`欄${c+1}`] = '';
+    for (const item of rowItems) {
+      let best = 0, bestDist = Infinity;
+      for (let c=0; c<columns.length; c++) {
+        const d = Math.abs(item.minX - columns[c]);
+        if (d < bestDist) { bestDist = d; best = c; }
+      }
+      const key = `欄${best+1}`;
+      obj[key] = obj[key] ? `${obj[key]} ${item.text}` : item.text;
+    }
+    return obj;
+  }).filter((r)=>Object.keys(r).some(k=>k!=='行號' && r[k]));
+
+  const filledCells = rows.reduce((sum,r)=>sum+Object.keys(r).filter(k=>k!=='行號' && r[k]).length,0);
+  const density = filledCells / Math.max(1, rows.length * columns.length);
+  if (rows.length < 5 || columns.length < 3 || density < 0.12) return [];
+
+  // Header cleanup: if the first useful row looks like headers, use it.
+  const first = rows[0];
+  const values = Object.keys(first).filter(k=>k!=='行號').map(k=>first[k]);
+  const headerLike = values.some(v=>/品項|品名|單價|數量|金額|內容|項目|結果|備註|日期/.test(v));
+  if (headerLike && rows.length > 1) {
+    const headers = makeUniqueHeaders(values.map((v,i)=>v || `欄${i+1}`));
+    return rows.slice(1).map((r, idx)=>{
+      const out = { 行號: String(idx + 1) };
+      headers.forEach((h,i)=>{ out[h] = r[`欄${i+1}`] || ''; });
+      return out;
+    });
+  }
+
+  return rows;
+}
+
 function parseTwoColumnLayout(document) {
   const items = collectLayoutItems(document);
   if (items.length < 6) return [];
@@ -187,6 +259,9 @@ function parseTwoColumnLayout(document) {
 }
 
 function parseFallbackText(document) {
+  const gridRows = parseGridReconstruction(document);
+  if (gridRows.length) return gridRows;
+
   const layoutRows = parseTwoColumnLayout(document);
   if (layoutRows.length) return layoutRows;
 

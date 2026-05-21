@@ -258,6 +258,46 @@ function parseTwoColumnLayout(document) {
   return rows;
 }
 
+function buildVisual(document) {
+  const items = collectLayoutItems(document).map((item) => ({
+    text: item.text,
+    minX: Number(item.minX || 0),
+    minY: Number(item.minY || 0),
+    maxX: Number(item.maxX || 0),
+    maxY: Number(item.maxY || 0),
+    x: Number(item.x || 0),
+    y: Number(item.y || 0),
+  })).filter((i) => i.text);
+  if (!items.length) return null;
+
+  const minX = Math.max(0, Math.min(...items.map(i => i.minX)) - 0.02);
+  const maxX = Math.min(1, Math.max(...items.map(i => i.maxX)) + 0.02);
+  const minY = Math.max(0, Math.min(...items.map(i => i.minY)) - 0.02);
+  const maxY = Math.min(1, Math.max(...items.map(i => i.maxY)) + 0.02);
+
+  let columns = clusterValues(items.map(i => i.minX), 0.045).filter(x => x >= minX && x <= maxX);
+  if (columns.length > 14) columns = clusterValues(columns, 0.065);
+  let rows = clusterValues(items.map(i => i.y), 0.018).filter(y => y >= minY && y <= maxY);
+  if (rows.length > 80) rows = clusterValues(rows, 0.026);
+
+  function boundaries(centers, start, end) {
+    if (!centers.length) return [start, end];
+    const sorted = [...centers].sort((a,b)=>a-b);
+    const out = [start];
+    for (let i=0; i<sorted.length-1; i++) out.push((sorted[i] + sorted[i+1]) / 2);
+    out.push(end);
+    return out.filter((v,i,a)=>i===0 || Math.abs(v-a[i-1])>0.003);
+  }
+
+  return {
+    version: 'visual-reconstruction-v1',
+    bounds: { minX, maxX, minY, maxY },
+    columns: boundaries(columns, minX, maxX),
+    rows: boundaries(rows, minY, maxY),
+    items,
+  };
+}
+
 function parseFallbackText(document) {
   const gridRows = parseGridReconstruction(document);
   if (gridRows.length) return gridRows;
@@ -321,8 +361,9 @@ export default async function handler(req, res) {
     const document = result.document || {};
     const tableRows = parseTables(document);
     const rows = tableRows.length ? tableRows : parseFallbackText(document);
+    const visual = buildVisual(document);
 
-    return res.status(200).json(rows);
+    return res.status(200).json({ rows, visual });
   } catch (error) {
     return res.status(500).json({ error: '辨識失敗，請確認圖片清晰度後重試。' });
   }

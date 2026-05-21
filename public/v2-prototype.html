@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -1208,6 +1209,168 @@ function createSchema(imageName = 'unknown') {
 }
 
 /* ===========================================================
+   V2.1 LAYOUT RECONSTRUCTION ENGINE
+   Canvas line detection → grid → OCR text assignment
+   =========================================================== */
+
+/** Detect H/V lines from image via canvas pixel density analysis. */
+function detectGridFromCanvas(imgEl) {
+  const MAX_W = 800;
+  const scale = Math.min(1, MAX_W / (imgEl.naturalWidth || MAX_W));
+  const cw = Math.round((imgEl.naturalWidth || MAX_W) * scale);
+  const ch = Math.round((imgEl.naturalHeight || 600) * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(imgEl, 0, 0, cw, ch);
+  const px = ctx.getImageData(0, 0, cw, ch).data;
+  const lum = (x, y) => { const i=(y*cw+x)*4; return px[i]*.299+px[i+1]*.587+px[i+2]*.114; };
+
+  // Row darkness scores
+  const hScore = Array.from({length:ch}, (_, y) => {
+    let d=0; for(let x=0;x<cw;x++) if(lum(x,y)<128) d++; return d/cw;
+  });
+  // Col darkness scores
+  const vScore = Array.from({length:cw}, (_, x) => {
+    let d=0; for(let y=0;y<ch;y++) if(lum(x,y)<128) d++; return d/ch;
+  });
+
+  function peaks(scores, thr, gap) {
+    const out=[];
+    for(let i=1;i<scores.length-1;i++){
+      if(scores[i]>thr && scores[i]>=scores[i-1] && scores[i]>=scores[i+1]){
+        if(!out.length || i-out[out.length-1]>=gap) out.push(i);
+      }
+    }
+    return out;
+  }
+  return {
+    hLines: peaks(hScore, 0.22, 14).map(y=>Math.round(y/scale)),
+    vLines: peaks(vScore, 0.22, 18).map(x=>Math.round(x/scale)),
+    w: imgEl.naturalWidth||cw, h: imgEl.naturalHeight||ch, scale
+  };
+}
+
+/** Build full tableSchema from detected lines + OCR response. */
+function reconstructGridSchema(grid, ocr, file) {
+  const {hLines, vLines, w, h} = grid;
+  const schema = createSchema(file?.name||'uploaded-image');
+  schema.source.imageWidth=w; schema.source.imageHeight=h;
+  schema.meta.reconstructionMode='canvasGrid';
+
+  const ys=[...new Set([0,...hLines,h])].sort((a,b)=>a-b);
+  const xs=[...new Set([0,...vLines,w])].sort((a,b)=>a-b);
+  if(xs.length<2||ys.length<2) return null;
+
+  schema.columns = xs.slice(0,-1).map((x,i)=>({
+    id:`col_${i}`, x, width:xs[i+1]-x,
+    label:`Col ${i+1}`, locked:false
+  }));
+  schema.rows = ys.slice(0,-1).map((y,j)=>({
+    id:`row_${j}`, y, height:ys[j+1]-y,
+    type: j===0?'header':'data'
+  }));
+  schema.cells = [];
+  schema.rows.forEach((row,ri)=>schema.columns.forEach((col,ci)=>{
+    schema.cells.push({
+      id:`cell_${ri}_${ci}`, rowId:row.id, colId:col.id,
+      text:'', rowSpan:1, colSpan:1, confidence:null,
+      bbox:{x:col.x,y:row.y,w:col.width,h:row.height},
+      style:{bold:ri===0, align:'left',
+        borderTop:'thin',borderRight:'thin',
+        borderBottom:ri===0?'medium':'thin',borderLeft:'thin'}
+    });
+  }));
+
+  // Assign OCR text into cells
+  const words = extractOCRWords(ocr);
+  if(words.length) assignWordsToCells(words, schema);
+  return schema;
+}
+
+/** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
+function extractOCRWords(ocr) {
+  if(!ocr) return [];
+  const words=[];
+  // rows[] format
+  if(Array.isArray(ocr.rows)&&ocr.rows.length) {
+    ocr.rows.forEach((row,ri)=>Object.keys(row).forEach((k,ci)=>{
+      const v=String(row[k]??'').trim();
+      if(v) words.push({text:v,sr:ri,sc:ci});
+    }));
+    return words;
+  }
+  // flat array
+  if(Array.isArray(ocr)&&ocr.length&&typeof ocr[0]==='object') {
+    ocr.forEach((row,ri)=>Object.keys(row).forEach((k,ci)=>{
+      const v=String(row[k]??'').trim();
+      if(v) words.push({text:v,sr:ri,sc:ci});
+    }));
+    return words;
+  }
+  // words with bbox
+  const wl=ocr.layoutData?.words||ocr.words||[];
+  wl.forEach(w=>{ if(w.text&&w.bbox) words.push({text:w.text,x:w.bbox.x,y:w.bbox.y,w:w.bbox.w||w.bbox.width||10,h:w.bbox.h||w.bbox.height||12}); });
+  return words;
+}
+
+/** Assign word list into schema cells by bbox overlap or sequential index. */
+function assignWordsToCells(words, schema) {
+  const hasBbox = words.some(w=>w.x!=null);
+  if(hasBbox) {
+    words.forEach(word=>{
+      let best=null,bov=0;
+      schema.cells.forEach(cell=>{
+        if(!cell.bbox) return;
+        const ox=Math.max(0,Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x));
+        const oy=Math.max(0,Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y));
+        if(ox*oy>bov){bov=ox*oy;best=cell;}
+      });
+      if(best&&bov>0) best.text=(best.text?best.text+' ':'')+word.text;
+    });
+  } else {
+    // sequential: row 0 → header row labels; row 1+ → data rows
+    const nC=schema.columns.length;
+    const nR=schema.rows.length;
+    // detect column headers from first OCR row keys
+    const firstRow=words.filter(w=>w.sr===0);
+    firstRow.forEach(w=>{
+      const ci=Math.min(w.sc,nC-1);
+      const hCell=schema.cells.find(c=>c.rowId==='row_0'&&c.colId===`col_${ci}`);
+      if(hCell){ hCell.text=w.text; schema.columns[ci].label=w.text; }
+    });
+    // data rows start at sr=0 in OCR → schema row 1
+    words.forEach(w=>{
+      const ri=Math.min(w.sr+1,nR-1);
+      const ci=Math.min(w.sc,nC-1);
+      const cell=schema.cells.find(c=>c.rowId===`row_${ri}`&&c.colId===`col_${ci}`);
+      if(cell&&ri>0) cell.text=w.text;
+    });
+  }
+}
+
+/**
+ * V2.1 entry: try canvas grid first, fall back to OCR-only mapping.
+ */
+function mapOCRToSchemaV21(ocrResponse, file) {
+  const imgEl=document.getElementById('prev-img');
+  let schema=null;
+  try {
+    if(imgEl&&imgEl.naturalWidth>0){
+      const grid=detectGridFromCanvas(imgEl);
+      if(grid.hLines.length>=2&&grid.vLines.length>=2){
+        schema=reconstructGridSchema(grid,ocrResponse,file);
+      }
+    }
+  } catch(e){ console.warn('[V2.1] canvas detection failed:',e); schema=null; }
+  if(!schema||!schema.cells.length){
+    schema=mapOCRToSchema(ocrResponse,file);
+    schema.meta.reconstructionMode+=(schema.meta.reconstructionMode?'+':'')+'fallback';
+  }
+  return schema;
+}
+
+/* ===========================================================
    OCR → SCHEMA MAPPING
    =========================================================== */
 /**
@@ -1460,8 +1623,8 @@ async function startOCR() {
 
     if (json.error) throw new Error(json.error);
 
-    // ★ Map OCR response → tableSchema (one time only)
-    tableSchema = mapOCRToSchema(json, imageFile);
+    // ★ V2.1: Canvas grid detection → OCR text assignment → tableSchema
+    tableSchema = mapOCRToSchemaV21(json, imageFile);
 
     incUsage();
     renderTableFromSchema();

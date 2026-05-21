@@ -444,6 +444,9 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 }
 .vis-body{padding:20px;overflow:auto;background:var(--warm)}
 #svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
+.debug-bar{padding:8px 20px;background:#f9f7f3;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.debug-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--mut);user-select:none}
+.debug-toggle-label input{cursor:pointer}
 
 /* Export panel */
 .export-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:24px}
@@ -1017,6 +1020,14 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
               <span class="en">Editable vector draft · Openable in Illustrator</span>
             </span>
           </div>
+          <div class="debug-bar">
+            <label class="debug-toggle-label">
+              <input type="checkbox" id="debug-chk" onchange="toggleDebugOverlay(this.checked)">
+              <span class="zh">Debug 線段偵測</span><span class="en">Debug Line Detection</span>
+            </label>
+          </div>
+          <canvas id="debug-canvas" style="display:none;max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;background:#fff"></canvas>
+          <div id="debug-stats" style="display:none;font-size:11px;color:var(--mut);margin-top:6px;font-family:monospace;line-height:1.8;padding:8px 12px;background:#f9f7f3;border-radius:4px;border:1px solid var(--line)"></div>
           <div class="vis-body">
             <div id="svg-preview"></div>
           </div>
@@ -1209,165 +1220,366 @@ function createSchema(imageName = 'unknown') {
 }
 
 /* ===========================================================
-   V2.1 LAYOUT RECONSTRUCTION ENGINE
-   Canvas line detection → grid → OCR text assignment
+   V2.2 LAYOUT RECONSTRUCTION ENGINE — CALIBRATED
+   Canvas edge detection → filtering → grid → OCR bbox assignment
    =========================================================== */
 
-/** Detect H/V lines from image via canvas pixel density analysis. */
+let lastDetectedGrid = null; // stored for debug overlay
+
+/**
+ * Detect H/V lines via per-row/col edge-strength scoring.
+ * Returns { rawH, rawV, filteredH, filteredV, rejectedH, rejectedV, w, h, scale }
+ */
 function detectGridFromCanvas(imgEl) {
-  const MAX_W = 800;
+  const MAX_W = 900;
   const scale = Math.min(1, MAX_W / (imgEl.naturalWidth || MAX_W));
   const cw = Math.round((imgEl.naturalWidth || MAX_W) * scale);
   const ch = Math.round((imgEl.naturalHeight || 600) * scale);
-  const canvas = document.createElement('canvas');
-  canvas.width = cw; canvas.height = ch;
-  const ctx = canvas.getContext('2d');
+
+  const cvs = document.createElement('canvas');
+  cvs.width = cw; cvs.height = ch;
+  const ctx = cvs.getContext('2d');
   ctx.drawImage(imgEl, 0, 0, cw, ch);
   const px = ctx.getImageData(0, 0, cw, ch).data;
-  const lum = (x, y) => { const i=(y*cw+x)*4; return px[i]*.299+px[i+1]*.587+px[i+2]*.114; };
 
-  // Row darkness scores
-  const hScore = Array.from({length:ch}, (_, y) => {
-    let d=0; for(let x=0;x<cw;x++) if(lum(x,y)<128) d++; return d/cw;
-  });
-  // Col darkness scores
-  const vScore = Array.from({length:cw}, (_, x) => {
-    let d=0; for(let y=0;y<ch;y++) if(lum(x,y)<128) d++; return d/ch;
-  });
+  const lum = (x, y) => {
+    const i = (Math.min(ch-1,y)*cw + Math.min(cw-1,x)) * 4;
+    return px[i]*.299 + px[i+1]*.587 + px[i+2]*.114;
+  };
 
-  function peaks(scores, thr, gap) {
-    const out=[];
-    for(let i=1;i<scores.length-1;i++){
-      if(scores[i]>thr && scores[i]>=scores[i-1] && scores[i]>=scores[i+1]){
-        if(!out.length || i-out[out.length-1]>=gap) out.push(i);
+  // Edge-strength score per row: average |delta_y brightness| across columns
+  const hEdge = new Float32Array(ch);
+  for (let y = 1; y < ch-1; y++) {
+    let s = 0;
+    for (let x = 0; x < cw; x++) s += Math.abs(lum(x,y+1) - lum(x,y-1));
+    hEdge[y] = s / cw;
+  }
+  // Edge-strength score per column
+  const vEdge = new Float32Array(cw);
+  for (let x = 1; x < cw-1; x++) {
+    let s = 0;
+    for (let y = 0; y < ch; y++) s += Math.abs(lum(x+1,y) - lum(x-1,y));
+    vEdge[x] = s / ch;
+  }
+
+  // Darkness score to validate actual lines
+  const hDark = new Float32Array(ch);
+  for (let y = 0; y < ch; y++) {
+    let d = 0;
+    for (let x = 0; x < cw; x++) if (lum(x,y) < 140) d++;
+    hDark[y] = d / cw;
+  }
+  const vDark = new Float32Array(cw);
+  for (let x = 0; x < cw; x++) {
+    let d = 0;
+    for (let y = 0; y < ch; y++) if (lum(x,y) < 140) d++;
+    vDark[x] = d / ch;
+  }
+
+  // Adaptive threshold: mean + 0.7 * std
+  function adaptiveThr(arr) {
+    const mean = arr.reduce((s,v)=>s+v,0)/arr.length;
+    const std = Math.sqrt(arr.reduce((s,v)=>s+(v-mean)**2,0)/arr.length);
+    return Math.max(6, mean + 0.7*std);
+  }
+  const hThr = adaptiveThr(hEdge);
+  const vThr = adaptiveThr(vEdge);
+
+  // Extract local maxima peaks above threshold, enforcing min gap
+  function extractPeaks(edge, dark, thr, gap) {
+    const raw = [];
+    for (let i = 2; i < edge.length-2; i++) {
+      if (edge[i] < thr) continue;
+      if (dark[i] < 0.04) continue; // must have some dark pixels
+      let isMax = true;
+      for (let j = Math.max(0,i-4); j <= Math.min(edge.length-1,i+4); j++) {
+        if (j !== i && edge[j] > edge[i]) { isMax=false; break; }
       }
+      if (!isMax) continue;
+      if (raw.length && i - raw[raw.length-1] < gap) {
+        if (edge[i] > edge[raw[raw.length-1]]) raw[raw.length-1] = i;
+      } else {
+        raw.push(i);
+      }
+    }
+    return raw;
+  }
+
+  // Merge close parallel lines
+  function mergeClose(lines, mergeGap) {
+    if (!lines.length) return lines;
+    const out = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i] - out[out.length-1] < mergeGap) {
+        out[out.length-1] = Math.round((out[out.length-1]+lines[i])/2);
+      } else out.push(lines[i]);
     }
     return out;
   }
+
+  const rawHpx = extractPeaks(hEdge, hDark, hThr, 8);
+  const rawVpx = extractPeaks(vEdge, vDark, vThr, 10);
+  const filtHpx = mergeClose(rawHpx, 10);
+  const filtVpx = mergeClose(rawVpx, 13);
+
+  const toOrig = (v) => Math.round(v / scale);
+  const rawH = rawHpx.map(toOrig), rawV = rawVpx.map(toOrig);
+  const filtH = filtHpx.map(toOrig), filtV = filtVpx.map(toOrig);
+
+  const W = imgEl.naturalWidth || cw;
+  const H = imgEl.naturalHeight || ch;
+
+  // Detect outer border (lines within 4% of image edge)
+  const hTol = Math.round(H * 0.04), vTol = Math.round(W * 0.04);
+  const outerBorder = {
+    top:    filtH.find(y => y < hTol) ?? null,
+    bottom: [...filtH].reverse().find(y => y > H-hTol) ?? null,
+    left:   filtV.find(x => x < vTol) ?? null,
+    right:  [...filtV].reverse().find(x => x > W-vTol) ?? null
+  };
+
+  const interiorH = filtH.filter(y => y !== outerBorder.top && y !== outerBorder.bottom);
+  const interiorV = filtV.filter(x => x !== outerBorder.left && x !== outerBorder.right)
+                         .slice(0, 11); // max 12 columns
+
+  const rejectedH = rawH.filter(v => !filtH.includes(v));
+  const rejectedV = rawV.filter(v => !filtV.includes(v));
+
   return {
-    hLines: peaks(hScore, 0.22, 14).map(y=>Math.round(y/scale)),
-    vLines: peaks(vScore, 0.22, 18).map(x=>Math.round(x/scale)),
-    w: imgEl.naturalWidth||cw, h: imgEl.naturalHeight||ch, scale
+    rawH, rawV, filteredH: filtH, filteredV: filtV,
+    rejectedH, rejectedV, interiorH, interiorV, outerBorder,
+    w: W, h: H, scale, _cvs: cvs, _cw: cw, _ch: ch
   };
 }
 
-/** Build full tableSchema from detected lines + OCR response. */
+/** Build tableSchema from calibrated grid. Merges narrow cols (< 40px). */
 function reconstructGridSchema(grid, ocr, file) {
-  const {hLines, vLines, w, h} = grid;
-  const schema = createSchema(file?.name||'uploaded-image');
-  schema.source.imageWidth=w; schema.source.imageHeight=h;
-  schema.meta.reconstructionMode='canvasGrid';
+  const { interiorH, interiorV, outerBorder, w, h } = grid;
+  const schema = createSchema(file?.name || 'uploaded-image');
+  schema.source.imageWidth = w; schema.source.imageHeight = h;
+  schema.meta.reconstructionMode = 'canvasGrid-v22';
+  schema.meta._debug = {
+    rawH: grid.rawH.length, rawV: grid.rawV.length,
+    filteredH: grid.filteredH.length, filteredV: grid.filteredV.length,
+    rejectedH: grid.rejectedH.length, rejectedV: grid.rejectedV.length
+  };
 
-  const ys=[...new Set([0,...hLines,h])].sort((a,b)=>a-b);
-  const xs=[...new Set([0,...vLines,w])].sort((a,b)=>a-b);
-  if(xs.length<2||ys.length<2) return null;
+  const le = outerBorder.left   ?? 0,  re = outerBorder.right  ?? w;
+  const te = outerBorder.top    ?? 0,  be = outerBorder.bottom ?? h;
 
-  schema.columns = xs.slice(0,-1).map((x,i)=>({
-    id:`col_${i}`, x, width:xs[i+1]-x,
-    label:`Col ${i+1}`, locked:false
+  let xs = [...new Set([le, ...interiorV, re])].sort((a,b)=>a-b);
+  const ys = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
+  if (xs.length < 2 || ys.length < 2) return null;
+
+  // Merge narrow columns
+  const MIN_COL_W = 40;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < xs.length-1; i++) {
+      if (xs[i+1]-xs[i] < MIN_COL_W) { xs.splice(i+1,1); changed=true; break; }
+    }
+  }
+
+  const nC = xs.length-1, nR = ys.length-1;
+  schema.columns = xs.slice(0,-1).map((x,i) => ({
+    id:`col_${i}`, x, width:xs[i+1]-x, label:`Col ${i+1}`, locked:false
   }));
-  schema.rows = ys.slice(0,-1).map((y,j)=>({
-    id:`row_${j}`, y, height:ys[j+1]-y,
-    type: j===0?'header':'data'
+  schema.rows = ys.slice(0,-1).map((y,j) => ({
+    id:`row_${j}`, y, height:ys[j+1]-y, type:j===0?'header':'data'
   }));
+
   schema.cells = [];
-  schema.rows.forEach((row,ri)=>schema.columns.forEach((col,ci)=>{
+  schema.rows.forEach((row,ri) => schema.columns.forEach((col,ci) => {
+    const isOuter = { t:ri===0, b:ri===nR-1, l:ci===0, r:ci===nC-1 };
     schema.cells.push({
       id:`cell_${ri}_${ci}`, rowId:row.id, colId:col.id,
       text:'', rowSpan:1, colSpan:1, confidence:null,
-      bbox:{x:col.x,y:row.y,w:col.width,h:row.height},
-      style:{bold:ri===0, align:'left',
-        borderTop:'thin',borderRight:'thin',
-        borderBottom:ri===0?'medium':'thin',borderLeft:'thin'}
+      bbox:{x:col.x, y:row.y, w:col.width, h:row.height},
+      style:{
+        bold:ri===0, align:ci===0?'left':'center',
+        borderTop:    isOuter.t ? 'thick' : 'thin',
+        borderBottom: isOuter.b ? 'thick' : (ri===0?'medium':'thin'),
+        borderLeft:   isOuter.l ? 'thick' : 'thin',
+        borderRight:  isOuter.r ? 'thick' : 'thin'
+      }
     });
   }));
 
-  // Assign OCR text into cells
   const words = extractOCRWords(ocr);
-  if(words.length) assignWordsToCells(words, schema);
+  if (words.length) assignWordsToCells(words, schema);
   return schema;
 }
 
 /** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
 function extractOCRWords(ocr) {
-  if(!ocr) return [];
-  const words=[];
-  // rows[] format
-  if(Array.isArray(ocr.rows)&&ocr.rows.length) {
-    ocr.rows.forEach((row,ri)=>Object.keys(row).forEach((k,ci)=>{
-      const v=String(row[k]??'').trim();
-      if(v) words.push({text:v,sr:ri,sc:ci});
+  if (!ocr) return [];
+  const words = [];
+  if (Array.isArray(ocr.rows) && ocr.rows.length) {
+    ocr.rows.forEach((row,ri) => Object.keys(row).forEach((k,ci) => {
+      const v = String(row[k]??'').trim();
+      if (v) words.push({text:v, sr:ri, sc:ci, key:k});
     }));
     return words;
   }
-  // flat array
-  if(Array.isArray(ocr)&&ocr.length&&typeof ocr[0]==='object') {
-    ocr.forEach((row,ri)=>Object.keys(row).forEach((k,ci)=>{
-      const v=String(row[k]??'').trim();
-      if(v) words.push({text:v,sr:ri,sc:ci});
+  if (Array.isArray(ocr) && ocr.length && typeof ocr[0]==='object') {
+    ocr.forEach((row,ri) => Object.keys(row).forEach((k,ci) => {
+      const v = String(row[k]??'').trim();
+      if (v) words.push({text:v, sr:ri, sc:ci});
     }));
     return words;
   }
-  // words with bbox
-  const wl=ocr.layoutData?.words||ocr.words||[];
-  wl.forEach(w=>{ if(w.text&&w.bbox) words.push({text:w.text,x:w.bbox.x,y:w.bbox.y,w:w.bbox.w||w.bbox.width||10,h:w.bbox.h||w.bbox.height||12}); });
+  const wl = ocr.layoutData?.words || ocr.words || [];
+  wl.forEach(w => {
+    if (w.text && w.bbox)
+      words.push({text:w.text, x:w.bbox.x, y:w.bbox.y,
+        w:w.bbox.w||w.bbox.width||10, h:w.bbox.h||w.bbox.height||12});
+  });
   return words;
 }
 
-/** Assign word list into schema cells by bbox overlap or sequential index. */
+/**
+ * V2.2 text assignment: bbox center-point → cell; multi-text → newline join.
+ * Falls back to sequential sr/sc if no bbox.
+ */
 function assignWordsToCells(words, schema) {
-  const hasBbox = words.some(w=>w.x!=null);
-  if(hasBbox) {
-    words.forEach(word=>{
-      let best=null,bov=0;
-      schema.cells.forEach(cell=>{
-        if(!cell.bbox) return;
-        const ox=Math.max(0,Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x));
-        const oy=Math.max(0,Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y));
-        if(ox*oy>bov){bov=ox*oy;best=cell;}
+  const hasBbox = words.some(w => w.x != null);
+  if (hasBbox) {
+    const buckets = {};
+    schema.cells.forEach(c => { buckets[c.id] = []; });
+    words.forEach(word => {
+      const cx = word.x + (word.w||8)/2;
+      const cy = word.y + (word.h||12)/2;
+      let bestCell=null, bestScore=-1;
+      schema.cells.forEach(cell => {
+        if (!cell.bbox) return;
+        const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
+                       cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
+        if (!inCell) return;
+        const ox = Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x);
+        const oy = Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y);
+        if (Math.max(0,ox)*Math.max(0,oy) > bestScore) {
+          bestScore=ox*oy; bestCell=cell;
+        }
       });
-      if(best&&bov>0) best.text=(best.text?best.text+' ':'')+word.text;
+      // Fallback: max overlap even if center outside
+      if (!bestCell) {
+        schema.cells.forEach(cell => {
+          if (!cell.bbox) return;
+          const ox=Math.max(0,Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x));
+          const oy=Math.max(0,Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y));
+          if (ox*oy>bestScore) { bestScore=ox*oy; bestCell=cell; }
+        });
+      }
+      if (bestCell) buckets[bestCell.id].push(word.text);
+    });
+    schema.cells.forEach(cell => {
+      if (buckets[cell.id]?.length) {
+        cell.text = buckets[cell.id].join('\n');
+        if (cell.rowId===schema.rows[0]?.id) {
+          const col = schema.columns.find(c=>c.id===cell.colId);
+          if (col) col.label = cell.text.split('\n')[0];
+        }
+      }
     });
   } else {
-    // sequential: row 0 → header row labels; row 1+ → data rows
-    const nC=schema.columns.length;
-    const nR=schema.rows.length;
-    // detect column headers from first OCR row keys
-    const firstRow=words.filter(w=>w.sr===0);
-    firstRow.forEach(w=>{
-      const ci=Math.min(w.sc,nC-1);
-      const hCell=schema.cells.find(c=>c.rowId==='row_0'&&c.colId===`col_${ci}`);
-      if(hCell){ hCell.text=w.text; schema.columns[ci].label=w.text; }
+    // No bbox: sequential sr/sc
+    const nC = schema.columns.length, nR = schema.rows.length;
+    words.filter(w=>w.sr===0).forEach(w => {
+      const ci = Math.min(w.sc,nC-1);
+      const hc = schema.cells.find(c=>c.rowId==='row_0'&&c.colId===`col_${ci}`);
+      if (hc) { hc.text=w.text; schema.columns[ci].label=w.text; }
     });
-    // data rows start at sr=0 in OCR → schema row 1
-    words.forEach(w=>{
-      const ri=Math.min(w.sr+1,nR-1);
-      const ci=Math.min(w.sc,nC-1);
+    words.filter(w=>w.sr>0).forEach(w => {
+      const ri=Math.min(w.sr,nR-1), ci=Math.min(w.sc,nC-1);
       const cell=schema.cells.find(c=>c.rowId===`row_${ri}`&&c.colId===`col_${ci}`);
-      if(cell&&ri>0) cell.text=w.text;
+      if (cell) cell.text=w.text;
     });
   }
 }
 
-/**
- * V2.1 entry: try canvas grid first, fall back to OCR-only mapping.
- */
+/** V2.2 entry: canvas grid priority, OCR-only fallback. */
 function mapOCRToSchemaV21(ocrResponse, file) {
-  const imgEl=document.getElementById('prev-img');
-  let schema=null;
+  const imgEl = document.getElementById('prev-img');
+  let schema = null;
+  lastDetectedGrid = null;
   try {
-    if(imgEl&&imgEl.naturalWidth>0){
-      const grid=detectGridFromCanvas(imgEl);
-      if(grid.hLines.length>=2&&grid.vLines.length>=2){
-        schema=reconstructGridSchema(grid,ocrResponse,file);
+    if (imgEl && imgEl.naturalWidth > 0) {
+      const grid = detectGridFromCanvas(imgEl);
+      lastDetectedGrid = grid;
+      if (grid.filteredH.length >= 2 && grid.filteredV.length >= 2) {
+        schema = reconstructGridSchema(grid, ocrResponse, file);
       }
     }
-  } catch(e){ console.warn('[V2.1] canvas detection failed:',e); schema=null; }
-  if(!schema||!schema.cells.length){
-    schema=mapOCRToSchema(ocrResponse,file);
-    schema.meta.reconstructionMode+=(schema.meta.reconstructionMode?'+':'')+'fallback';
+  } catch(e) { console.warn('[V2.2]', e); schema=null; }
+  if (!schema || !schema.cells.length) {
+    schema = mapOCRToSchema(ocrResponse, file);
+    schema.meta.reconstructionMode += '+fallback';
   }
   return schema;
+}
+
+/* ===========================================================
+   V2.2 DEBUG OVERLAY
+   =========================================================== */
+function toggleDebugOverlay(on) {
+  const canvas = document.getElementById('debug-canvas');
+  const stats  = document.getElementById('debug-stats');
+  if (!on) { canvas.style.display='none'; stats.style.display='none'; return; }
+  if (!lastDetectedGrid || !tableSchema) {
+    stats.style.display='block'; canvas.style.display='none';
+    stats.innerHTML='<span style="color:#B03922">Run recognition first to see debug data.</span>';
+    return;
+  }
+  const g = lastDetectedGrid;
+  const { rawH, rawV, filteredH, filteredV, rejectedH, rejectedV,
+          interiorH, interiorV, outerBorder, _cvs, _cw, _ch, scale } = g;
+
+  canvas.width = _cw; canvas.height = _ch; canvas.style.display='block';
+  const dctx = canvas.getContext('2d');
+  dctx.drawImage(_cvs, 0, 0);
+
+  const draw = (lines, isH, color, dash, alpha, lw) => {
+    dctx.save(); dctx.globalAlpha=alpha; dctx.strokeStyle=color;
+    dctx.lineWidth=lw; dctx.setLineDash(dash);
+    lines.forEach(v => {
+      const p = v*scale;
+      dctx.beginPath();
+      if (isH) { dctx.moveTo(0,p); dctx.lineTo(_cw,p); }
+      else      { dctx.moveTo(p,0); dctx.lineTo(p,_ch); }
+      dctx.stroke();
+    });
+    dctx.restore();
+  };
+
+  draw(rejectedH, true,  '#FF4444', [3,3], 0.5, 1);
+  draw(rejectedV, false, '#FF4444', [3,3], 0.5, 1);
+  draw(rawH.filter(v=>!rejectedH.includes(v)), true,  '#FF9800', [6,3], 0.55, 1);
+  draw(rawV.filter(v=>!rejectedV.includes(v)), false, '#FF9800', [6,3], 0.55, 1);
+  draw(filteredH, true,  '#1E88E5', [], 0.7, 1.5);
+  draw(filteredV, false, '#1E88E5', [], 0.7, 1.5);
+  const ob = outerBorder;
+  draw([ob.top,ob.bottom].filter(v=>v!=null), true,  '#43A047', [], 0.9, 2.5);
+  draw([ob.left,ob.right].filter(v=>v!=null), false, '#43A047', [], 0.9, 2.5);
+
+  // Legend
+  const leg=[['#FF4444','Rejected'],['#FF9800','Raw detected'],['#1E88E5','Filtered'],['#43A047','Outer border']];
+  leg.forEach(([c,l],i)=>{
+    dctx.fillStyle=c; dctx.fillRect(8,8+i*18,14,10);
+    dctx.fillStyle='#111'; dctx.font='10px Arial'; dctx.fillText(l,26,18+i*18);
+  });
+
+  const nC=tableSchema?.columns?.length??'–', nR=tableSchema?.rows?.length??'–';
+  stats.style.display='block';
+  stats.innerHTML=[
+    `<b>Mode:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
+    `<b>Raw H:</b> ${rawH.length} | <b>Raw V:</b> ${rawV.length}`,
+    `<b>Filtered H:</b> ${filteredH.length} | <b>Filtered V:</b> ${filteredV.length}`,
+    `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
+    `<b>Interior H:</b> ${interiorH.length} | <b>Interior V:</b> ${interiorV.length}`,
+    `<b>Final:</b> ${nC} cols × ${nR} rows`,
+    `<b>Border:</b> top=${ob.top??'–'} bot=${ob.bottom??'–'} left=${ob.left??'–'} right=${ob.right??'–'}`
+  ].join('<br>');
 }
 
 /* ===========================================================
@@ -1735,60 +1947,94 @@ function buildXLSXFromSchema(schema) {
   const cmap = {};
   cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
 
+  const isGridMode = schema.meta?.reconstructionMode?.startsWith('canvasGrid');
   const headerRow = rows.find(r => r.type === 'header');
   const dataRows  = rows.filter(r => r.type === 'data');
   const allRows   = [];
 
-  if (headerRow) allRows.push(cols.map(col => {
-    const c = cmap[`${headerRow.id}|${col.id}`];
-    return c ? c.text : col.label;
-  }));
-  dataRows.forEach(row => allRows.push(cols.map(col => {
-    const c = cmap[`${row.id}|${col.id}`];
-    return c ? c.text : '';
-  })));
+  if (headerRow) allRows.push({ row: headerRow, isH: true });
+  dataRows.forEach(r => allRows.push({ row: r, isH: false }));
 
-  // Column widths: px → Excel char units (approx)
+  // Column widths from detected grid (px → Excel char, readability-first)
   const colXml = '<cols>' + cols.map((col, i) => {
-    const w = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
-    return `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`;
+    // Use actual pixel width from grid; ensure min 8, max 60 chars
+    const charW = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
+    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1"/>`;
   }).join('') + '</cols>';
 
-  const sheetData = allRows.map((row, ri) => {
-    const isH  = ri === 0 && !!headerRow;
-    const maxL = Math.max(...row.map(v => String(v||'').length), 1);
-    const ht   = isH ? 22 : Math.min(120, Math.max(20, Math.ceil(maxL / 22) * 16));
-    return `<row r="${ri+1}" ht="${ht}" customHeight="1">` +
-      row.map((v, ci) =>
-        `<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${isH ? 2 : 1}">` +
-        `<is><t xml:space="preserve">${escX(v)}</t></is></c>`
-      ).join('') + '</row>';
+  // Determine border style per cell from schema style
+  // We use 5 border styles: 0=none, 1=thin, 2=medium, 3=thick (for outer)
+  // styleId: 0=default, 1=data, 2=header, 3=data-outer, 4=header-outer
+  const getBorderStyleId = (cell, ri, nR, nC) => {
+    if (!isGridMode) return cell.style?.bold ? 2 : 1;
+    const s = cell.style || {};
+    const isHdr = cell.rowId === headerRow?.id;
+    const isLastRow = ri === nR - 1;
+    const ci = cols.findIndex(c => c.id === cell.colId);
+    const isLastCol = ci === nC - 1;
+    // Pick styleId based on outer-border position
+    const outer = (s.borderTop==='thick'||s.borderBottom==='thick'||
+                   s.borderLeft==='thick'||s.borderRight==='thick');
+    if (isHdr && outer) return 4;
+    if (isHdr) return 2;
+    if (outer) return 3;
+    return 1;
+  };
+
+  const nR = allRows.length, nC = cols.length;
+  const sheetData = allRows.map(({ row, isH }, ri) => {
+    const maxL = Math.max(...cols.map(col => {
+      const c = cmap[`${row.id}|${col.id}`];
+      return String(c?.text || '').length;
+    }), 1);
+    // Row height: use detected height if available, else auto
+    const detectedHt = row.height ? Math.min(120, Math.max(14, row.height * 0.75)) : null;
+    const ht = detectedHt ?? (isH ? 22 : Math.min(120, Math.max(18, Math.ceil(maxL/22)*16)));
+    return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">` +
+      cols.map((col, ci) => {
+        const c = cmap[`${row.id}|${col.id}`];
+        const text = c ? c.text : (isH ? col.label : '');
+        // Replace newlines with space for Excel (Excel uses Alt+Enter = &#10; in shared strings)
+        const xmlText = escX(text.replace(/\n/g, ' '));
+        const sid = getBorderStyleId(c || {style:{}}, ri, nR, nC);
+        return `<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${sid}">` +
+               `<is><t xml:space="preserve">${xmlText}</t></is></c>`;
+      }).join('') + '</row>';
   }).join('');
 
   const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData></worksheet>`;
 
+  // 5 border styles: none, thin, thin+bold-hdr, thick-outer, thick-outer+bold-hdr
+  const mkBorder = (l,r,t,b) =>
+    `<border><left style="${l}"><color rgb="FF8C7B6B"/></left>` +
+    `<right style="${r}"><color rgb="FF8C7B6B"/></right>` +
+    `<top style="${t}"><color rgb="FF1A1A18"/></top>` +
+    `<bottom style="${b}"><color rgb="FF1A1A18"/></bottom><diagonal/></border>`;
+
   const styles = `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font></fonts>
+<fonts count="2">
+  <font><sz val="11"/><name val="Arial"/></font>
+  <font><b/><sz val="11"/><name val="Arial"/></font>
+</fonts>
 <fills count="3">
   <fill><patternFill patternType="none"/></fill>
   <fill><patternFill patternType="gray125"/></fill>
   <fill><patternFill patternType="solid"><fgColor rgb="FFF5F0E8"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
-<borders count="2">
-  <border><left/><right/><top/><bottom/><diagonal/></border>
-  <border>
-    <left style="thin"><color rgb="FFE0D8C8"/></left>
-    <right style="thin"><color rgb="FFE0D8C8"/></right>
-    <top style="thin"><color rgb="FFE0D8C8"/></top>
-    <bottom style="thin"><color rgb="FFE0D8C8"/></bottom>
-    <diagonal/>
-  </border>
+<borders count="5">
+  ${mkBorder('none','none','none','none')}
+  ${mkBorder('thin','thin','thin','thin')}
+  ${mkBorder('thin','thin','medium','medium')}
+  ${mkBorder('thick','thick','thick','thick')}
+  ${mkBorder('thick','thick','thick','thick')}
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="3">
+<cellXfs count="5">
   <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
-  <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>
-  <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="3" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="4" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
@@ -1796,7 +2042,7 @@ function buildXLSXFromSchema(schema) {
   return zipFiles([
     ['[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
     ['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-    ['xl/workbook.xml',`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck V2" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ['xl/workbook.xml',`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck V2.2" sheetId="1" r:id="rId1"/></sheets></workbook>`],
     ['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
     ['xl/styles.xml', styles],
     ['xl/worksheets/sheet1.xml', sheet]
@@ -1804,77 +2050,92 @@ function buildXLSXFromSchema(schema) {
 }
 
 /* ===========================================================
-   BUILD SVG FROM SCHEMA
+   BUILD SVG FROM SCHEMA — V2.2 GRID-FAITHFUL
+   Uses actual bbox coords from reconstructed grid
    =========================================================== */
 function buildSVGFromSchema(schema) {
   const { columns: cols, rows, cells } = schema;
   const cmap = {};
   cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
 
-  const MARGIN = 40, ROW_H = 30, HDR_H = 38;
-  const tableW  = cols.reduce((s, c) => s + c.width, 0);
-  const dataRows = rows.filter(r => r.type === 'data');
-  const tableH  = HDR_H + dataRows.length * ROW_H;
-  const svgW    = tableW + MARGIN * 2;
-  const svgH    = tableH + MARGIN * 2 + 30;
+  const isGridMode = schema.meta?.reconstructionMode?.startsWith('canvasGrid');
+  const MARGIN = 32;
+
+  // Use actual grid pixel dimensions if available; else fall back to computed
+  const gridW = isGridMode
+    ? (cols[cols.length-1].x + cols[cols.length-1].width - cols[0].x)
+    : cols.reduce((s,c)=>s+c.width, 0);
+  const gridH = isGridMode
+    ? (rows[rows.length-1].y + rows[rows.length-1].height - rows[0].y)
+    : rows.reduce((s,r)=>s+r.height, 0);
+
+  const svgW = gridW + MARGIN*2;
+  const svgH = gridH + MARGIN*2 + 24;
+  const OX   = MARGIN;
+  const OY   = MARGIN + 16;
+
+  // Offset so grid starts at (OX, OY) regardless of source coords
+  const originX = isGridMode ? cols[0].x : 0;
+  const originY = isGridMode ? rows[0].y : 0;
+  const tx = c => OX + (c - originX);  // translate x
+  const ty = r => OY + (r - originY);  // translate y
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
   svg += `<rect width="100%" height="100%" fill="white"/>`;
-  svg += `<text x="${MARGIN}" y="20" font-size="10" font-family="Arial,'Noto Sans TC',sans-serif" fill="#999">`;
-  svg += `PhotoCheck Docs V2 · SVG Vector Layout Draft · Editable in Illustrator</text>`;
+  svg += `<text x="${MARGIN}" y="13" font-size="9.5" font-family="Arial,'Noto Sans TC',sans-serif" fill="#AAA">`;
+  svg += `PhotoCheck Docs V2.2 · Grid-Faithful SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
 
-  const OX = MARGIN, OY = MARGIN + 10;
-
-  // Outer border
-  svg += `<rect x="${OX}" y="${OY}" width="${tableW}" height="${tableH}" fill="none" stroke="#1A1A18" stroke-width="2"/>`;
+  // Zebra stripes (data rows)
+  rows.filter(r=>r.type==='data').forEach((row,i) => {
+    if (i%2===0)
+      svg += `<rect x="${tx(cols[0].x)}" y="${ty(row.y)}" width="${gridW}" height="${row.height}" fill="#FDFAF5"/>`;
+  });
 
   // Header background
-  svg += `<rect x="${OX}" y="${OY}" width="${tableW}" height="${HDR_H}" fill="#F5F0E8"/>`;
+  const hdrRow = rows.find(r=>r.type==='header');
+  if (hdrRow)
+    svg += `<rect x="${tx(cols[0].x)}" y="${ty(hdrRow.y)}" width="${gridW}" height="${hdrRow.height}" fill="#F5F0E8"/>`;
 
-  // Zebra stripes
-  dataRows.forEach((_, i) => {
-    if (i % 2 === 0) {
-      svg += `<rect x="${OX}" y="${OY + HDR_H + i * ROW_H}" width="${tableW}" height="${ROW_H}" fill="#FDFAF5"/>`;
-    }
+  // Draw all cell borders faithfully from schema style
+  cells.forEach(cell => {
+    const row = rows.find(r=>r.id===cell.rowId);
+    const col = cols.find(c=>c.id===cell.colId);
+    if (!row||!col) return;
+    const x1=tx(col.x), y1=ty(row.y), x2=tx(col.x+col.width), y2=ty(row.y+row.height);
+    const s = cell.style||{};
+    const strokeW = st => st==='thick'?2.5:st==='medium'?1.5:0.75;
+    const strokeC = st => (st==='thick'||st==='medium')?'#1A1A18':'#C8BCA8';
+    const drawLine = (x1,y1,x2,y2,st) => {
+      if (!st||st==='none') return;
+      svg+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${strokeC(st)}" stroke-width="${strokeW(st)}"/>`;
+    };
+    drawLine(x1,y1,x2,y1, s.borderTop);
+    drawLine(x1,y2,x2,y2, s.borderBottom);
+    drawLine(x1,y1,x1,y2, s.borderLeft);
+    drawLine(x2,y1,x2,y2, s.borderRight);
   });
 
-  // Column vertical lines
-  let cx = OX;
-  cols.slice(0, -1).forEach(col => {
-    cx += col.width;
-    svg += `<line x1="${cx}" y1="${OY}" x2="${cx}" y2="${OY + tableH}" stroke="#E0D8C8" stroke-width="1"/>`;
-  });
-
-  // Header bottom line
-  svg += `<line x1="${OX}" y1="${OY + HDR_H}" x2="${OX + tableW}" y2="${OY + HDR_H}" stroke="#1A1A18" stroke-width="1.5"/>`;
-
-  // Row horizontal lines
-  dataRows.forEach((_, i) => {
-    const ly = OY + HDR_H + (i + 1) * ROW_H;
-    svg += `<line x1="${OX}" y1="${ly}" x2="${OX + tableW}" y2="${ly}" stroke="#E0D8C8" stroke-width="0.75"/>`;
-  });
-
-  // Header text
-  const headerRow = rows.find(r => r.type === 'header');
-  if (headerRow) {
-    let hx = OX;
-    cols.forEach(col => {
-      const c    = cmap[`${headerRow.id}|${col.id}`];
-      const text = truncStr(c ? c.text : col.label, Math.floor(col.width / 7.5));
-      svg += `<text x="${hx + 8}" y="${OY + HDR_H / 2 + 5}" font-size="12" font-weight="bold" font-family="Arial,'Noto Sans TC',sans-serif" fill="#1A1A18">${escX(text)}</text>`;
-      hx += col.width;
-    });
-  }
-
-  // Data text
-  dataRows.forEach((row, ri) => {
-    let dx = OX;
-    cols.forEach(col => {
-      const c    = cmap[`${row.id}|${col.id}`];
-      const text = truncStr(c ? c.text : '', Math.floor(col.width / 7));
-      const ty   = OY + HDR_H + ri * ROW_H + ROW_H / 2 + 4;
-      svg += `<text x="${dx + 7}" y="${ty}" font-size="11" font-family="Arial,'Noto Sans TC',sans-serif" fill="#333">${escX(text)}</text>`;
-      dx += col.width;
+  // Cell text
+  cells.forEach(cell => {
+    const row = rows.find(r=>r.id===cell.rowId);
+    const col = cols.find(c=>c.id===cell.colId);
+    if (!row||!col||!cell.text) return;
+    const isHdr = row.type==='header';
+    const cx = tx(col.x), cy = ty(row.y);
+    const fs = isHdr ? 12 : 11;
+    const fw = isHdr ? 'bold' : 'normal';
+    const fill = isHdr ? '#1A1A18' : '#333';
+    const padX = 7, padY = 4;
+    const maxChars = Math.max(4, Math.floor(col.width/7));
+    // Multi-line text support
+    const lines = cell.text.split('\n');
+    const lineH = fs + 3;
+    const startY = cy + row.height/2 - (lines.length-1)*lineH/2 + fs*0.35;
+    lines.forEach((line,li) => {
+      const txt = truncStr(line, maxChars);
+      svg += `<text x="${(cx+padX).toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
+             `font-size="${fs}" font-weight="${fw}" `+
+             `font-family="Arial,'Noto Sans TC',sans-serif" fill="${fill}">${escX(txt)}</text>`;
     });
   });
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PhotoCheck Docs｜照片轉可編輯表格</title>
-  <meta name="description" content="上傳進貨單、報表、菜單或手寫紀錄，AI 先轉成可編輯表格，你再確認、修改、匯出。" />
+  <title>PhotoCheck Docs｜照片轉可編輯表格 V1.4</title>
+  <meta name="description" content="上傳進貨單、報表、菜單或手寫紀錄，AI 辨識文字 + 版面線條偵測，輸出可編輯 Excel 與原版面 SVG。" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta property="og:title" content="PhotoCheck Docs｜照片轉可編輯表格" />
@@ -13,92 +13,1043 @@
   <meta name="twitter:card" content="summary_large_image" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0} :root{--cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1A18;--muted:#8A8A80;--line:#E0D8C8;--gold:#C8A96E;--gold2:#E8D5A8;--green:#4A6741} body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--ink)} .serif{font-family:'Playfair Display',serif}.btn{border:0;border-radius:2px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer}.btn.dark{background:var(--ink);color:white}.btn.gold{background:var(--gold);color:var(--ink)}.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}nav{display:flex;justify-content:space-between;align-items:center;padding:18px 48px;border-bottom:1px solid var(--line);background:var(--warm);position:sticky;top:0;z-index:5}.brand{font:600 18px 'Playfair Display',serif}.sub{font-size:11px;letter-spacing:.08em;color:var(--muted)}.navlinks{display:flex;gap:24px;align-items:center}.navlinks button{background:none;border:0;font-size:14px;cursor:pointer;color:#444}.hero{max-width:980px;margin:auto;padding:78px 48px 64px;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}.tag{display:inline-block;background:var(--gold2);color:#765922;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.06em;margin-bottom:22px}h1{font-size:clamp(38px,5vw,58px);line-height:1.12;letter-spacing:-.03em;margin-bottom:22px}.hero p{max-width:410px;line-height:1.8;color:#4A4A45;margin-bottom:30px}.mock{width:270px;margin:auto;background:#1A1A18;border-radius:34px;padding:14px;box-shadow:0 28px 60px rgba(0,0,0,.18)}.mockin{background:var(--warm);border-radius:24px;overflow:hidden}.mocktop{background:var(--ink);color:#fff;padding:18px}.mockbody{padding:16px}.minirow{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}.minirow span{background:white;border-radius:3px;padding:4px 6px;font-size:9px}.section{max-width:980px;margin:auto;padding:64px 48px}.center{text-align:center}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:38px}.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:26px;line-height:1.7}.principle{background:var(--ink);color:#fff}.principle .card{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}.app{display:none;max-width:920px;margin:auto;padding:34px 24px}.topbar{display:flex;justify-content:space-between;align-items:center;background:var(--warm);border-bottom:1px solid var(--line);padding:16px 32px}.drop{border:2px dashed var(--ink);border-radius:10px;background:var(--warm);padding:36px;text-align:center;cursor:pointer;margin-bottom:24px}.preview{display:flex;gap:24px;align-items:center;text-align:left}.preview img{max-width:220px;max-height:140px;border:1px solid var(--line);border-radius:4px;object-fit:contain}.pills{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:22px}.pill{border:1.5px solid var(--line);border-radius:99px;padding:8px 18px;cursor:pointer;background:white}.pill.active{background:var(--ink);color:white;border-color:var(--ink)}.error{background:#fff0ed;border:1px solid #ffccc7;color:#b03922;padding:14px;border-radius:6px;margin:18px 0}.tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px}.actions{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:24px 0 12px;flex-wrap:wrap}table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}th{background:var(--warm);text-align:left;padding:10px;border-bottom:2px solid var(--line);white-space:nowrap;font-weight:700}td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:top}.cell-edit{width:100%;min-height:34px;border:0;background:transparent;padding:8px 10px;outline:0;resize:none;overflow:hidden;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.45;color:var(--ink);white-space:pre-wrap}.cell-edit:focus{background:var(--cream)}.col-num{width:8%}.col-main{width:46%}.col-default{width:30%}.road{background:#161615;color:#fff;text-align:center}.roadbox{background:rgba(255,255,255,.08);border-radius:10px;text-align:left;max-width:620px;margin:32px auto;padding:28px;line-height:2.2}.small{font-size:12px;color:var(--muted)}@media(max-width:760px){nav{padding:16px 22px}.navlinks{gap:10px}.navlinks button:not(.trial){display:none}.hero{grid-template-columns:1fr;padding:48px 28px}.cards{grid-template-columns:1fr}.section{padding:50px 28px}.topbar{padding:14px 22px}.preview{flex-direction:column;align-items:flex-start}.btn{width:100%}}
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1A18;--muted:#8A8A80;--line:#E0D8C8;--gold:#C8A96E;--gold2:#E8D5A8;--green:#4A6741}
+    body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--ink)}
+    .serif{font-family:'Playfair Display',serif}
+    .btn{border:0;border-radius:2px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer}
+    .btn.dark{background:var(--ink);color:white}
+    .btn.gold{background:var(--gold);color:var(--ink)}
+    .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+    nav{display:flex;justify-content:space-between;align-items:center;padding:18px 48px;border-bottom:1px solid var(--line);background:var(--warm);position:sticky;top:0;z-index:5}
+    .brand{font:600 18px 'Playfair Display',serif}
+    .sub{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+    .navlinks{display:flex;gap:24px;align-items:center}
+    .navlinks button{background:none;border:0;font-size:14px;cursor:pointer;color:#444}
+    .hero{max-width:980px;margin:auto;padding:78px 48px 64px;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+    .tag{display:inline-block;background:var(--gold2);color:#765922;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.06em;margin-bottom:22px}
+    h1{font-size:clamp(38px,5vw,58px);line-height:1.12;letter-spacing:-.03em;margin-bottom:22px}
+    .hero p{max-width:410px;line-height:1.8;color:#4A4A45;margin-bottom:30px}
+    .mock{width:270px;margin:auto;background:#1A1A18;border-radius:34px;padding:14px;box-shadow:0 28px 60px rgba(0,0,0,.18)}
+    .mockin{background:var(--warm);border-radius:24px;overflow:hidden}
+    .mocktop{background:var(--ink);color:#fff;padding:18px}
+    .mockbody{padding:16px}
+    .minirow{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}
+    .minirow span{background:white;border-radius:3px;padding:4px 6px;font-size:9px}
+    .section{max-width:980px;margin:auto;padding:64px 48px}
+    .center{text-align:center}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:38px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:26px;line-height:1.7}
+    .principle{background:var(--ink);color:#fff}
+    .principle .card{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+    .road{background:#161615;color:#fff;text-align:center}
+    .roadbox{background:rgba(255,255,255,.08);border-radius:10px;text-align:left;max-width:620px;margin:32px auto;padding:28px;line-height:2.2}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* === APP === */
+    .app{display:none;max-width:960px;margin:auto;padding:34px 24px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;background:var(--warm);border-bottom:1px solid var(--line);padding:16px 32px}
+    .drop{border:2px dashed var(--ink);border-radius:10px;background:var(--warm);padding:36px;text-align:center;cursor:pointer;margin-bottom:24px;transition:.15s}
+    .drop:hover{background:#ede7d8}
+    .imgprev{display:flex;gap:24px;align-items:center;text-align:left}
+    .imgprev img{max-width:220px;max-height:140px;border:1px solid var(--line);border-radius:4px;object-fit:contain}
+    .error{background:#fff0ed;border:1px solid #ffccc7;color:#b03922;padding:14px;border-radius:6px;margin:18px 0}
+    .info{background:#fff;border:1px solid var(--line);color:var(--ink);padding:14px;border-radius:6px;margin:18px 0}
+
+    /* Preview tabs */
+    .vtabs{display:flex;border-bottom:2px solid var(--line);margin:28px 0 0}
+    .vtab{background:none;border:0;border-bottom:2.5px solid transparent;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);margin-bottom:-2px;transition:.1s}
+    .vtab.active{color:var(--ink);border-bottom-color:var(--ink)}
+    .vpane{display:none;padding-top:16px}
+    .vpane.on{display:block}
+    .pane-hint{font-size:12px;color:var(--muted);margin-bottom:12px}
+
+    /* Data table */
+    .tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+    table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}
+    th{background:var(--warm);text-align:left;padding:10px;border-bottom:2px solid var(--line);white-space:nowrap;font-weight:700}
+    td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:top}
+    .cell-edit{width:100%;min-height:34px;border:0;background:transparent;padding:8px 10px;outline:0;resize:none;overflow:hidden;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.45;color:var(--ink);white-space:pre-wrap}
+    .cell-edit:focus{background:var(--cream)}
+    .col-num{width:7%}.col-main{width:45%}.col-default{width:28%}
+
+    /* Visual preview */
+    .svg-wrap{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto;min-height:300px;padding:12px;text-align:center}
+    .svg-wrap svg{max-width:100%;height:auto}
+    .no-preview{color:var(--muted);font-size:14px;padding:40px}
+
+    /* Download modes */
+    .dl-section{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:28px 0 16px}
+    .dl-mode{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px}
+    .dl-mode-v{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .dl-mode-title{font-weight:700;font-size:15px;margin-bottom:3px}
+    .dl-mode-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+    .dl-mode-v .dl-mode-sub{color:rgba(255,255,255,.55)}
+    .dl-btns{display:flex;gap:8px;flex-wrap:wrap}
+    .dl-btn{border:1.5px solid var(--line);border-radius:4px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--ink);transition:.12s}
+    .dl-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .dl-mode-v .dl-btn{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}
+    .dl-mode-v .dl-btn:hover{background:rgba(255,255,255,.18)}
+    .beta-tag{font-size:10px;opacity:.6;margin-left:3px}
+
+    /* Grid detect badge */
+    .detect-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:99px;margin-bottom:14px;font-weight:600}
+    .detect-ok{background:#e6f4ea;color:#2d7a45}
+    .detect-fallback{background:#fef7e0;color:#8a6700}
+
+    @media(max-width:760px){
+      nav{padding:16px 22px}.navlinks{gap:10px}.navlinks button:not(.trial){display:none}
+      .hero{grid-template-columns:1fr;padding:48px 28px}.cards{grid-template-columns:1fr}
+      .section{padding:50px 28px}.topbar{padding:14px 22px}
+      .imgprev{flex-direction:column;align-items:flex-start}
+      .btn{width:100%}.dl-section{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-  <div id="landing">
-    <nav><div><div class="brand">PhotoCheck Docs</div><div class="sub">AI DRAFTS. YOU VERIFY.</div></div><div class="navlinks"><button onclick="scrollToId('features')">功能</button><button onclick="scrollToId('flow')">流程</button><button onclick="scrollToId('principle')">產品原則</button><button onclick="scrollToId('roadmap')">版本</button><button class="btn dark trial" onclick="startApp()">免費試用 →</button></div></nav>
-    <section class="hero"><div><span class="tag">V1 PUBLIC TEST · 可人工校對</span><h1 class="serif">照片秒變<br><em>可編輯表格</em><br>不再手打。</h1><p>上傳進貨單、報表、菜單或手寫紀錄，AI 先轉成可編輯表格，你再確認、修改、匯出。</p><div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn dark" onclick="startApp()">免費試用 5 次 →</button><button class="btn ghost" onclick="scrollToId('demo')">查看示範</button></div><p class="small" style="margin-top:22px">✦ AI 產草稿，人類做判斷 ✦ 支援 CSV / JSON / XLSX / DOCX</p></div><div id="demo" class="mock"><div class="mockin"><div class="mocktop"><div class="small">Good evening, Creator</div><div class="serif" style="font-size:18px;margin-top:4px">文件草稿已準備好</div></div><div class="mockbody"><div class="small">進貨單 · 草稿</div><div class="minirow"><span style="background:#1A1A18;color:white">品名</span><span style="background:#1A1A18;color:white">數量</span><span>麵粉</span><span>25kg</span><span>砂糖</span><span>15kg</span></div></div></div></div></section>
-    <section id="features" class="section center"><div class="small">FEATURES</div><h2 class="serif" style="font-size:34px;margin-top:8px">從照片到可校對資料</h2><div class="cards"><div class="card"><b>拍照上傳</b><br>支援 JPG / PNG / WebP，適合進貨單、報表、菜單、手寫紀錄。</div><div class="card"><b>AI 產草稿</b><br>使用 Google Document AI OCR 產生初步表格，結果不直接視為正式資料。</div><div class="card"><b>人工校對匯出</b><br>可在網頁直接修改儲存格，再匯出 CSV / JSON / XLSX / DOCX。</div></div></section>
-    <section id="flow" class="section center"><div class="small">HOW IT WORKS</div><h2 class="serif" style="font-size:34px;margin-top:8px">三步驟，文件數位化</h2><div class="cards"><div class="card"><b>01 上傳圖片</b><br>把紙本文件拍照或截圖後上傳。</div><div class="card"><b>02 OCR 草稿</b><br>系統擷取文字與表格結構，整理成可編輯資料。</div><div class="card"><b>03 校對匯出</b><br>人工確認後下載成所需格式。</div></div></section>
-    <section id="principle" class="section principle center"><div class="small" style="color:var(--gold)">PRODUCT PRINCIPLE</div><h2 class="serif" style="font-size:34px;margin-top:8px">AI 產草稿，人類做判斷</h2><div class="cards"><div class="card">未經人工確認，不自動視為正式資料。</div><div class="card">系統協助減少重打，不取代審核責任。</div><div class="card">V1 Public Test 優先測試辨識流程與校對體驗。</div></div></section>
-    <section id="roadmap" class="section road"><div class="small" style="color:var(--gold)">ROADMAP</div><h2 class="serif" style="font-size:42px;margin-top:10px">後續版本功能</h2><div class="roadbox">✦ V1.1：XLSX / DOCX 匯出測試<br>✦ V1.2：欄位解析與多文件樣本優化<br>✦ V1.3：SVG 版面重建，可丟 Illustrator 編輯<br>✦ V2：帳號、用量紀錄、訂閱制<br>✦ V3：線上核對、簽署、ERP 可擷取格式</div><button class="btn gold" onclick="startApp()">返回測試 →</button></section>
+
+<!-- ======== LANDING ======== -->
+<div id="landing">
+  <nav>
+    <div><div class="brand">PhotoCheck Docs</div><div class="sub">AI DRAFTS. YOU VERIFY.</div></div>
+    <div class="navlinks">
+      <button onclick="scrollToId('features')">功能</button>
+      <button onclick="scrollToId('flow')">流程</button>
+      <button onclick="scrollToId('principle')">產品原則</button>
+      <button onclick="scrollToId('roadmap')">版本</button>
+      <button class="btn dark trial" onclick="startApp()">免費試用 →</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <span class="tag">V1.4 LAYOUT RECONSTRUCTION · 版面重建模式</span>
+      <h1 class="serif">照片秒變<br><em>可編輯表格</em><br>不再手打。</h1>
+      <p>上傳菜單、進貨單、報表，AI 辨識文字同時偵測表格線條，輸出資料用 Excel / CSV，版面用 SVG 直接丟 Illustrator 編輯。</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn dark" onclick="startApp()">免費試用 5 次 →</button>
+        <button class="btn ghost" onclick="scrollToId('demo')">查看示範</button>
+      </div>
+      <p class="small" style="margin-top:22px">✦ AI 產草稿，人類做判斷 ✦ Data Mode: XLSX / CSV / JSON ✦ Visual Mode: SVG / PDF</p>
+    </div>
+    <div id="demo" class="mock">
+      <div class="mockin">
+        <div class="mocktop">
+          <div class="small">Layout Reconstruction</div>
+          <div class="serif" style="font-size:18px;margin-top:4px">版面 + 資料同步輸出</div>
+        </div>
+        <div class="mockbody">
+          <div class="small" style="margin-bottom:8px">菜單 · 偵測到 3 條粗框 · 8 條細格線</div>
+          <div class="minirow">
+            <span style="background:#1A1A18;color:white">品名</span><span style="background:#1A1A18;color:white">價格</span>
+            <span>炒飯</span><span>$80</span>
+            <span>牛肉麵</span><span>$120</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <span style="font-size:10px;background:#e6f4ea;color:#2d7a45;border-radius:4px;padding:3px 8px">⬇ Excel</span>
+            <span style="font-size:10px;background:#1A1A18;color:white;border-radius:4px;padding:3px 8px">⬇ SVG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="section center">
+    <div class="small">FEATURES · V1.4</div>
+    <h2 class="serif" style="font-size:34px;margin-top:8px">照片 → 資料 + 版面，同步輸出</h2>
+    <div class="cards">
+      <div class="card"><b>📊 Data Mode</b><br>XLSX 欄寬依據偵測比例設定，不再全部平均。CSV / JSON 資料乾淨可直接進 ERP。</div>
+      <div class="card"><b>🖼 Visual Mode</b><br>SVG 全向量，粗框細格線都是 &lt;line&gt; 物件，可直接丟 Illustrator 編輯，不是圖片塞 SVG。</div>
+      <div class="card"><b>🔍 版面線條偵測</b><br>Canvas 灰階分析 + 黑色像素密度掃描，辨識水平 / 垂直線及粗細，不依賴 OCR 文字位置。</div>
+    </div>
+  </section>
+
+  <section id="flow" class="section center">
+    <div class="small">HOW IT WORKS · V1.4 PIPELINE</div>
+    <h2 class="serif" style="font-size:34px;margin-top:8px">兩個引擎，同時執行</h2>
+    <div class="cards">
+      <div class="card"><b>01 上傳圖片</b><br>拍照或截圖後上傳，支援 PNG / JPG / WebP，上限 5MB。</div>
+      <div class="card"><b>02 雙引擎辨識</b><br>Google Document AI 辨識文字位置，前端 Canvas 偵測表格線條，結果合併。</div>
+      <div class="card"><b>03 雙模式輸出</b><br>Data Mode 下載 Excel / CSV / JSON，Visual Mode 下載 SVG / PDF，各自獨立邏輯。</div>
+    </div>
+  </section>
+
+  <section id="principle" class="section principle center">
+    <div class="small" style="color:var(--gold)">PRODUCT PRINCIPLE</div>
+    <h2 class="serif" style="font-size:34px;margin-top:8px">AI 產草稿，人類做判斷</h2>
+    <div class="cards">
+      <div class="card">未經人工確認，不自動視為正式資料。</div>
+      <div class="card">系統協助減少重打，不取代審核責任。</div>
+      <div class="card">版面重建為近似結果，需人工核對後使用。</div>
+    </div>
+  </section>
+
+  <section id="roadmap" class="section road">
+    <div class="small" style="color:var(--gold)">ROADMAP</div>
+    <h2 class="serif" style="font-size:42px;margin-top:10px">版本紀錄</h2>
+    <div class="roadbox">
+      ✦ V1.1：XLSX / DOCX 匯出<br>
+      ✦ V1.2：Grid 重建，欄位解析優化<br>
+      ✦ V1.3：SVG / CSV / JSON 加入，visual data 回傳<br>
+      ✦ <b style="color:var(--gold2)">V1.4：Layout Reconstruction Mode ← 目前版本</b><br>
+      <span style="font-size:12px;opacity:.7;margin-left:20px">Canvas 線條偵測 · 雙模式輸出 · 向量 SVG · 欄寬比例 XLSX</span><br>
+      ✦ V2：帳號、用量紀錄、訂閱制<br>
+      ✦ V3：線上核對、簽署、ERP 可擷取格式
+    </div>
+    <button class="btn gold" onclick="startApp()">開始使用 V1.4 →</button>
+  </section>
+</div>
+
+
+<!-- ======== APP ======== -->
+<div id="app" class="app">
+  <div class="topbar">
+    <div><div class="brand">PhotoCheck Docs</div><div class="sub">V1.4 LAYOUT RECONSTRUCTION MODE</div></div>
+    <div>剩餘免費次數：<b id="remain">5</b> / 5</div>
   </div>
-  <div id="app" class="app"><div class="topbar"><div><div class="brand">PhotoCheck Docs</div><div class="sub">AI DRAFTS. YOU VERIFY.</div></div><div>剩餘免費次數：<b id="remain">5</b> / 5</div></div><div style="padding:32px 0"><input id="file" type="file" accept="image/*" hidden><div class="drop" onclick="file.click()" ondragover="event.preventDefault()" ondrop="dropFile(event)"><div id="dropText"><b>拖放圖片，或點擊上傳</b><br><span class="small">支援 PNG · JPG · WEBP｜上限 5MB</span></div><div id="previewBox" class="preview" style="display:none"><img id="preview"><div><b>圖片已載入</b><br><span class="small">點擊此區域更換圖片</span></div></div></div><div class="pills"><span class="small">匯出格式：</span><button class="pill active" data-format="xlsx">XLSX</button><button class="pill" data-format="docx">DOCX</button><button class="pill" data-format="svg">SVG</button><button class="pill" data-format="csv">CSV</button><button class="pill" data-format="json">JSON</button></div><button class="btn dark" id="convert">✦ 啟動 AI 辨識</button><div id="msg"></div><div id="result" style="display:none"><div class="actions"><div><div class="serif" style="font-size:22px">辨識結果</div><div class="small">可直接在格子內點擊修改，確認後再匯出。</div></div><button class="btn gold" id="download">下載</button></div><div class="tablewrap" id="tablewrap"></div></div></div></div>
+
+  <div style="padding:32px 0">
+    <input id="file" type="file" accept="image/*" hidden>
+
+    <div class="drop" id="dropzone" onclick="file.click()" ondragover="event.preventDefault()" ondrop="dropFile(event)">
+      <div id="dropText"><b>拖放圖片，或點擊上傳</b><br><span class="small">支援 PNG · JPG · WEBP｜上限 5MB</span></div>
+      <div id="previewBox" class="imgprev" style="display:none">
+        <img id="preview" alt="預覽">
+        <div><b>圖片已載入</b><br><span class="small">點擊此區域更換圖片</span></div>
+      </div>
+    </div>
+
+    <div id="msg"></div>
+
+    <button class="btn dark" id="convert" style="width:100%">✦ 啟動 AI 辨識 + 版面偵測</button>
+
+    <div id="result" style="display:none">
+
+      <!-- detect badge -->
+      <div style="margin-top:22px" id="detectBadge"></div>
+
+      <!-- preview tabs -->
+      <div class="vtabs">
+        <button class="vtab active" id="tab-data" onclick="switchPreview('data')">📊 Data Preview（可編輯）</button>
+        <button class="vtab" id="tab-visual" onclick="switchPreview('visual')">🖼 Visual Preview（版面重建）</button>
+      </div>
+
+      <!-- data pane -->
+      <div class="vpane on" id="pane-data">
+        <div class="pane-hint">可在格子內直接修改，確認後再選擇下方格式下載。</div>
+        <div class="tablewrap" id="tablewrap"></div>
+      </div>
+
+      <!-- visual pane -->
+      <div class="vpane" id="pane-visual">
+        <div class="pane-hint">向量版面重建預覽 — 所有線條為 &lt;line&gt;/&lt;rect&gt; 物件，文字為 &lt;text&gt; 物件，非圖片嵌入。</div>
+        <div class="svg-wrap" id="svgPreview"><div class="no-preview">辨識後自動顯示版面預覽</div></div>
+      </div>
+
+      <!-- download section -->
+      <div class="dl-section">
+        <div class="dl-mode">
+          <div class="dl-mode-title">📊 Data Mode</div>
+          <div class="dl-mode-sub">資料乾淨可編輯，適合 ERP 匯入。XLSX 欄寬依偵測比例設定。</div>
+          <div class="dl-btns">
+            <button class="dl-btn" onclick="dl('xlsx')">⬇ Excel</button>
+            <button class="dl-btn" onclick="dl('csv')">⬇ CSV</button>
+            <button class="dl-btn" onclick="dl('json')">⬇ JSON</button>
+            <button class="dl-btn" onclick="dl('docx')">⬇ DOCX</button>
+          </div>
+        </div>
+        <div class="dl-mode dl-mode-v">
+          <div class="dl-mode-title">🖼 Visual Mode</div>
+          <div class="dl-mode-sub">保留原圖版面比例，粗框細格線皆向量，可丟 Illustrator 直接編輯。</div>
+          <div class="dl-btns">
+            <button class="dl-btn" onclick="dl('svg')">⬇ SVG</button>
+            <button class="dl-btn" onclick="dl('pdf')">⬇ PDF<span class="beta-tag">β</span></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /result -->
+  </div>
+</div><!-- /app -->
+
+
 <script>
-let imageData=null, tableData=null, visualData=null, format='xlsx'; const limit=5; const usageKey='photocheck_usage';
-function usage(){return Number(localStorage.getItem(usageKey)||0)} function inc(){localStorage.setItem(usageKey,String(usage()+1)); updateRemain()} function updateRemain(){document.getElementById('remain').textContent=Math.max(0,limit-usage())}
-function scrollToId(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'})} function startApp(){document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';updateRemain();scrollTo({top:0})}
-file.onchange=e=>handleFile(e.target.files[0]); function dropFile(e){e.preventDefault();handleFile(e.dataTransfer.files[0])}
-function handleFile(f){ if(!f||!f.type.startsWith('image/'))return; if(f.size>5*1024*1024){show('圖片超過 5MB，請先壓縮。',true);return} const r=new FileReader(); r.onload=()=>{imageData=r.result;preview.src=imageData;dropText.style.display='none';previewBox.style.display='flex';result.style.display='none'}; r.readAsDataURL(f)}
-document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));b.classList.add('active');format=b.dataset.format});
-function show(t,err=false){msg.innerHTML=t?`<div class="error" style="${err?'':'background:#fff;border-color:var(--line);color:var(--ink)'}">${t}</div>`:''}
-convert.onclick=async()=>{if(!imageData)return show('請先上傳圖片。',true); if(usage()>=limit)return show('免費次數已用完。',true); convert.disabled=true; show('辨識中，請稍候…'); try{const res=await fetch('/api/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imageData})}); const json=await res.json(); if(!res.ok)throw new Error(json.error||'辨識失敗'); const rows=Array.isArray(json)?json:json.rows; if(!Array.isArray(rows))throw new Error('回傳格式不是表格陣列'); tableData=rows; visualData=Array.isArray(json)?null:json.visual; renderTable(); inc(); show(''); result.style.display='block'}catch(e){show(e.message,true)}finally{convert.disabled=false}}
-function renderTable(){const keys=[...new Set(tableData.flatMap(r=>Object.keys(r)))]; const colgroup='<colgroup>'+keys.map(k=>`<col class="${k==='行號'?'col-num':((k==='左欄'||k==='右欄'||k==='段落'||k==='內容')?'col-main':'col-default')}">`).join('')+'</colgroup>'; tablewrap.innerHTML=`<table>${colgroup}<thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${tableData.map((r,i)=>`<tr>${keys.map(k=>`<td><textarea class="cell-edit" rows="1" oninput="tableData[${i}]['${js(k)}']=this.value;autoGrow(this)">${esc(r[k]||'')}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>`; document.querySelectorAll('.cell-edit').forEach(autoGrow)}
-function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))} function attr(s){return esc(s).replace(/"/g,'&quot;')} function js(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
-download.onclick=()=>{if(!tableData)return; if(format==='json')save('photocheck-export.json',new Blob([JSON.stringify(tableData,null,2)],{type:'application/json'})); else if(format==='csv')save('photocheck-export.csv',new Blob([toCSV(tableData)],{type:'text/csv;charset=utf-8'})); else if(format==='xlsx')save('photocheck-export.xlsx',makeXLSX(tableData)); else if(format==='svg')save('photocheck-layout.svg',makeSVG(visualData,tableData)); else save('photocheck-export.docx',makeDOCX(tableData))}
-function autoGrow(el){el.style.height='auto';el.style.height=Math.min(Math.max(el.scrollHeight,34),240)+'px'}
-function save(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function toCSV(data){const keys=[...new Set(data.flatMap(r=>Object.keys(r)))]; return [keys,...data.map(r=>keys.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"'))].map(r=>r.join(',')).join('\n')}
-function crc32Bytes(bytes){let c=~0; for(let i=0;i<bytes.length;i++){c^=bytes[i]; for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1} return ~c>>>0}
-function columnName(n){let s=''; n++; while(n>0){let m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26)} return s}
-function zip(files,mime='application/zip'){
-  const enc=new TextEncoder();
-  const entries=[]; let offset=0;
-  for(const [name,content] of files){
-    const nameBytes=enc.encode(name); const data=enc.encode(content); const crc=crc32Bytes(data);
-    entries.push({nameBytes,data,crc,offset});
-    offset += 30 + nameBytes.length + data.length;
-  }
-  const centralSize=entries.reduce((sum,e)=>sum+46+e.nameBytes.length,0);
-  const totalSize=offset + centralSize + 22;
-  const out=new Uint8Array(totalSize); const view=new DataView(out.buffer); let p=0;
-  const w16=v=>{view.setUint16(p,v,true);p+=2}; const w32=v=>{view.setUint32(p,v>>>0,true);p+=4}; const put=b=>{out.set(b,p);p+=b.length};
-  for(const e of entries){
-    e.offset=p; w32(0x04034b50); w16(20); w16(0x0800); w16(0); w16(0); w16(0); w32(e.crc); w32(e.data.length); w32(e.data.length); w16(e.nameBytes.length); w16(0); put(e.nameBytes); put(e.data);
-  }
-  const centralStart=p;
-  for(const e of entries){
-    w32(0x02014b50); w16(20); w16(20); w16(0x0800); w16(0); w16(0); w16(0); w32(e.crc); w32(e.data.length); w32(e.data.length); w16(e.nameBytes.length); w16(0); w16(0); w16(0); w16(0); w32(0); w32(e.offset); put(e.nameBytes);
-  }
-  const centralEnd=p;
-  w32(0x06054b50); w16(0); w16(0); w16(entries.length); w16(entries.length); w32(centralEnd-centralStart); w32(centralStart); w16(0);
-  return new Blob([out],{type:mime});
+// ─── state ───────────────────────────────────────────────
+let imageData = null, tableData = null, visualData = null, layoutGrid = null, layoutData = null;
+const LIMIT = 5, USAGE_KEY = 'photocheck_usage';
+
+function usage() { return Number(localStorage.getItem(USAGE_KEY) || 0); }
+function inc() { localStorage.setItem(USAGE_KEY, String(usage() + 1)); updateRemain(); }
+function updateRemain() { document.getElementById('remain').textContent = Math.max(0, LIMIT - usage()); }
+
+function scrollToId(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }
+function startApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  updateRemain();
+  scrollTo({ top: 0 });
 }
 
-function makeSVG(visual,data){
-  const W=1200,H=1700,margin=40;
-  if(!visual||!visual.items||!visual.items.length){
-    const keys=[...new Set(data.flatMap(r=>Object.keys(r)))];
-    const rows=[keys,...data.map(r=>keys.map(k=>r[k]||''))];
-    const cw=(W-margin*2)/Math.max(1,keys.length), rh=34;
-    let out=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.max(400,rows.length*rh+margin*2)}" viewBox="0 0 ${W} ${Math.max(400,rows.length*rh+margin*2)}"><rect width="100%" height="100%" fill="white"/>`;
-    rows.forEach((row,r)=>row.forEach((v,c)=>{const x=margin+c*cw,y=margin+r*rh;out+=`<rect x="${x}" y="${y}" width="${cw}" height="${rh}" fill="none" stroke="#111" stroke-width="${r===0?2:1}"/><text x="${x+6}" y="${y+22}" font-size="14" font-family="Arial, sans-serif">${esc(v)}</text>`}));
-    return new Blob([out+'</svg>'],{type:'image/svg+xml'});
-  }
-  const b=visual.bounds||{minX:0,maxX:1,minY:0,maxY:1};
-  const sx=(x)=>margin+(x-b.minX)/(b.maxX-b.minX||1)*(W-margin*2);
-  const sy=(y)=>margin+(y-b.minY)/(b.maxY-b.minY||1)*(H-margin*2);
-  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="white"/>`;
-  const cols=visual.columns||[], rows=visual.rows||[];
-  if(cols.length&&rows.length){
-    const x0=sx(cols[0]),x1=sx(cols[cols.length-1]),y0=sy(rows[0]),y1=sy(rows[rows.length-1]);
-    svg+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="#000" stroke-width="4"/>`;
-    cols.slice(1,-1).forEach(x=>svg+=`<line x1="${sx(x)}" y1="${y0}" x2="${sx(x)}" y2="${y1}" stroke="#000" stroke-width="2"/>`);
-    rows.slice(1,-1).forEach(y=>svg+=`<line x1="${x0}" y1="${sy(y)}" x2="${x1}" y2="${sy(y)}" stroke="#000" stroke-width="2"/>`);
-  }
-  visual.items.forEach(it=>{
-    const x=sx(it.minX),y=sy(it.minY)+14;
-    const size=Math.max(10,Math.min(18,(it.maxY-it.minY)*H*0.75));
-    svg+=`<text x="${x}" y="${y}" font-size="${size}" font-family="Arial, 'Noto Sans TC', sans-serif" fill="#111">${esc(it.text)}</text>`;
+// ─── file handling ─────────────────────────────────────────
+file.onchange = e => handleFile(e.target.files[0]);
+function dropFile(e) { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }
+function handleFile(f) {
+  if (!f || !f.type.startsWith('image/')) return;
+  if (f.size > 5 * 1024 * 1024) { show('圖片超過 5MB，請先壓縮。', true); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    imageData = r.result;
+    document.getElementById('preview').src = imageData;
+    document.getElementById('dropText').style.display = 'none';
+    document.getElementById('previewBox').style.display = 'flex';
+    document.getElementById('result').style.display = 'none';
+    layoutGrid = null;
+    layoutData = null;
+  };
+  r.readAsDataURL(f);
+}
+
+// ─── ui helpers ─────────────────────────────────────────────
+function show(t, err = false) {
+  document.getElementById('msg').innerHTML = t
+    ? `<div class="${err ? 'error' : 'info'}">${t}</div>` : '';
+}
+function switchPreview(mode) {
+  document.querySelectorAll('.vtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.vpane').forEach(p => p.classList.remove('on'));
+  document.getElementById('tab-' + mode).classList.add('active');
+  document.getElementById('pane-' + mode).classList.add('on');
+}
+
+// ─────────────────────────────────────────────────────────────
+// CANVAS LINE DETECTION
+// Strategy: convert to grayscale, scan each row/col for dark pixel density.
+// A row with >30% dark pixels = horizontal table line.
+// A col with >20% dark pixels = vertical table line.
+// Consecutive dark rows/cols are clustered; cluster size = line thickness.
+// ─────────────────────────────────────────────────────────────
+async function detectLines(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const MAX = 1400;
+        const sc = Math.min(1, MAX / Math.max(img.width, img.height));
+        const W = Math.round(img.width * sc);
+        const H = Math.round(img.height * sc);
+        const cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, W, H);
+        const px = ctx.getImageData(0, 0, W, H).data;
+
+        // Grayscale (BT.601 luma)
+        const gray = new Uint8Array(W * H);
+        for (let i = 0; i < W * H; i++) {
+          const p = i * 4;
+          // slight contrast boost: pull dark pixels darker
+          let g = (77 * px[p] + 150 * px[p + 1] + 29 * px[p + 2]) >> 8;
+          gray[i] = g < 128 ? Math.max(0, Math.round(g * 0.75)) : g;
+        }
+
+        const DARK = 90; // threshold: below = dark pixel
+        const EDGE = 8;  // ignore first/last N pixels (border artifacts)
+
+        // Scan horizontal lines
+        const darkRows = [];
+        for (let y = EDGE; y < H - EDGE; y++) {
+          let d = 0;
+          for (let x = EDGE; x < W - EDGE; x++) d += gray[y * W + x] < DARK ? 1 : 0;
+          if (d / (W - EDGE * 2) >= 0.30) darkRows.push(y);
+        }
+
+        // Scan vertical lines
+        const darkCols = [];
+        for (let x = EDGE; x < W - EDGE; x++) {
+          let d = 0;
+          for (let y = EDGE; y < H - EDGE; y++) d += gray[y * W + x] < DARK ? 1 : 0;
+          if (d / (H - EDGE * 2) >= 0.20) darkCols.push(x);
+        }
+
+        // Cluster consecutive positions into line objects
+        function clusterLines(positions, max) {
+          if (!positions.length) return [];
+          const groups = [[positions[0]]];
+          for (let i = 1; i < positions.length; i++) {
+            const last = groups[groups.length - 1];
+            if (positions[i] - last[last.length - 1] <= 5) last.push(positions[i]);
+            else groups.push([positions[i]]);
+          }
+          return groups.map(g => {
+            const center = (g[0] + g[g.length - 1]) / 2;
+            return {
+              center,
+              thickness: g.length,       // pixel width of the line
+              norm: center / max,        // normalized 0-1
+              isThick: g.length >= 3,    // ≥3px = thick border
+            };
+          });
+        }
+
+        const hLines = clusterLines(darkRows, H);
+        const vLines = clusterLines(darkCols, W);
+        resolve({ hLines, vLines, W, H, ratio: H / W });
+      } catch (e) {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
   });
-  svg+='</svg>';
-  return new Blob([svg],{type:'image/svg+xml'});
 }
 
-function makeXLSX(data){const keys=[...new Set(data.flatMap(r=>Object.keys(r)))]; const rows=[keys,...data.map(r=>keys.map(k=>r[k]||''))]; const colXml='<cols>'+keys.map((k,i)=>{let w=(k==='行號')?8:((k==='左欄'||k==='右欄'||k==='段落'||k==='內容')?42:24);return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'}).join('')+'</cols>'; const sheet='<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+colXml+'<sheetData>'+rows.map((row,i)=>{const maxLen=Math.max(...row.map(v=>String(v||'').length)); const ht=i===0?24:Math.min(Math.max(22,Math.ceil(maxLen/18)*18),120); return '<row r="'+(i+1)+'" ht="'+ht+'" customHeight="1">'+row.map((v,j)=>'<c r="'+columnName(j)+(i+1)+'" t="inlineStr" s="'+(i===0?2:1)+'"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>').join('')+'</row>'}).join('')+'</sheetData></worksheet>'; const styles='<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF5F0E8"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFE0D8C8"/></left><right style="thin"><color rgb="FFE0D8C8"/></right><top style="thin"><color rgb="FFE0D8C8"/></top><bottom style="thin"><color rgb="FFE0D8C8"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'; return zip([['[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml','<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck" sheetId="1" r:id="rId1"/></sheets></workbook>'],['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],['xl/styles.xml',styles],['xl/worksheets/sheet1.xml',sheet]],'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-function makeDOCX(data){const keys=[...new Set(data.flatMap(r=>Object.keys(r)))]; const rows=[keys,...data.map(r=>keys.map(k=>r[k]||''))]; const trs=rows.map(row=>'<w:tr>'+row.map(v=>'<w:tc><w:p><w:r><w:t>'+esc(v)+'</w:t></w:r></w:p></w:tc>').join('')+'</w:tr>').join(''); return zip([['[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],['word/document.xml','<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>PhotoCheck Docs Export</w:t></w:r></w:p><w:tbl>'+trs+'</w:tbl></w:body></w:document>']],'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+// ─── build merged grid from canvas + API visual data ─────────
+function buildGrid(det, vis) {
+  const hasCanvas = det && det.vLines.length >= 2 && det.hLines.length >= 2;
+  const items = vis?.items || [];
+
+  if (hasCanvas) {
+    // Use canvas-detected line positions as grid
+    const vN = det.vLines.map(l => l.norm);
+    const hN = det.hLines.map(l => l.norm);
+    // Build cell boundaries: [0, between-lines, 1]
+    const vB = [0, ...vN, 1].filter((v, i, a) => i === 0 || v - a[i - 1] > 0.012);
+    const hB = [0, ...hN, 1].filter((v, i, a) => i === 0 || v - a[i - 1] > 0.008);
+    return { vB, hB, vLines: det.vLines, hLines: det.hLines, items, ratio: det.ratio, fromCanvas: true };
+  }
+
+  // Fallback: API text-cluster boundaries
+  const vB = vis?.columns?.length >= 2 ? vis.columns : [0, 0.5, 1];
+  const hB = vis?.rows?.length >= 2 ? vis.rows : [0, 0.5, 1];
+  const vLines = vB.slice(1, -1).map(n => ({ norm: n, isThick: false, thickness: 1 }));
+  const hLines = hB.slice(1, -1).map(n => ({ norm: n, isThick: false, thickness: 1 }));
+  const ratio = vis?.aspectRatio || 1.4;
+  return { vB, hB, vLines, hLines, items, ratio, fromCanvas: false };
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// V1.4 Phase 2: buildGridFromLayoutData
+// Converts API layoutData (page-coordinate space) to the
+// normalised grid format used by buildSVGString / makeXLSX.
+// Returns null when layoutData has no usable grid candidates.
+// ─────────────────────────────────────────────────────────────
+function buildGridFromLayoutData(ld, vis) {
+  if (!ld) return null;
+  const { pageWidth, pageHeight, textBlocks, gridCandidates } = ld;
+  const { verticalLines, horizontalLines } = gridCandidates;
+
+  const hasGrid = verticalLines.length >= 2 && horizontalLines.length >= 2;
+  if (!hasGrid) return null;
+
+  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
+  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+
+  const tableX0 = sortedV[0].x,   tableX1 = sortedV[sortedV.length - 1].x;
+  const tableY0 = sortedH[0].y,   tableY1 = sortedH[sortedH.length - 1].y;
+  const rangeX  = tableX1 - tableX0 || 1;
+  const rangeY  = tableY1 - tableY0 || 1;
+
+  const nx = v => (v - tableX0) / rangeX;
+  const ny = v => (v - tableY0) / rangeY;
+
+  const vB = sortedV.map(l => nx(l.x));
+  const hB = sortedH.map(l => ny(l.y));
+
+  const vLines = sortedV.slice(1, -1).map(l => ({ norm: nx(l.x), isThick: false, thickness: 1 }));
+  const hLines = sortedH.slice(1, -1).map(l => ({ norm: ny(l.y), isThick: false, thickness: 1 }));
+
+  const items = (textBlocks || []).map(b => ({
+    text:  b.text,
+    minX:  nx(b.boundingBox.x),
+    minY:  ny(b.boundingBox.y),
+    maxX:  nx(b.boundingBox.x + b.boundingBox.width),
+    maxY:  ny(b.boundingBox.y + b.boundingBox.height),
+  }));
+
+  return {
+    vB, hB, vLines, hLines, items,
+    ratio:          pageHeight / pageWidth,
+    fromLayoutData: true,
+    fromCanvas:     false,
+    _sortedV: sortedV,
+    _sortedH: sortedH,
+    _ld:      ld,
+  };
+}
+
+// Map OCR text items to grid cells
+function mapToGrid(items, vB, hB) {
+  const nr = hB.length - 1, nc = vB.length - 1;
+  const cells = Array.from({ length: nr }, () => Array(nc).fill(''));
+  for (const it of items) {
+    const cx = (it.minX + it.maxX) / 2;
+    const cy = (it.minY + it.maxY) / 2;
+    let col = nc - 1, row = nr - 1;
+    for (let c = 0; c < nc; c++) { if (cx < vB[c + 1]) { col = c; break; } }
+    for (let r = 0; r < nr; r++) { if (cy < hB[r + 1]) { row = r; break; } }
+    if (row >= 0 && row < nr && col >= 0 && col < nc) {
+      cells[row][col] = cells[row][col] ? cells[row][col] + ' ' + it.text : it.text;
+    }
+  }
+  return { cells, nr, nc };
+}
+
+// ─── CONVERT (OCR + line detect, parallel) ───────────────────
+convert.onclick = async () => {
+  if (!imageData) return show('請先上傳圖片。', true);
+  if (usage() >= LIMIT) return show('免費次數已用完。', true);
+  convert.disabled = true;
+  show('版面線條偵測 + AI 辨識中，請稍候…');
+
+  try {
+    const [lineResult, ocrRes] = await Promise.all([
+      detectLines(imageData).catch(() => null),
+      fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData }),
+      }).then(r => r.json()).catch(e => ({ error: e.message })),
+    ]);
+
+    if (ocrRes.error) { show(ocrRes.error, true); return; }
+
+    const rows = Array.isArray(ocrRes) ? ocrRes : ocrRes.rows;
+    if (!Array.isArray(rows)) { show('回傳格式錯誤', true); return; }
+
+    tableData = rows;
+    visualData = Array.isArray(ocrRes) ? null : ocrRes.visual;
+    layoutData = ocrRes.layoutData || null;
+
+    // Grid priority:
+    //   1. layoutData (from Document AI tables) — most accurate
+    //   2. canvas line detection (pixel scan)
+    //   3. OCR text-cluster fallback
+    const ldGrid = layoutData ? buildGridFromLayoutData(layoutData, visualData) : null;
+    layoutGrid = ldGrid || buildGrid(lineResult, visualData);
+
+    inc();
+    show('');
+    renderTable();
+    renderVisualPreview();
+
+    // Show detect badge
+    const b = document.getElementById('detectBadge');
+    if (ldGrid) {
+      const nv = layoutData.gridCandidates.verticalLines.length;
+      const nh = layoutData.gridCandidates.horizontalLines.length;
+      const nc = layoutData.gridCandidates.cells.length;
+      b.innerHTML = `<span class="detect-badge detect-ok">✓ Document AI 表格結構 — ${nv} 條垂直線 · ${nh} 條水平線 · ${nc} 個 cells · XLSX / SVG 均使用真實座標</span>`;
+    } else if (layoutGrid.fromCanvas) {
+      const nh = layoutGrid.hLines.length, nv = layoutGrid.vLines.length;
+      const thickH = layoutGrid.hLines.filter(l => l.isThick).length;
+      const thickV = layoutGrid.vLines.filter(l => l.isThick).length;
+      b.innerHTML = `<span class="detect-badge detect-ok">✓ Canvas 像素偵測 — 水平線 ${nh}（粗框 ${thickH}）· 垂直線 ${nv}（粗框 ${thickV}）</span>`;
+    } else {
+      b.innerHTML = `<span class="detect-badge detect-fallback">⚠ 以 OCR 文字位置推算版面（圖片線條不明顯）</span>`;
+    }
+
+    document.getElementById('result').style.display = 'block';
+  } finally {
+    convert.disabled = false;
+  }
+};
+
+// ─── DATA TABLE RENDER ────────────────────────────────────────
+function renderTable() {
+  const keys = [...new Set(tableData.flatMap(r => Object.keys(r)))];
+  const cg = '<colgroup>' + keys.map(k =>
+    `<col class="${k === '行號' ? 'col-num' : (k === '左欄' || k === '右欄' || k === '段落' || k === '內容') ? 'col-main' : 'col-default'}">`
+  ).join('') + '</colgroup>';
+  document.getElementById('tablewrap').innerHTML = `<table>${cg}<thead><tr>${
+    keys.map(k => `<th>${esc(k)}</th>`).join('')
+  }</tr></thead><tbody>${
+    tableData.map((r, i) => `<tr>${
+      keys.map(k => `<td><textarea class="cell-edit" rows="1"
+        oninput="tableData[${i}]['${js(k)}']=this.value;autoGrow(this)">${esc(r[k] || '')}</textarea></td>`).join('')
+    }</tr>`).join('')
+  }</tbody></table>`;
+  document.querySelectorAll('.cell-edit').forEach(autoGrow);
+}
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(Math.max(el.scrollHeight, 34), 240) + 'px'; }
+
+// ─── VISUAL PREVIEW (inline SVG) ─────────────────────────────
+function renderVisualPreview() {
+  const el = document.getElementById('svgPreview');
+
+  // Priority 1: layoutData with real page coordinates
+  if (layoutData?.gridCandidates?.verticalLines?.length >= 2) {
+    el.innerHTML = buildSVGFromLayoutData(layoutData);
+    return;
+  }
+
+  // Priority 2: canvas / text-cluster normalised grid
+  if (!layoutGrid || !layoutGrid.items.length) {
+    el.innerHTML = '<div class="no-preview">版面資料不足，無法重建預覽</div>';
+    return;
+  }
+  el.innerHTML = buildSVGString(layoutGrid, 860, Math.round(860 * Math.max(0.5, Math.min(3, layoutGrid.ratio))));
+}
+
+// ─────────────────────────────────────────────────────────────
+// SVG BUILDER — two implementations:
+//
+// buildSVGFromLayoutData(ld)
+//   Uses Document AI page coordinates directly.
+//   viewBox = native page dims → browser scales to display width.
+//   All lines / text are real vector objects; no embedded image.
+//
+// buildSVGString(grid, W, H)
+//   Legacy normalised-coordinate path (canvas / text-cluster).
+//   Used when layoutData is unavailable.
+// ─────────────────────────────────────────────────────────────
+
+function buildSVGFromLayoutData(ld) {
+  const { pageWidth, pageHeight, textBlocks, gridCandidates } = ld;
+  const { verticalLines, horizontalLines } = gridCandidates;
+
+  // stroke-width in page-coordinate units (browser scales with viewBox)
+  const outerSW = (pageWidth / 300).toFixed(2);
+  const innerSW = (pageWidth / 1000).toFixed(2);
+  const fontMax  = pageWidth / 60;
+  const fontMin  = pageWidth / 160;
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pageWidth} ${pageHeight}" preserveAspectRatio="xMidYMid meet">`;
+  s += `<rect width="${pageWidth}" height="${pageHeight}" fill="white"/>`;
+
+  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
+  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+
+  if (sortedV.length >= 2 && sortedH.length >= 2) {
+    const x0 = sortedV[0].x,                   x1 = sortedV[sortedV.length - 1].x;
+    const y0 = sortedH[0].y,                   y1 = sortedH[sortedH.length - 1].y;
+    const tableW = x1 - x0, tableH = y1 - y0;
+
+    // Outer border (thick rect)
+    s += `<rect x="${x0}" y="${y0}" width="${tableW}" height="${tableH}" fill="none" stroke="#111" stroke-width="${outerSW}"/>`;
+
+    // Internal vertical lines (thin)
+    for (const vl of sortedV.slice(1, -1)) {
+      s += `<line x1="${vl.x}" y1="${y0}" x2="${vl.x}" y2="${y1}" stroke="#111" stroke-width="${innerSW}"/>`;
+    }
+
+    // Internal horizontal lines (thin)
+    for (const hl of sortedH.slice(1, -1)) {
+      s += `<line x1="${x0}" y1="${hl.y}" x2="${x1}" y2="${hl.y}" stroke="#111" stroke-width="${innerSW}"/>`;
+    }
+  }
+
+  // Text blocks at original page coordinates
+  for (const blk of textBlocks) {
+    const tx = blk.boundingBox.x + pageWidth * 0.003;
+    const ty = blk.boundingBox.y + blk.boundingBox.height * 0.75;
+    const fs = Math.max(fontMin, Math.min(fontMax, blk.boundingBox.height * 0.68)).toFixed(1);
+    s += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs}" font-family="Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif" fill="#111">${esc(blk.text)}</text>`;
+  }
+
+  s += '</svg>';
+  return s;
+}
+
+// Legacy: normalised-coordinate SVG (canvas / text-cluster fallback)
+function buildSVGString(grid, W, H) {
+  const M = 36, iW = W - M * 2, iH = H - M * 2;
+  const sx = n => M + n * iW;
+  const sy = n => M + n * iH;
+  const { vB, hB, vLines, hLines, items } = grid;
+
+  const x0 = sx(0), x1 = sx(1), y0 = sy(0), y1 = sy(1);
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  s += `<rect width="${W}" height="${H}" fill="white"/>`;
+
+  // Outer bounding box — always thick
+  s += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${(y1-y0).toFixed(1)}" fill="none" stroke="#111" stroke-width="3.5"/>`;
+
+  // Internal horizontal lines
+  for (const hl of hLines) {
+    const y = sy(hl.norm);
+    const sw = hl.isThick ? 2.5 : 0.9;
+    s += `<line x1="${x0.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#111" stroke-width="${sw}"/>`;
+  }
+
+  // Internal vertical lines
+  for (const vl of vLines) {
+    const x = sx(vl.norm);
+    const sw = vl.isThick ? 2.5 : 0.9;
+    s += `<line x1="${x.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#111" stroke-width="${sw}"/>`;
+  }
+
+  // Text items — mapped to original normalized positions
+  for (const it of items) {
+    const tx = sx(it.minX) + 3;
+    const ty = sy(it.minY + (it.maxY - it.minY) * 0.72);
+    const cellH = (it.maxY - it.minY) * iH;
+    const fs = Math.max(8, Math.min(18, cellH * 0.62));
+    s += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif" fill="#111">${esc(it.text)}</text>`;
+  }
+
+  s += '</svg>';
+  return s;
+}
+
+// ─── DOWNLOAD DISPATCHER ─────────────────────────────────────
+function dl(fmt) {
+  if (!tableData) return;
+  if (fmt === 'json') save('photocheck-data.json', new Blob([JSON.stringify(tableData, null, 2)], { type: 'application/json' }));
+  else if (fmt === 'csv') save('photocheck-data.csv', new Blob([toCSV(tableData)], { type: 'text/csv;charset=utf-8' }));
+  else if (fmt === 'xlsx') save('photocheck-data.xlsx', makeXLSX(tableData, layoutGrid, layoutData));
+  else if (fmt === 'docx') save('photocheck-data.docx', makeDOCX(tableData));
+  else if (fmt === 'svg') {
+    // Priority: layoutData page-coord SVG → normalised fallback
+    if (layoutData?.gridCandidates?.verticalLines?.length >= 2) {
+      save('photocheck-layout.svg', new Blob([buildSVGFromLayoutData(layoutData)], { type: 'image/svg+xml' }));
+    } else if (layoutGrid) {
+      const W = 1200, H = Math.round(W * Math.max(0.5, Math.min(3, layoutGrid.ratio)));
+      save('photocheck-layout.svg', new Blob([buildSVGString(layoutGrid, W, H)], { type: 'image/svg+xml' }));
+    }
+  }
+  else if (fmt === 'pdf') printAsPDF();
+}
+
+function printAsPDF() {
+  // Priority: layoutData → normalised fallback
+  let svgStr;
+  if (layoutData?.gridCandidates?.verticalLines?.length >= 2) {
+    svgStr = buildSVGFromLayoutData(layoutData);
+  } else if (layoutGrid) {
+    const W = 1200, H = Math.round(W * Math.max(0.5, Math.min(3, layoutGrid.ratio)));
+    svgStr = buildSVGString(layoutGrid, W, H);
+  } else return;
+
+  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open('', '_blank');
+  if (!win) { alert('請允許彈出視窗以列印 PDF'); URL.revokeObjectURL(url); return; }
+  win.document.write(`<!doctype html><html><head><title>PhotoCheck Layout</title>
+<style>*{margin:0;padding:0}body{background:white}svg{width:100%;height:auto;display:block}
+@media print{@page{margin:0}body{margin:0}}</style></head>
+<body>${svgStr}</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 400);
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
+// ─────────────────────────────────────────────────────────────
+// XLSX GENERATOR — V1.4 Phase 2
+//
+// makeXLSX(data, grid, ld) is the public entry point.
+// Priority:
+//   1. ld (layoutData from API) — uses real page coordinates for
+//      column widths, row heights, cell mapping, and borders.
+//   2. grid (canvas / text-cluster) — proportional widths/heights.
+//   3. Heuristic fallback (no grid at all).
+//
+// BORDER STYLE MAP (OOXML borderId references):
+//   0 = no border
+//   1 = thin all-around  (interior cells)
+//   2 = medium all-around (outer boundary cells)
+//   3 = medium top+bottom + thin sides (header row)
+// ─────────────────────────────────────────────────────────────
+
+// Shared OOXML boilerplate returned by both paths
+function xlsxPackage(colXml, styles, sheetData) {
+  const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData></worksheet>`;
+  return zip([
+    ['[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', '<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', styles],
+    ['xl/worksheets/sheet1.xml', sheet],
+  ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+
+// OOXML styles.xml — shared across both paths
+function xlsxStyles(borderXml) {
+  return `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="2">
+  <font><sz val="11"/><name val="Arial"/></font>
+  <font><b/><sz val="11"/><name val="Arial"/></font>
+</fonts>
+<fills count="3">
+  <fill><patternFill patternType="none"/></fill>
+  <fill><patternFill patternType="gray125"/></fill>
+  <fill><patternFill patternType="solid"><fgColor rgb="FFF0EBE0"/><bgColor indexed="64"/></patternFill></fill>
+</fills>
+${borderXml}
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="4">
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1">
+    <alignment wrapText="1" vertical="top"/>
+  </xf>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="2" applyBorder="1" applyAlignment="1">
+    <alignment wrapText="1" vertical="top"/>
+  </xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="3" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+    <alignment wrapText="1" vertical="center" horizontal="center"/>
+  </xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+}
+
+// Border XML used by both paths
+const BORDER_XML = `<borders count="4">
+<border><left/><right/><top/><bottom/><diagonal/></border>
+<border>
+  <left style="thin"><color rgb="FFAAAAAA"/></left>
+  <right style="thin"><color rgb="FFAAAAAA"/></right>
+  <top style="thin"><color rgb="FFAAAAAA"/></top>
+  <bottom style="thin"><color rgb="FFAAAAAA"/></bottom>
+  <diagonal/>
+</border>
+<border>
+  <left style="medium"><color rgb="FF111111"/></left>
+  <right style="medium"><color rgb="FF111111"/></right>
+  <top style="medium"><color rgb="FF111111"/></top>
+  <bottom style="medium"><color rgb="FF111111"/></bottom>
+  <diagonal/>
+</border>
+<border>
+  <left style="thin"><color rgb="FFAAAAAA"/></left>
+  <right style="thin"><color rgb="FFAAAAAA"/></right>
+  <top style="medium"><color rgb="FF333333"/></top>
+  <bottom style="medium"><color rgb="FF333333"/></bottom>
+  <diagonal/>
+</border>
+</borders>`;
+
+// ── Path 1: layoutData grid reconstruction ──────────────────────
+// Uses Document AI page coordinates for all measurements.
+// textBlocks are mapped to cells by bounding-box overlap.
+function makeXLSXFromLayoutData(tableData, ld) {
+  const { pageWidth, pageHeight, textBlocks, gridCandidates } = ld;
+  const { verticalLines, horizontalLines } = gridCandidates;
+
+  const sortedV = [...verticalLines].sort((a, b) => a.x - b.x);
+  const sortedH = [...horizontalLines].sort((a, b) => a.y - b.y);
+
+  const nc = sortedV.length - 1;  // columns
+  const nr = sortedH.length - 1;  // rows
+  if (nc <= 0 || nr <= 0) return null; // fallback
+
+  // ── Map textBlocks to (row, col) cells ─────────────────────
+  const cellGrid = Array.from({ length: nr }, () => Array(nc).fill(''));
+
+  for (const blk of textBlocks) {
+    const cx = blk.boundingBox.x + blk.boundingBox.width  / 2;
+    const cy = blk.boundingBox.y + blk.boundingBox.height / 2;
+    let col = nc - 1, row = nr - 1;
+    for (let c = 0; c < nc; c++) { if (cx < sortedV[c + 1].x) { col = c; break; } }
+    for (let r = 0; r < nr; r++) { if (cy < sortedH[r + 1].y) { row = r; break; } }
+    if (row >= 0 && row < nr && col >= 0 && col < nc) {
+      const cur = cellGrid[row][col];
+      cellGrid[row][col] = cur ? cur + ' ' + blk.text : blk.text;
+    }
+  }
+
+  // If textBlocks gave empty cells, fall back to tableData for values
+  const hasContent = cellGrid.some(r => r.some(Boolean));
+  if (!hasContent && tableData.length) {
+    const keys = [...new Set(tableData.flatMap(r => Object.keys(r)))];
+    tableData.forEach((row, ri) => {
+      keys.forEach((k, ci) => {
+        if (ri < nr && ci < nc) cellGrid[ri][ci] = row[k] || '';
+      });
+    });
+  }
+
+  // ── Column widths (page-coord proportional) ─────────────────
+  const tableW = sortedV[nc].x - sortedV[0].x || 1;
+  const TOTAL_CW = 160; // total Excel character-width units
+  const colWidths = Array.from({ length: nc }, (_, i) => {
+    const w = sortedV[i + 1].x - sortedV[i].x;
+    return Math.max(6, Math.round((w / tableW) * TOTAL_CW));
+  });
+
+  // ── Row heights (page-coord proportional) ───────────────────
+  const tableH = sortedH[nr].y - sortedH[0].y || 1;
+  const TOTAL_RH = 600; // total point-height budget
+  const rowHeights = Array.from({ length: nr }, (_, i) => {
+    const h = sortedH[i + 1].y - sortedH[i].y;
+    return Math.max(16, Math.min(120, Math.round((h / tableH) * TOTAL_RH)));
+  });
+
+  // ── Border style per cell ────────────────────────────────────
+  // OOXML cellXf index:
+  //   3 = header (bold + fill + medium-top-bottom)
+  //   2 = medium all-around (outer boundary cells)
+  //   1 = thin all-around (interior cells)
+  //
+  // First row (row 0) is treated as header IF it looks header-like.
+  const firstRowTexts = cellGrid[0] || [];
+  const looksHeader = firstRowTexts.some(v =>
+    /品名|品項|項目|名稱|單價|金額|數量|日期|備註|內容|結果/.test(v)
+  );
+
+  function cellStyleIdx(r, c) {
+    if (r === 0 && looksHeader) return 3;                          // header
+    const outer = r === 0 || r === nr - 1 || c === 0 || c === nc - 1;
+    return outer ? 2 : 1;                                          // medium / thin
+  }
+
+  // ── Build OOXML XML ─────────────────────────────────────────
+  const colXml = '<cols>' +
+    colWidths.map((w, i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('') +
+    '</cols>';
+
+  const sheetData = cellGrid.map((row, r) => {
+    const ht = rowHeights[r];
+    return `<row r="${r+1}" ht="${ht}" customHeight="1">${
+      row.map((v, c) =>
+        `<c r="${colName(c)}${r+1}" t="inlineStr" s="${cellStyleIdx(r,c)}"><is><t xml:space="preserve">${esc(v)}</t></is></c>`
+      ).join('')
+    }</row>`;
+  }).join('');
+
+  return xlsxPackage(colXml, xlsxStyles(BORDER_XML), sheetData);
+}
+
+// ── Path 2: canvas / text-cluster proportional grid ────────────
+function makeXLSXFromGrid(data, grid) {
+  const keys = [...new Set(data.flatMap(r => Object.keys(r)))];
+  const allRows = [keys, ...data.map(r => keys.map(k => r[k] || ''))];
+
+  // Column widths
+  let colWidths;
+  if (grid?.fromCanvas && grid.vB.length >= 3) {
+    const gaps = grid.vB.slice(1).map((v, i) => v - grid.vB[i]);
+    const total = gaps.reduce((a, b) => a + b, 0) || 1;
+    colWidths = keys.map((_, i) => Math.max(7, Math.round((gaps[Math.min(i, gaps.length-1)] / total) * 140)));
+  } else {
+    colWidths = keys.map(k =>
+      k === '行號' ? 8 : (k === '左欄' || k === '右欄' || k === '段落' || k === '內容') ? 44 : 26
+    );
+  }
+
+  // Row heights
+  const useGridH = grid?.fromCanvas && grid.hB.length >= 3;
+  const hGaps = useGridH ? grid.hB.slice(1).map((v, i) => v - grid.hB[i]) : null;
+  const maxHGap = hGaps ? Math.max(...hGaps) : 1;
+
+  function rowHeight(rowIdx) {
+    if (rowIdx === 0) return 28;
+    if (hGaps) {
+      const gap = hGaps[Math.min(rowIdx, hGaps.length - 1)];
+      return Math.max(18, Math.min(90, Math.round((gap / maxHGap) * 52 + 16)));
+    }
+    const maxLen = Math.max(...allRows[rowIdx].map(v => String(v || '').length));
+    return Math.min(Math.max(22, Math.ceil(maxLen / 20) * 18), 100);
+  }
+
+  function cellStyleIdx(rowIdx) {
+    if (rowIdx === 0) return 3;
+    if (grid?.fromCanvas && grid.hLines.length) {
+      const rowNorm = grid.hB[Math.min(rowIdx, grid.hB.length - 1)];
+      if (grid.hLines.some(hl => hl.isThick && Math.abs(hl.norm - rowNorm) < 0.06)) return 2;
+    }
+    return 1;
+  }
+
+  const colXml = '<cols>' +
+    colWidths.map((w, i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('') +
+    '</cols>';
+
+  const sheetData = allRows.map((row, i) =>
+    `<row r="${i+1}" ht="${rowHeight(i)}" customHeight="1">${
+      row.map((v, j) =>
+        `<c r="${colName(j)}${i+1}" t="inlineStr" s="${cellStyleIdx(i)}"><is><t xml:space="preserve">${esc(v)}</t></is></c>`
+      ).join('')
+    }</row>`
+  ).join('');
+
+  return xlsxPackage(colXml, xlsxStyles(BORDER_XML), sheetData);
+}
+
+// ── Public entry point ──────────────────────────────────────────
+function makeXLSX(data, grid, ld) {
+  // Priority 1: layoutData with real grid candidates
+  if (ld?.gridCandidates?.verticalLines?.length >= 2 && ld?.gridCandidates?.horizontalLines?.length >= 2) {
+    const result = makeXLSXFromLayoutData(data, ld);
+    if (result) return result;
+  }
+  // Priority 2: canvas / text-cluster grid
+  return makeXLSXFromGrid(data, grid);
+}
+
+// ─── CSV
+
+// ─── CSV ──────────────────────────────────────────────────────
+function toCSV(data) {
+  const keys = [...new Set(data.flatMap(r => Object.keys(r)))];
+  return [keys, ...data.map(r => keys.map(k => '"' + String(r[k] || '').replace(/"/g, '""') + '"'))].map(r => r.join(',')).join('\n');
+}
+
+// ─── DOCX ─────────────────────────────────────────────────────
+function makeDOCX(data) {
+  const keys = [...new Set(data.flatMap(r => Object.keys(r)))];
+  const border = '<w:top w:val="single" w:sz="4" w:space="0" w:color="888888"/><w:left w:val="single" w:sz="4" w:space="0" w:color="888888"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="888888"/><w:right w:val="single" w:sz="4" w:space="0" w:color="888888"/>';
+  const allRows = [keys, ...data.map(r => keys.map(k => r[k] || ''))];
+  const tbl = '<w:tbl><w:tblPr><w:tblW w:w="9000" w:type="dxa"/><w:tblBorders>' + border + '</w:tblBorders></w:tblPr>' +
+    allRows.map((row, ri) => '<w:tr>' + row.map(v =>
+      `<w:tc><w:tcPr><w:tcBorders>${border}</w:tcBorders></w:tcPr><w:p><w:r>${ri === 0 ? '<w:rPr><w:b/></w:rPr>' : ''}<w:t xml:space="preserve">${esc(v)}</w:t></w:r></w:p></w:tc>`
+    ).join('') + '</w:tr>').join('') + '</w:tbl>';
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${tbl}<w:sectPr/></w:body></w:document>`;
+  return zip([
+    ['[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+    ['_rels/.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+    ['word/document.xml', doc],
+  ], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+}
+
+// ─── ZIP helper ───────────────────────────────────────────────
+function crc32(bytes) {
+  let c = ~0;
+  for (let i = 0; i < bytes.length; i++) { c ^= bytes[i]; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; }
+  return ~c >>> 0;
+}
+function zip(files, mime = 'application/zip') {
+  const enc = new TextEncoder();
+  const entries = []; let offset = 0;
+  for (const [name, content] of files) {
+    const nb = enc.encode(name), db = enc.encode(content), crc = crc32(db);
+    entries.push({ nb, db, crc, offset });
+    offset += 30 + nb.length + db.length;
+  }
+  const cSize = entries.reduce((s, e) => s + 46 + e.nb.length, 0);
+  const out = new Uint8Array(offset + cSize + 22);
+  const v = new DataView(out.buffer);
+  let p = 0;
+  const w16 = n => { v.setUint16(p, n, true); p += 2; };
+  const w32 = n => { v.setUint32(p, n >>> 0, true); p += 4; };
+  const put = b => { out.set(b, p); p += b.length; };
+  for (const e of entries) {
+    e.offset = p;
+    w32(0x04034b50); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.db.length); w32(e.db.length); w16(e.nb.length); w16(0);
+    put(e.nb); put(e.db);
+  }
+  const cs = p;
+  for (const e of entries) {
+    w32(0x02014b50); w16(20); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.db.length); w32(e.db.length); w16(e.nb.length); w16(0);
+    w16(0); w16(0); w16(0); w32(0); w32(e.offset); put(e.nb);
+  }
+  const ce = p;
+  w32(0x06054b50); w16(0); w16(0); w16(entries.length); w16(entries.length);
+  w32(ce - cs); w32(cs); w16(0);
+  return new Blob([out], { type: mime });
+}
+
+// ─── utils ────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function js(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+function colName(n) { let s = ''; n++; while (n > 0) { let m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+function save(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 </script>
 </body>
 </html>

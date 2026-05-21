@@ -107,7 +107,89 @@ function parseTables(document) {
   return rows;
 }
 
+
+function getBoxCenter(layout) {
+  const vertices = layout?.boundingPoly?.normalizedVertices || layout?.boundingPoly?.vertices || [];
+  if (!vertices.length) return null;
+  const xs = vertices.map((v) => Number(v.x || 0));
+  const ys = vertices.map((v) => Number(v.y || 0));
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, minX, maxX, minY, maxY };
+}
+
+function collectLayoutItems(document) {
+  const text = document?.text || '';
+  const pages = document?.pages || [];
+  const items = [];
+
+  for (const page of pages) {
+    const candidates = page.lines || page.paragraphs || page.blocks || [];
+    for (const node of candidates) {
+      const value = getAnchoredText(text, node.layout);
+      const box = getBoxCenter(node.layout);
+      if (value && box) items.push({ text: value, ...box });
+    }
+
+    // Some Document AI OCR responses expose text only through blocks/paragraphs.
+    // Keep this fallback conservative so it never blocks normal OCR output.
+    if (!candidates.length) {
+      for (const block of page.blocks || []) {
+        const value = getAnchoredText(text, block.layout);
+        const box = getBoxCenter(block.layout);
+        if (value && box) items.push({ text: value, ...box });
+      }
+    }
+  }
+
+  return items;
+}
+
+function parseTwoColumnLayout(document) {
+  const items = collectLayoutItems(document);
+  if (items.length < 6) return [];
+
+  const xs = items.map((i) => i.x).sort((a, b) => a - b);
+  const minX = xs[0], maxX = xs[xs.length - 1];
+  if (maxX - minX < 0.28) return [];
+
+  // Split by median x-position. This works better for photographed forms than
+  // assuming a perfect 50/50 page split.
+  const splitX = xs[Math.floor(xs.length / 2)];
+  const yTolerance = 0.018;
+
+  const sorted = items.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  const groups = [];
+
+  for (const item of sorted) {
+    let group = groups.find((g) => Math.abs(g.y - item.y) <= yTolerance);
+    if (!group) {
+      group = { y: item.y, left: [], right: [] };
+      groups.push(group);
+    }
+    if (item.x <= splitX) group.left.push(item);
+    else group.right.push(item);
+    group.y = (group.y + item.y) / 2;
+  }
+
+  const rows = groups
+    .sort((a, b) => a.y - b.y)
+    .map((g, index) => ({
+      行號: String(index + 1),
+      左欄: g.left.sort((a, b) => a.x - b.x).map((i) => i.text).join(' '),
+      右欄: g.right.sort((a, b) => a.x - b.x).map((i) => i.text).join(' '),
+    }))
+    .filter((r) => r.左欄 || r.右欄);
+
+  const nonEmptyRight = rows.filter((r) => r.右欄).length;
+  if (nonEmptyRight < Math.max(3, rows.length * 0.2)) return [];
+  return rows;
+}
+
 function parseFallbackText(document) {
+  const layoutRows = parseTwoColumnLayout(document);
+  if (layoutRows.length) return layoutRows;
+
   const text = document?.text || '';
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (!lines.length) return [{ 段落: '' }];

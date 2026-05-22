@@ -420,19 +420,17 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   background:var(--cream);flex-wrap:wrap
 }
 .tbar-btn{
-  background:#fff;border:1px solid var(--line);border-radius:var(--r-s);
-  padding:5px 11px;font-size:11.5px;cursor:not-allowed;color:var(--mut);
-  font-family:var(--sans);opacity:.6;
-  position:relative
+  font-size:12px;font-weight:500;color:var(--ink);
+  background:#fff;border:1px solid var(--line);
+  border-radius:6px;padding:5px 12px;cursor:pointer;
+  font-family:var(--sans);transition:all .15s;
+  white-space:nowrap;
 }
-.tbar-btn::after{
-  content:'Coming in production';
-  position:absolute;bottom:calc(100% + 6px);left:50%;
-  transform:translateX(-50%);background:var(--ink);color:#fff;
-  font-size:10px;padding:4px 8px;border-radius:3px;
-  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s
-}
-.tbar-btn:hover::after{opacity:1}
+.tbar-btn:hover{background:var(--gold-lt);border-color:var(--gold-dim)}
+.mode-group{display:flex;flex-direction:column;gap:8px;width:100%}
+.mode-sample{border-style:dashed}
+.mode-layout{border-style:dashed;opacity:.85}
+
 .tbar-info{font-size:11px;color:var(--mut);margin-left:auto;font-style:italic}
 
 /* Visual panel */
@@ -543,15 +541,15 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <section class="hero">
   <div>
     <div class="hero-eyebrow">
-      V2 Prototype · Image-to-Excel Layout Reconstruction Engine
+      PhotoCheck Docs · V2 Prototype
     </div>
     <h1 class="serif">
-      <span class="zh">照片秒變<br><em>結構化表格</em><br>OCR 只呼叫一次。</span>
-      <span class="en">Photos become<br><em>structured tables.</em><br>One OCR call only.</span>
+      <span class="zh">照片秒變<br><em>可編輯表格</em></span>
+      <span class="en">Turn Photos into<br><em>Editable Tables.</em></span>
     </h1>
     <p class="hero-desc">
-      <span class="zh">上傳表格照片，AI 解析成可校對的 Table Schema，後續所有編輯與匯出都在瀏覽器本機完成。不重複呼叫 API，不把資料送出裝置。</span>
-      <span class="en">Upload a table photo. AI parses it into a reviewable Table Schema. All editing and export happen locally in the browser. No repeated API calls. Data stays on device.</span>
+      <span class="zh">上傳菜單、進貨單、報表或手寫表格，AI 會幫你辨識文字、重建表格版面，輸出可編輯的 Excel、CSV、SVG 與列印版。</span>
+      <span class="en">Upload menus, purchase sheets, reports, or handwritten tables. PhotoCheck Docs helps recognize text, rebuild table layouts, and export editable Excel, CSV, SVG, and print-ready drafts.</span>
     </p>
     <div class="hero-ctas">
       <button class="btn btn-gold" onclick="showApp()">
@@ -559,15 +557,15 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="en">✦ Try 5 times free</span>
       </button>
       <button class="btn btn-outline" onclick="scrollById('architecture')">
-        <span class="zh">了解 V2 架構</span>
-        <span class="en">V2 Architecture</span>
+        <span class="zh">了解功能</span>
+        <span class="en">See Features</span>
       </button>
     </div>
     <div class="hero-notes">
-      <span class="hero-note-item"><span class="zh">XLSX 正式主輸出</span><span class="en">XLSX primary output</span></span>
+      <span class="hero-note-item"><span class="zh">匯出 Excel / CSV / SVG</span><span class="en">Export Excel / CSV / SVG</span></span>
       <span class="hero-note-item"><span class="zh">SVG 向量草稿</span><span class="en">SVG vector draft</span></span>
       <span class="hero-note-item"><span class="zh">PDF Print Beta</span><span class="en">PDF Print Beta</span></span>
-      <span class="hero-note-item"><span class="zh">No-build · 純靜態</span><span class="en">No-build · Pure static</span></span>
+      <span class="hero-note-item"><span class="zh">支援進貨單 / 菜單 / 報表</span><span class="en">Invoices · Menus · Reports</span></span>
     </div>
   </div>
 
@@ -643,18 +641,18 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
     </div>
     <div class="feat-card">
       <div class="feat-icon">🧠</div>
-      <div class="feat-title"><span class="zh">OCR 只呼叫一次</span><span class="en">Single OCR Call</span></div>
+      <div class="feat-title"><span class="zh">AI 智慧辨識</span><span class="en">AI Recognition</span></div>
       <div class="feat-desc">
-        <span class="zh">呼叫一次 Google Document AI，結果轉為本機 Table Schema，後續不重複聯網。</span>
-        <span class="en">One Google Document AI call. Result converts to local Table Schema. No repeated API calls.</span>
+        <span class="zh">上傳照片後 AI 自動辨識文字，重建表格版面，可立即校對與修改。</span>
+        <span class="en">AI recognizes text and reconstructs table layout from your photo. Edit results immediately.</span>
       </div>
     </div>
     <div class="feat-card">
       <div class="feat-icon">🗃️</div>
-      <div class="feat-title"><span class="zh">Schema 本機校對</span><span class="en">Local Schema Review</span></div>
+      <div class="feat-title"><span class="zh">可直接校對編輯</span><span class="en">Edit & Review</span></div>
       <div class="feat-desc">
-        <span class="zh">所有儲存格編輯、欄位調整都在 Browser Local State 完成。速度快、資料不離開裝置。</span>
-        <span class="en">All edits happen in browser local state. Fast. Data stays on device.</span>
+        <span class="zh">辨識結果可直接在表格中修改文字、新增列、調整欄寬，資料不離開裝置。</span>
+        <span class="en">Edit text, add rows, and adjust columns directly in the result table. Your data stays on device.</span>
       </div>
     </div>
     <div class="feat-card">
@@ -712,12 +710,12 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       <div>
         <div class="s-eyebrow">V2 Architecture</div>
         <h2 class="s-title serif">
-          <span class="zh">Schema 優先，<br>不重複呼叫 API</span>
-          <span class="en">Schema-first.<br>No repeated API calls.</span>
+          <span class="zh">一次辨識，<br>隨時匯出</span>
+          <span class="en">Recognize once.<br>Export anytime.</span>
         </h2>
         <p class="s-desc" style="margin-top:18px">
-          <span class="zh">V2 設計原則：OCR 只呼叫一次，結果轉成前端 Local Table Schema，後續所有調整都在 Browser Local State 完成。未來可接 Vision API / Document AI / open-source OCR routing，但 export 邏輯不變。</span>
-          <span class="en">V2 design principle: OCR is called once. The result becomes a local Table Schema. All subsequent edits happen in browser local state. Future-ready for Vision API / Document AI / open-source OCR routing without changing the export layer.</span>
+          <span class="zh">上傳照片後，AI 辨識一次，結果存在瀏覽器本機。你可以隨時校對儲存格、調整欄位，再輸出你需要的格式，完全不需要重新掃描。</span>
+          <span class="en">After AI recognition, all your edits happen in the browser. Review cells, fix column labels, add rows, then download in any format — no need to re-scan the original photo.</span>
         </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:22px">
           <span class="badge badge-gold">OCR Once</span>
@@ -866,7 +864,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <footer class="lfoot">
   <div>
     <div class="brand-name" style="font-size:15px">PhotoCheck Docs</div>
-    <div class="lfoot-note" style="margin-top:4px">V2 Prototype · Image-to-Excel Layout Reconstruction Engine</div>
+    <div class="lfoot-note" style="margin-top:4px">PhotoCheck Docs · V2 Prototype</div>
   </div>
   <div class="lfoot-note">
     <span class="zh">AI 產草稿，人類做判斷。未經確認，不自動視為正式資料。</span>
@@ -941,14 +939,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="en">Start AI Recognition</span>
       </button>
 
-      <button class="demo-btn" id="demo-btn" onclick="startDemoMode()">
-        <span>⬡</span>
-        <span class="zh">使用範例資料（Demo Mode）</span>
-        <span class="en">Use sample data (Demo Mode)</span>
-      </button>
+      <div class="mode-group">
+        <button class="demo-btn mode-sample" onclick="startDemoMode()">
+          <span>⬡</span>
+          <span class="zh">使用範例資料</span>
+          <span class="en">Use sample data</span>
+        </button>
+        <button class="demo-btn mode-layout" onclick="analyzeLayoutOnly()" id="layout-btn">
+          <span>◈</span>
+          <span class="zh">只分析版面（不呼叫 AI）</span>
+          <span class="en">Analyze layout only (no AI)</span>
+        </button>
+      </div>
       <div class="demo-note">
-        <span class="zh">Demo Mode 不呼叫 API，適合在 Claude Preview 或本機預覽時使用。</span>
-        <span class="en">Demo Mode skips the API call — use it in Claude Preview or local testing.</span>
+        <span class="zh">「使用範例資料」：載入內建範例，不消耗次數。「只分析版面」：用你上傳的圖片偵測格線與黑底，不扣次數。</span>
+        <span class="en">"Sample data": loads a built-in example, no credits. "Analyze layout": detects grid lines &amp; dark fills from your image, no credits.</span>
       </div>
 
       <div class="app-msg" id="app-msg"></div>
@@ -1000,14 +1005,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <table class="schema-tbl" id="schema-tbl"></table>
           </div>
           <div class="tbl-toolbar">
-            <span class="tbar-btn"><span class="zh">合併儲存格</span><span class="en">Merge cells</span></span>
-            <span class="tbar-btn"><span class="zh">調整欄寬</span><span class="en">Adjust column width</span></span>
-            <span class="tbar-btn"><span class="zh">新增列</span><span class="en">Add row</span></span>
-            <span class="tbar-btn"><span class="zh">編輯欄標題</span><span class="en">Edit column label</span></span>
-            <span class="tbar-info">
-              <span class="zh">Prototype 版本 · 完整功能於 Production 實作</span>
-              <span class="en">Prototype · Full features in production</span>
-            </span>
+            <button class="tbar-btn" onclick="toolMergeCells()"><span class="zh">合併儲存格</span><span class="en">Merge cells</span></button>
+            <button class="tbar-btn" onclick="toolAdjustWidth()"><span class="zh">調整欄寬</span><span class="en">Adjust col width</span></button>
+            <button class="tbar-btn" onclick="toolAddRow()"><span class="zh">新增列</span><span class="en">Add row</span></button>
+            <button class="tbar-btn" onclick="toolEditColLabel()"><span class="zh">編輯欄標題</span><span class="en">Edit col label</span></button>
           </div>
         </div>
       </div>
@@ -1231,6 +1232,9 @@ function handleFile(f) {
     showMsg('', '');
     document.getElementById('step-results').style.display = 'none';
     tableSchema = null;
+    // Enable layout-only button when image is ready
+    const lb = document.getElementById('layout-btn');
+    if (lb) lb.disabled = false;
   };
   reader.readAsDataURL(f);
   fileInput.value = ''; // allow re-selecting same file
@@ -1460,40 +1464,75 @@ function reconstructGridSchema(grid, ocr, file) {
 }
 
 /**
- * V2.3: Sample each cell's bbox from the canvas to detect dark-fill cells.
- * If dark pixel ratio >= BLACK_THR, marks cell as black-fill.
+ * V2.4: Sample each cell bbox, detect dark-fill cells.
+ * Also merges contiguous black cells in the same row into black regions.
+ * Black regions become section headers (bold, white text).
  */
 function detectCellBackgrounds(schema, cvs, scale) {
   if (!cvs) return;
-  const BLACK_THR = 0.38; // 38% dark pixels → black fill
+  const BLACK_THR = 0.35;
   const ctx = cvs.getContext('2d');
   const cw = cvs.width, ch = cvs.height;
 
+  // Step 1: Score each cell
+  const darkRatio = new Map(); // cell.id → ratio
   schema.cells.forEach(cell => {
     if (!cell.bbox) return;
-    // Scale bbox to canvas coordinates
     const bx = Math.round(cell.bbox.x * scale);
     const by = Math.round(cell.bbox.y * scale);
     const bw = Math.max(1, Math.round(cell.bbox.w * scale));
     const bh = Math.max(1, Math.round(cell.bbox.h * scale));
-
-    // Clamp to canvas
     const x0 = Math.max(0, bx + 2), y0 = Math.max(0, by + 2);
     const x1 = Math.min(cw, bx + bw - 2), y1 = Math.min(ch, by + bh - 2);
-    if (x1 <= x0 || y1 <= y0) return;
-
+    if (x1 <= x0 || y1 <= y0) { darkRatio.set(cell.id, 0); return; }
     const iData = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
-    const total = (x1-x0) * (y1-y0);
+    const total = (x1-x0)*(y1-y0);
     let dark = 0;
     for (let i = 0; i < iData.length; i += 4) {
       const lum = iData[i]*.299 + iData[i+1]*.587 + iData[i+2]*.114;
-      if (lum < 90) dark++; // strict dark threshold
+      if (lum < 90) dark++;
     }
-    const ratio = dark / total;
-    if (ratio >= BLACK_THR) {
-      cell.style.fill      = 'black';
+    darkRatio.set(cell.id, dark / total);
+  });
+
+  // Step 2: Mark individual black cells
+  schema.cells.forEach(cell => {
+    if ((darkRatio.get(cell.id) || 0) >= BLACK_THR) {
+      cell.style.fill = 'black';
       cell.style.textColor = 'white';
-      cell.style.bold      = true;
+      cell.style.bold = true;
+    }
+  });
+
+  // Step 3: Per-row contiguous black region detection
+  // If a row has a run of 2+ black cells, treat whole run as a black region
+  schema.rows.forEach(row => {
+    const rowCells = schema.columns.map(col =>
+      schema.cells.find(c => c.rowId === row.id && c.colId === col.id)
+    ).filter(Boolean);
+
+    // Find runs of black cells
+    let runStart = -1;
+    rowCells.forEach((cell, i) => {
+      const isBlack = cell.style.fill === 'black';
+      if (isBlack && runStart === -1) runStart = i;
+      if (!isBlack && runStart !== -1) {
+        // End of run — enforce all in run
+        for (let j = runStart; j < i; j++) {
+          rowCells[j].style.fill = 'black';
+          rowCells[j].style.textColor = 'white';
+          rowCells[j].style.bold = true;
+        }
+        runStart = -1;
+      }
+    });
+    if (runStart !== -1) {
+      // Run extends to end of row
+      for (let j = runStart; j < rowCells.length; j++) {
+        rowCells[j].style.fill = 'black';
+        rowCells[j].style.textColor = 'white';
+        rowCells[j].style.bold = true;
+      }
     }
   });
 }
@@ -1852,6 +1891,115 @@ const MOCK_SCHEMA = {
 /* ===========================================================
    DEMO MODE — load mock schema without API call
    =========================================================== */
+/* ============================================================
+   SELECTED CELL TRACKING (for toolbar operations)
+   ============================================================ */
+let selectedCellId = null;
+let selectedColId  = null;
+
+function setSelectedCell(cellId, colId) {
+  selectedCellId = cellId;
+  selectedColId  = colId;
+}
+
+/* ============================================================
+   TOOLBAR ACTIONS
+   ============================================================ */
+function toolAddRow() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const newId = 'row_added_' + Date.now();
+  const lastRow = tableSchema.rows[tableSchema.rows.length - 1];
+  const newY = lastRow ? lastRow.y + lastRow.height : 0;
+  tableSchema.rows.push({ id: newId, y: newY, height: 32, type: 'data' });
+  tableSchema.columns.forEach((col, ci) => {
+    tableSchema.cells.push({
+      id: `cell_${newId}_${ci}`, rowId: newId, colId: col.id,
+      text: '', rowSpan: 1, colSpan: 1, confidence: null, bbox: null,
+      style: { bold: false, align: 'left', borderTop:'thin', borderBottom:'thin', borderLeft: ci===0?'thick':'thin', borderRight: ci===tableSchema.columns.length-1?'thick':'thin' }
+    });
+  });
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'已新增一列。':'Row added.','ok');
+}
+
+function toolEditColLabel() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const cols = tableSchema.columns;
+  if (!cols.length) return;
+  // Build prompt with column list
+  const list = cols.map((c,i)=>`${i+1}. ${c.label}`).join('\n');
+  const choice = window.prompt(
+    (lang==='zh'?'請輸入要編輯的欄號（1–'+cols.length+'）：\n':'Enter column number to edit (1–'+cols.length+'):\n') + list
+  );
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= cols.length) return;
+  const newLabel = window.prompt(
+    (lang==='zh'?'新欄名（目前：':'New label (current: ') + cols[idx].label + '）:', cols[idx].label
+  );
+  if (!newLabel && newLabel !== '') return;
+  cols[idx].label = newLabel.trim() || cols[idx].label;
+  // Update header cell text
+  const hRow = tableSchema.rows.find(r=>r.type==='header');
+  if (hRow) {
+    const hCell = tableSchema.cells.find(c=>c.rowId===hRow.id&&c.colId===cols[idx].id);
+    if (hCell) hCell.text = cols[idx].label;
+  }
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'欄名已更新。':'Column label updated.','ok');
+}
+
+function toolAdjustWidth() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const cols = tableSchema.columns;
+  const list = cols.map((c,i)=>`${i+1}. ${c.label} (${c.width}px)`).join('\n');
+  const choice = window.prompt(
+    (lang==='zh'?'請輸入要調整的欄號（1–'+cols.length+'）：\n':'Column number (1–'+cols.length+'):\n') + list
+  );
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= cols.length) return;
+  const newW = window.prompt(
+    (lang==='zh'?'新欄寬（px，目前：':'Width in px (current: ') + cols[idx].width + '):', cols[idx].width
+  );
+  const w = parseInt(newW);
+  if (isNaN(w) || w < 40) { showMsg(lang==='zh'?'寬度需 ≥ 40px。':'Width must be ≥ 40px.','err'); return; }
+  cols[idx].width = w;
+  // Update cell bboxes for this column
+  tableSchema.cells.filter(cell=>cell.colId===cols[idx].id).forEach(cell=>{
+    if (cell.bbox) cell.bbox.w = w;
+  });
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'欄寬已更新。':'Column width updated.','ok');
+}
+
+function toolMergeCells() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  // Find the focused cell
+  const focused = document.querySelector('.cell-edit:focus');
+  if (!focused) {
+    showMsg(lang==='zh'?'請先點擊要合併的起始格。':'Click a cell first, then press Merge.','err'); return;
+  }
+  const cid = focused.dataset.cid;
+  const cell = tableSchema.cells.find(c=>c.id===cid);
+  if (!cell) return;
+  const colIdx = tableSchema.columns.findIndex(c=>c.id===cell.colId);
+  const nextCol = tableSchema.columns[colIdx+1];
+  if (!nextCol) { showMsg(lang==='zh'?'右側沒有可合併的欄。':'No column to the right to merge.','err'); return; }
+  // Find right cell (same row)
+  const rCell = tableSchema.cells.find(c=>c.rowId===cell.rowId&&c.colId===nextCol.id);
+  if (!rCell) return;
+  // Merge: extend colSpan, combine text, mark right cell as merged
+  cell.colSpan = (cell.colSpan||1) + (rCell.colSpan||1);
+  cell.text = [cell.text, rCell.text].filter(Boolean).join(' ');
+  if (cell.bbox && rCell.bbox) cell.bbox.w = cell.bbox.w + rCell.bbox.w;
+  rCell._merged = true;
+  rCell.text = '';
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'已合併儲存格（水平）。':'Cells merged (horizontal).','ok');
+}
+
+/* ============================================================
+   DEMO MODE — SAMPLE DATA (no API, no credits)
+   ============================================================ */
 function startDemoMode() {
   tableSchema = JSON.parse(JSON.stringify(MOCK_SCHEMA));
   tableSchema.meta.createdAt = new Date().toISOString();
@@ -1864,11 +2012,67 @@ function startDemoMode() {
   showTab('data');
   showMsg(
     lang === 'zh'
-      ? '⬡ Demo Mode：已載入範例資料，所有匯出功能皆可使用。'
-      : '⬡ Demo Mode: sample data loaded. All export functions are available.',
+      ? '⬡ 已載入範例資料，所有匯出功能皆可使用。不消耗辨識次數。'
+      : '⬡ Sample data loaded. All export functions available. No credits used.',
     'ok'
   );
   document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================================================
+   ANALYZE LAYOUT ONLY — canvas detection, no OCR, no credits
+   ============================================================ */
+async function analyzeLayoutOnly() {
+  if (!imageData) {
+    showMsg(lang === 'zh' ? '請先上傳圖片。' : 'Please upload an image first.', 'err');
+    return;
+  }
+  const btn = document.getElementById('layout-btn');
+  if (btn) btn.disabled = true;
+  document.getElementById('step-processing').style.display = 'block';
+  document.getElementById('step-results').style.display = 'none';
+  showMsg('', '');
+
+  await new Promise(r => setTimeout(r, 50)); // allow repaint
+
+  try {
+    const imgEl = document.getElementById('prev-img');
+    if (!imgEl || !imgEl.naturalWidth) throw new Error('Image not loaded');
+
+    const grid = detectGridFromCanvas(imgEl);
+    lastDetectedGrid = grid;
+
+    // Build empty schema from grid (no OCR text)
+    let schema = null;
+    if (grid.filteredH.length >= 2 && grid.filteredV.length >= 2) {
+      schema = reconstructGridSchema(grid, null, imageFile);
+    }
+    if (!schema) {
+      schema = createSchema(imageFile?.name || 'uploaded-image');
+      schema.source.imageWidth = imgEl.naturalWidth;
+      schema.source.imageHeight = imgEl.naturalHeight;
+      schema.meta.reconstructionMode = 'layout-only-fallback';
+    }
+    tableSchema = schema;
+
+    document.getElementById('step-processing').style.display = 'none';
+    document.getElementById('step-results').style.display = 'block';
+    renderTableFromSchema();
+    updateDpMeta();
+    showTab('visual'); // default to visual for layout-only
+    showMsg(
+      lang === 'zh'
+        ? '◈ 版面分析完成。顯示偵測到的格線與結構，不含文字辨識。啟用 Debug 可查看偵測細節。不消耗辨識次數。'
+        : '◈ Layout analysis done. Showing detected grid. No text recognition. Enable Debug to inspect. No credits used.',
+      'ok'
+    );
+    document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    showMsg((lang==='zh'?'版面分析失敗：':'Layout analysis failed: ') + err.message, 'err');
+    document.getElementById('step-processing').style.display = 'none';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 /* ===========================================================
@@ -1975,10 +2179,13 @@ function renderTableFromSchema() {
     cols.forEach((col, ci) => {
       const c  = cmap[`${row.id}|${col.id}`];
       const id = c ? c.id : `_${ri}_${ci}`;
+      if (c?._merged) return; // skip merged-away cells
       const isBlack = c?.style?.fill === 'black';
+      const colSpan = (c?.colSpan||1) > 1 ? ` colspan="${c.colSpan}"` : '';
       const tdCls = isBlack ? ' class="cell-black"' : '';
       const taCls = isBlack ? ' cell-edit-black' : '';
-      html += `<td${tdCls}><textarea class="cell-edit${taCls}" data-cid="${escA(id)}" rows="1"
+      html += `<td${tdCls}${colSpan}><textarea class="cell-edit${taCls}" data-cid="${escA(id)}" rows="1"
+        onfocus="setSelectedCell('${escA(id)}','${escA(col.id)}')"
         oninput="onCellInput(this)">${escH(c ? c.text : '')}</textarea></td>`;
     });
     html += '</tr>';

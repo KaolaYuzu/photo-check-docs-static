@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "photocheck-docs-normalized-v3",
+  "title": "PhotoCheck Docs V3 — Normalized Document JSON",
+  "description": "Unified intermediate format produced by all provider adapters. _noRetain:true means this object must NEVER be persisted to disk, database, or external service.",
+  "version": "v3",
+  "type": "object",
+  "required": ["version","documentType","riskLevel","extractionStrategy","confidence","providerMeta","blocks","meta"],
+  "properties": {
+    "version":            { "type":"string", "const":"v3" },
+    "documentType":       { "type":"string", "enum":["simple-table","structured-form","document","uncertain"] },
+    "riskLevel":          { "type":"string", "enum":["low","medium","high"],
+                            "description":"low=standard content; medium=personal info/financial; high=sensitive/legal/medical" },
+    "extractionStrategy": { "type":"string", "enum":["excel","form","doc","ask-user"],
+                            "description":"excel=V2.5.1 legacy grid; form=kv-block extraction; doc=reading-order; ask-user=Mode Gate" },
+    "confidence":         { "type":"number", "minimum":0, "maximum":1 },
+    "providerMeta": {
+      "type":"object",
+      "required":["name","processingTime","ocrEngine","replaceable"],
+      "properties": {
+        "name": {
+          "type":"string",
+          "enum":["google-document-ai","azure-document-intelligence","aws-textract","paddleocr","legacy-canvas-grid","mock"],
+          "description":"Active adapter. Replace by swapping googleDocumentAIAdapter() implementation."
+        },
+        "processingTime": { "type":"number", "description":"milliseconds" },
+        "ocrEngine":      { "type":"string" },
+        "replaceable":    { "type":"boolean", "const":true,
+                            "description":"All providers implement the same interface and are drop-in replaceable." }
+      }
+    },
+    "blocks": {
+      "type":"array",
+      "description":"Primary extraction units, sorted by readingOrder for document flow.",
+      "items": {
+        "type":"object",
+        "required":["id","blockType","confidence","readingOrder","content"],
+        "properties": {
+          "id":           { "type":"string" },
+          "blockType":    { "type":"string", "enum":["table","kv-pair","paragraph","heading","list","unknown"] },
+          "confidence":   { "type":"number", "minimum":0, "maximum":1 },
+          "bbox":         {
+            "oneOf": [{"type":"null"},{"type":"object","properties":{"x":{},"y":{},"w":{},"h":{}}}]
+          },
+          "readingOrder": { "type":"integer", "minimum":0 },
+          "content": {
+            "type":"object",
+            "description":"Block content — shape depends on blockType.",
+            "properties": {
+              "text":  { "type":"string", "description":"paragraph / heading / list text" },
+              "key":   { "type":"string", "description":"kv-pair key" },
+              "value": { "type":"string", "description":"kv-pair value" },
+              "rows":  {
+                "type":"array", "description":"table rows",
+                "items": {
+                  "type":"object",
+                  "properties": {
+                    "cells": {
+                      "type":"array",
+                      "items": { "type":"object", "properties": { "text":{"type":"string"}, "bbox":{} } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "tables":     { "type":"array", "description":"Convenience refs to blocks where blockType=table" },
+    "forms":      { "type":"array", "description":"Convenience refs to blocks where blockType=kv-pair" },
+    "paragraphs": { "type":"array", "description":"Convenience refs to blocks where blockType=paragraph|heading|list" },
+    "meta": {
+      "type":"object",
+      "required":["createdAt","_noRetain"],
+      "properties": {
+        "createdAt":       { "type":"string", "format":"date-time" },
+        "processingNotes": { "type":"array", "items":{"type":"string"} },
+        "_debug":          { "type":"object", "description":"Internal debug data — stripped in JSON export" },
+        "_noRetain": {
+          "type":"boolean", "const":true,
+          "description":"REQUIRED: this object must never be persisted to disk, database, logs, or external service. Discard after session."
+        }
+      }
+    }
+  },
+  "_governance": {
+    "auditTrailAllowed": ["processingTime","documentType","riskLevel","extractionStrategy","provider","success","errorType","credits"],
+    "auditTrailForbidden": ["documentFullText","phoneNumbers","addresses","financialFigures","customerPII"],
+    "approvedProviders": ["google-document-ai","azure-document-intelligence","aws-textract","paddleocr"],
+    "llmVisionPolicy": "May only be used as optional fallback for low-confidence local blocks, not as primary parser for full sensitive documents."
+  }
+}

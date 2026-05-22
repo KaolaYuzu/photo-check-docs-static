@@ -1,0 +1,3826 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhotoCheck Docs V3 — Document Understanding + Secure Extraction</title>
+<meta name="description" content="上傳表格照片，AI 解析成可校對的 Table Schema，一鍵匯出 XLSX。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   RESET & DESIGN TOKENS
+   ========================================================= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Brand */
+  --gold:#C8A96E;--gold-lt:#E8D5A8;--gold-dim:rgba(200,169,110,.15);
+  --green:#4A6741;--green-dim:rgba(74,103,65,.25);
+  /* Dark theme (landing) */
+  --dk:#0C0E14;--dk-s:#131620;--dk-c:#191D2A;
+  --dk-b:rgba(200,169,110,.13);--dk-bs:rgba(255,255,255,.06);
+  --dkt:#F0EDE6;--dkm:#6A6A64;--dks:#9A9890;
+  /* Light theme (app) */
+  --cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1A18;
+  --line:#E0D8C8;--mut:#8A8A80;
+  /* Type */
+  --serif:'Playfair Display',serif;
+  --sans:'DM Sans','Noto Sans TC',sans-serif;
+  /* Spacing */
+  --sp-xs:8px;--sp-sm:16px;--sp-md:24px;--sp-lg:48px;--sp-xl:88px;
+  /* Radius */
+  --r-s:4px;--r-m:8px;--r-l:14px;--r-xl:20px;--r-pill:999px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-smoothing:antialiased}
+
+/* =========================================================
+   SHARED
+   ========================================================= */
+.serif{font-family:var(--serif)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  border:0;border-radius:var(--r-s);padding:13px 26px;
+  font-size:14px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;white-space:nowrap
+}
+.btn-gold{background:var(--gold);color:var(--dk)}
+.btn-gold:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1.5px solid var(--dk-b);color:var(--dkt)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:#2a2a28}
+.btn-sm{padding:9px 18px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* =========================================================
+   LANDING
+   ========================================================= */
+#landing{min-height:100vh}
+
+/* — Nav — */
+.lnav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 56px;
+  background:rgba(12,14,20,.9);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--dk-b);
+  position:sticky;top:0;z-index:100
+}
+.brand-wrap{display:flex;flex-direction:column;gap:3px}
+.brand-name{font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:-.01em}
+.brand-sub{font-size:9.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.lnav-links{display:flex;align-items:center;gap:4px}
+.lnav-link{
+  background:none;border:0;color:var(--dks);font-size:13.5px;
+  font-family:var(--sans);padding:8px 14px;cursor:pointer;
+  border-radius:var(--r-s);transition:color .18s
+}
+.lnav-link:hover{color:var(--dkt)}
+.lang-pill{
+  display:flex;align-items:center;
+  background:var(--dk-c);border:1px solid var(--dk-b);
+  border-radius:var(--r-pill);padding:3px;gap:2px;margin-right:6px
+}
+.lang-btn{
+  border:0;background:transparent;color:var(--dkm);
+  font-size:11.5px;font-weight:600;font-family:var(--sans);
+  padding:5px 11px;border-radius:var(--r-pill);cursor:pointer;
+  transition:all .18s
+}
+.lang-btn.active{background:var(--gold);color:var(--dk)}
+
+/* — Hero — */
+.hero{
+  max-width:1120px;margin:0 auto;
+  padding:var(--sp-xl) 56px;
+  display:grid;grid-template-columns:1fr 420px;
+  gap:72px;align-items:center
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--gold-dim);border:1px solid rgba(200,169,110,.22);
+  border-radius:var(--r-pill);padding:6px 16px;
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:28px
+}
+.hero-eyebrow::before{content:'✦'}
+.hero h1{
+  font-family:var(--serif);
+  font-size:clamp(38px,5.2vw,62px);
+  line-height:1.09;letter-spacing:-.03em;
+  margin-bottom:22px;color:var(--dkt)
+}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero-desc{
+  font-size:16px;line-height:1.85;color:var(--dks);
+  max-width:440px;margin-bottom:34px
+}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.hero-notes{
+  display:flex;gap:0;flex-wrap:wrap;
+  border-top:1px solid var(--dk-bs);padding-top:20px
+}
+.hero-note-item{
+  font-size:11.5px;color:var(--dkm);
+  padding:0 18px;border-right:1px solid var(--dk-bs)
+}
+.hero-note-item:first-child{padding-left:0}
+.hero-note-item:last-child{border-right:0}
+
+/* — Schema card (hero visual) — */
+.schema-card{
+  background:var(--dk-c);
+  border:1px solid var(--dk-b);
+  border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:0 40px 96px rgba(0,0,0,.55),0 0 0 1px var(--dk-b)
+}
+.sc-header{
+  background:var(--dk-s);padding:13px 18px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--dk-b)
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot-r{background:#FF5F57}.dot-y{background:#FFBD2E}.dot-g{background:#28CA41}
+.sc-label{font-size:10px;letter-spacing:.1em;color:var(--dkm);text-transform:uppercase;margin-left:auto}
+.sc-body{padding:20px 22px}
+.sc-key{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px}
+.sc-pulse{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dkm);margin-bottom:16px}
+.pulse-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  animation:pulse 2.2s ease-in-out infinite
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.8)}}
+.mini-tbl{border:1px solid var(--dk-b);border-radius:var(--r-s);overflow:hidden;margin-bottom:18px;font-size:11px}
+.mini-row{display:grid;grid-template-columns:2fr 1fr 1fr;border-bottom:1px solid var(--dk-b)}
+.mini-row:last-child{border-bottom:0}
+.mini-cell{padding:7px 10px;border-right:1px solid var(--dk-b);color:var(--dks)}
+.mini-cell:last-child{border-right:0}
+.mini-cell.hd{background:var(--dk-s);color:var(--gold);font-weight:700;font-size:9.5px;text-transform:uppercase}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px}
+.badge{
+  border-radius:var(--r-pill);padding:3px 10px;
+  font-size:10px;font-weight:600;letter-spacing:.04em
+}
+.badge-gold{background:var(--gold-dim);border:1px solid rgba(200,169,110,.28);color:var(--gold)}
+.badge-green{background:var(--green-dim);border:1px solid rgba(74,103,65,.45);color:#7DB870}
+
+/* — Sections — */
+.section{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.s-eyebrow{font-size:10.5px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;font-weight:700;margin-bottom:12px}
+.s-title{font-family:var(--serif);font-size:clamp(26px,3.5vw,40px);line-height:1.14;letter-spacing:-.025em;color:var(--dkt)}
+.s-desc{font-size:15px;color:var(--dks);line-height:1.75;margin-top:14px;max-width:560px}
+.s-desc.center{margin:14px auto 0}
+.center{text-align:center}
+
+/* — Feature grid — */
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:44px}
+.feat-card{
+  background:var(--dk-c);border:1px solid var(--dk-bs);
+  border-radius:var(--r-l);padding:26px 22px;
+  transition:border-color .2s,transform .2s
+}
+.feat-card:hover{border-color:var(--dk-b);transform:translateY(-2px)}
+.feat-icon{font-size:22px;margin-bottom:14px}
+.feat-title{font-size:14.5px;font-weight:600;color:var(--dkt);margin-bottom:9px}
+.feat-desc{font-size:12.5px;color:var(--dkm);line-height:1.75}
+
+/* — Workflow steps — */
+.wf-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:44px}
+.wf-step{background:var(--dk-c);border:1px solid var(--dk-bs);padding:34px 28px}
+.wf-step:first-child{border-radius:var(--r-l) 0 0 var(--r-l)}
+.wf-step:last-child{border-radius:0 var(--r-l) var(--r-l) 0}
+.wf-num{font-family:var(--serif);font-size:52px;color:var(--gold-dim);font-weight:700;line-height:1;margin-bottom:14px}
+.wf-title{font-size:15px;font-weight:600;color:var(--dkt);margin-bottom:9px}
+.wf-desc{font-size:12.5px;color:var(--dkm);line-height:1.75}
+
+/* — Architecture band — */
+.arch-band{
+  background:var(--dk-s);
+  border-top:1px solid var(--dk-b);border-bottom:1px solid var(--dk-b)
+}
+.arch-inner{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.arch-code{
+  background:var(--dk);border:1px solid var(--dk-b);
+  border-radius:var(--r-m);padding:24px 22px;
+  font-family:'Courier New',monospace;font-size:12px;line-height:1.85;
+  color:var(--dks);overflow-x:auto
+}
+.ak{color:var(--gold)}.av{color:#7DB870}.as{color:#E8A87C}.am{color:var(--dkm)}
+
+/* — Export grid — */
+.exp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:44px}
+.exp-card{
+  background:var(--dk-c);border:1px solid var(--dk-bs);
+  border-radius:var(--r-m);padding:24px 16px;text-align:center
+}
+.exp-card.primary{border-color:var(--gold);background:var(--gold-dim)}
+.exp-tag{display:inline-block;background:var(--gold);color:var(--dk);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-bottom:10px}
+.exp-fmt{font-family:'Courier New',monospace;font-size:18px;font-weight:700;margin-bottom:7px}
+.exp-card.primary .exp-fmt{color:var(--gold)}
+.exp-info{font-size:11px;color:var(--dkm);line-height:1.6}
+
+/* — Roadmap — */
+.road-band{background:var(--ink)}
+.road-inner{max-width:1120px;margin:0 auto;padding:var(--sp-xl) 56px}
+.road-items{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px}
+.road-item{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r-l);padding:26px
+}
+.road-item.active{border-color:var(--gold)}
+.road-v{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:8px}
+.road-title{font-size:14.5px;color:#fff;font-weight:600;margin-bottom:8px}
+.road-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.7}
+
+/* — Footer — */
+.lfoot{
+  border-top:1px solid var(--dk-b);
+  padding:28px 56px;
+  display:flex;justify-content:space-between;align-items:center
+}
+.lfoot-note{font-size:11.5px;color:var(--dkm)}
+
+/* =========================================================
+   APP PROTOTYPE
+   ========================================================= */
+#app-view{
+  display:none;background:var(--warm);
+  min-height:100vh;color:var(--ink)
+}
+.anav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 32px;background:#fff;
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:50
+}
+.anav-left{display:flex;align-items:center;gap:14px}
+.back-btn{
+  background:none;border:1px solid var(--line);
+  border-radius:var(--r-s);padding:7px 14px;
+  font-size:12.5px;cursor:pointer;color:var(--mut);
+  font-family:var(--sans);transition:all .15s
+}
+.back-btn:hover{border-color:var(--ink);color:var(--ink)}
+.app-brand{font-family:var(--serif);font-size:16px}
+.app-sub-txt{font-size:9.5px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.credits-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--cream);border:1px solid var(--line);
+  border-radius:var(--r-pill);padding:6px 14px;font-size:13px
+}
+.credits-n{font-weight:700;color:var(--ink)}
+.credits-of{color:var(--mut)}
+
+/* App layout */
+.app-main{max-width:880px;margin:0 auto;padding:36px 24px}
+
+/* Upload zone */
+.drop-zone{
+  border:2px dashed var(--line);border-radius:var(--r-xl);
+  background:#fff;padding:60px 40px;text-align:center;
+  cursor:pointer;transition:all .2s;margin-bottom:20px;
+  position:relative
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:var(--warm)}
+.dz-icon{font-size:38px;margin-bottom:16px;opacity:.5}
+.dz-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.dz-hint{font-size:12.5px;color:var(--mut)}
+
+/* Upload preview */
+.upload-prev{
+  display:none;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r-l);
+  padding:18px 20px;margin-bottom:20px;
+  align-items:center;gap:20px
+}
+.prev-img{max-width:160px;max-height:110px;object-fit:contain;border:1px solid var(--line);border-radius:var(--r-s)}
+.prev-info{flex:1}
+.prev-name{font-weight:600;font-size:14px;margin-bottom:4px;color:var(--ink)}
+.prev-meta{font-size:11.5px;color:var(--mut)}
+.prev-change{
+  background:none;border:1px solid var(--line);border-radius:var(--r-s);
+  padding:7px 13px;font-size:12px;cursor:pointer;color:var(--mut);
+  font-family:var(--sans);transition:all .15s
+}
+.prev-change:hover{border-color:var(--ink);color:var(--ink)}
+
+/* Recognize button */
+.recog-btn{
+  width:100%;background:var(--ink);color:#fff;
+  border:0;border-radius:var(--r-m);padding:17px;
+  font-size:15px;font-weight:700;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px
+}
+.recog-btn:hover{background:#2a2a28;transform:translateY(-1px)}
+.recog-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.demo-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px 24px;border-radius:var(--r-m);
+  background:transparent;border:1.5px dashed var(--gold-dim);
+  color:var(--gold);font-size:14px;font-weight:500;font-family:var(--sans);
+  cursor:pointer;transition:all .2s;margin-top:10px;
+}
+.demo-btn:hover{border-color:var(--gold);background:var(--gold-dim)}
+.demo-note{
+  text-align:center;font-size:12px;color:var(--mut);
+  margin-top:8px;line-height:1.5;padding:0 8px;
+}
+
+/* Processing */
+#step-processing{
+  display:none;background:#fff;border:1px solid var(--line);
+  border-radius:var(--r-xl);padding:56px 40px;
+  text-align:center;margin-top:20px
+}
+.spinner{
+  width:44px;height:44px;border:3px solid var(--line);
+  border-top-color:var(--ink);border-radius:50%;
+  animation:spin .75s linear infinite;margin:0 auto 20px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-size:17px;font-weight:600;margin-bottom:7px}
+.proc-note{font-size:13px;color:var(--mut)}
+
+/* App message */
+.app-msg{
+  padding:13px 16px;border-radius:var(--r-m);
+  margin-top:14px;font-size:13.5px;display:none
+}
+.app-msg.err{background:#FFF0ED;border:1px solid #FFCCC7;color:#B03922}
+.app-msg.info{background:#F0F9FF;border:1px solid #BAE6FD;color:#1A5F8A}
+.app-msg.ok{background:#F0FAF0;border:1px solid #A3D9A5;color:#1E6B2E}
+.app-msg.show{display:block}
+
+/* Results */
+#step-results{display:none;margin-top:20px}
+.res-tabs{
+  display:flex;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r-m);
+  overflow:hidden;margin-bottom:14px
+}
+.res-tab{
+  flex:1;background:none;border:0;border-right:1px solid var(--line);
+  padding:13px 18px;font-size:13.5px;font-weight:500;
+  font-family:var(--sans);cursor:pointer;color:var(--mut);
+  transition:all .15s
+}
+.res-tab:last-child{border-right:0}
+.res-tab.active{background:var(--ink);color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Data panel */
+.data-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:visible;display:flex;flex-direction:column}
+.dp-header{
+  padding:14px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between
+}
+.dp-title{font-weight:600;font-size:14.5px;color:var(--ink)}
+.dp-meta{font-size:11.5px;color:var(--mut);margin-top:2px}
+.dp-export-btn{
+  background:var(--gold);color:var(--ink);border:0;
+  border-radius:var(--r-s);padding:8px 16px;
+  font-size:12.5px;font-weight:700;cursor:pointer;
+  font-family:var(--sans);transition:all .15s
+}
+.dp-export-btn:hover{background:var(--gold-lt)}
+.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:clamp(300px,65vh,800px);border:1px solid var(--line);border-radius:var(--r-s);background:#fff;flex:1 1 auto}
+.schema-tbl{border-collapse:collapse;width:100%;font-size:12.5px;min-width:400px;table-layout:auto}
+@media(max-width:600px){.tbl-wrap{max-height:55vh}}
+.schema-tbl th{
+  background:var(--cream);padding:10px 13px;font-weight:700;
+  text-align:left;border-bottom:2px solid var(--line);
+  border-right:1px solid var(--line);font-size:11.5px;
+  white-space:nowrap;position:sticky;top:0;z-index:3;
+  box-shadow:0 1px 0 var(--line)
+}
+.schema-tbl th:last-child{border-right:0}
+.schema-tbl td{
+  border-bottom:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:0;vertical-align:top
+}
+.schema-tbl td:last-child{border-right:0}
+.schema-tbl td.cell-black{background:#111;border-color:#333}
+.schema-tbl th.cell-black{background:#111;color:#fff;border-color:#333}
+.cell-edit{
+  width:100%;border:0;background:transparent;
+  padding:8px 13px;font-family:var(--sans);font-size:12.5px;
+  color:var(--ink);resize:none;outline:0;line-height:1.55;
+  min-height:34px;display:block
+}
+.cell-edit.cell-edit-black{color:#fff;background:transparent;caret-color:#fff}
+.cell-edit:focus{background:#FEFCF8}
+.cell-edit.cell-edit-black:focus{background:#222}
+.tbl-toolbar{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 18px;border-top:1px solid var(--line);
+  background:var(--cream);flex-wrap:wrap
+}
+.tbar-btn{
+  font-size:12px;font-weight:500;color:var(--ink);
+  background:#fff;border:1px solid var(--line);
+  border-radius:6px;padding:5px 12px;cursor:pointer;
+  font-family:var(--sans);transition:all .15s;
+  white-space:nowrap;
+}
+.tbar-btn:hover{background:var(--gold-lt);border-color:var(--gold-dim)}
+.mode-group{display:flex;flex-direction:column;gap:8px;width:100%}
+.mode-sample{border-style:dashed}
+.mode-layout{border-style:dashed;opacity:.85}
+
+.tbar-info{font-size:11px;color:var(--mut);margin-left:auto;font-style:italic}
+
+/* Visual panel */
+.visual-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.vis-header{
+  padding:13px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between
+}
+.vis-title{font-weight:600;font-size:14.5px}
+.vis-badge{
+  font-size:10.5px;background:var(--cream);
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:3px 10px;color:var(--mut)
+}
+.vis-body{padding:20px;overflow:auto;background:var(--warm)}
+#svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
+.debug-bar{padding:8px 20px;background:#f9f7f3;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.debug-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--mut);user-select:none}
+.debug-toggle-label input{cursor:pointer}
+
+/* Export panel */
+.export-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:24px}
+.exp-primary{margin-bottom:22px}
+.exp-main-btn{
+  width:100%;background:var(--ink);color:#fff;border:0;
+  border-radius:var(--r-m);padding:17px;font-size:14.5px;
+  font-weight:700;font-family:var(--sans);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s
+}
+.exp-main-btn:hover{background:#2a2a28}
+.exp-main-note{text-align:center;font-size:11.5px;color:var(--mut);margin-top:8px}
+.exp-secondary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.exp-sec{
+  border:1.5px solid var(--line);border-radius:var(--r-m);
+  padding:16px 12px;background:#fff;cursor:pointer;
+  text-align:center;font-family:var(--sans);
+  transition:all .15s
+}
+.exp-sec:hover{border-color:var(--ink)}
+.exp-sec.beta{border-style:dashed}
+.exp-sec-fmt{font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.exp-sec-lbl{font-size:10.5px;color:var(--mut)}
+.exp-sec.beta .exp-sec-lbl{color:var(--gold)}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media(max-width:960px){
+  .lnav{padding:16px 24px}
+  .lnav-link:not(.show-mobile){display:none}
+  .hero{grid-template-columns:1fr;padding:56px 24px 40px}
+  .schema-card{display:none}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .wf-steps{grid-template-columns:1fr}
+  .wf-step:first-child{border-radius:var(--r-l) var(--r-l) 0 0}
+  .wf-step:last-child{border-radius:0 0 var(--r-l) var(--r-l)}
+  .arch-grid{grid-template-columns:1fr}
+  .exp-grid{grid-template-columns:repeat(3,1fr)}
+  .road-items{grid-template-columns:1fr}
+  .section,.arch-inner,.road-inner{padding-left:24px;padding-right:24px}
+  .lfoot{flex-direction:column;gap:10px;text-align:center;padding:24px}
+  .exp-secondary{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .feat-grid{grid-template-columns:1fr}
+  .exp-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── V2.7 Doc Mode ─────────────────────────────── */
+.mode-gate-card{
+  background:#fff;border:1.5px solid var(--gold-dim);border-radius:var(--r-l);
+  padding:24px 28px;margin-top:12px;text-align:center
+}
+.mode-gate-title{font-weight:700;font-size:15px;margin-bottom:8px;color:var(--ink)}
+.mode-gate-reason{font-size:12.5px;color:var(--mut);margin-bottom:18px;line-height:1.6}
+.mode-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mode-gate-btn{
+  padding:9px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid
+}
+.mode-gate-btn.excel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.mode-gate-btn.excel:hover{background:#333}
+.mode-gate-btn.doc{background:#fff;color:var(--ink);border-color:var(--line)}
+.mode-gate-btn.doc:hover{background:var(--cream);border-color:var(--gold-dim)}
+.doc-preview-panel{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
+  overflow:visible;display:flex;flex-direction:column
+}
+.doc-preview-body{
+  padding:24px 28px;max-height:clamp(300px,65vh,800px);
+  overflow-y:auto;overflow-x:hidden;font-family:var(--sans);
+  font-size:13.5px;line-height:1.75;color:var(--ink);white-space:pre-wrap;
+  border-bottom:1px solid var(--line)
+}
+.doc-preview-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--line);background:var(--cream)
+}
+.doc-preview-title{font-weight:700;font-size:14px}
+.doc-mode-badge{
+  font-size:11px;background:#EDF4FF;color:#1A5F8A;
+  border:1px solid #BAE6FD;border-radius:4px;padding:3px 8px;font-weight:600
+}
+.doc-export-bar{
+  display:flex;gap:8px;padding:12px 20px;background:var(--cream);flex-wrap:wrap
+}
+.doc-exp-btn{
+  font-size:12.5px;font-weight:600;padding:7px 16px;border-radius:var(--r-m);
+  cursor:pointer;font-family:var(--sans);border:1.5px solid var(--line);
+  background:#fff;color:var(--ink);transition:all .15s
+}
+.doc-exp-btn:hover{background:var(--gold-lt);border-color:var(--gold-dim)}
+.doc-mode-warning{
+  font-size:12px;color:#B03922;padding:8px 20px;
+  background:#FFF0ED;border-top:1px solid #FFCCC7;
+}
+@media(max-width:600px){
+  .mode-gate-btns{flex-direction:column}
+  .mode-gate-btn{width:100%}
+}
+
+/* ── V2.8 Safety Notice ─────────────────────────────── */
+.safety-notice{
+  background:#F9F7F3;border:1px solid var(--line);border-radius:var(--r-m);
+  padding:10px 16px;margin-top:14px;font-size:11.5px;color:var(--mut);
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6
+}
+.safety-notice-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.safety-notice.high-risk{
+  background:#FFF8ED;border-color:#F6C96A;color:#7A5C1E
+}
+.safety-notice.high-risk .safety-icon-label{
+  display:inline-block;background:#F6C96A;color:#5A3E00;
+  font-weight:700;font-size:10px;border-radius:3px;padding:1px 6px;margin-bottom:4px
+}
+/* ── V2.8 Architecture meta bar ─────────────────────── */
+.arch-meta-bar{
+  font-size:11px;color:var(--mut);background:#F5F2EC;
+  border-top:1px solid var(--line);padding:6px 20px;
+  display:flex;gap:16px;align-items:center;flex-wrap:wrap
+}
+.arch-meta-item{display:flex;align-items:center;gap:4px}
+.arch-meta-label{font-weight:600;color:var(--ink)}
+/* ── V2.8 Normalized blocks preview ─────────────────── */
+.blocks-preview{
+  font-size:12.5px;line-height:1.7;padding:20px 24px;
+  max-height:clamp(300px,60vh,720px);overflow-y:auto;overflow-x:hidden;
+  background:#fff
+}
+.block-item{margin-bottom:14px;border-left:3px solid var(--line);padding-left:12px}
+.block-item.block-table{border-color:var(--gold-dim);background:#FDFAF5;padding:10px 14px;border-radius:4px}
+.block-item.block-kv{border-color:#BAE6FD}
+.block-item.block-para{border-color:var(--line)}
+.block-type-badge{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--mut);margin-bottom:4px
+}
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     LANDING PAGE
+     ======================================================== -->
+<div id="landing">
+
+<!-- NAV -->
+<nav class="lnav">
+  <div class="brand-wrap">
+    <div class="brand-name">PhotoCheck Docs</div>
+    <div class="brand-sub">Image-to-Excel Engine · V2</div>
+  </div>
+  <div class="lnav-links">
+    <button class="lnav-link" onclick="scrollById('features')">
+      <span class="zh">功能</span><span class="en">Features</span>
+    </button>
+    <button class="lnav-link" onclick="scrollById('workflow')">
+      <span class="zh">流程</span><span class="en">How It Works</span>
+    </button>
+    <button class="lnav-link" onclick="scrollById('architecture')">
+      <span class="zh">架構</span><span class="en">Architecture</span>
+    </button>
+    <button class="lnav-link show-mobile" onclick="scrollById('roadmap')">
+      <span class="zh">版本</span><span class="en">Roadmap</span>
+    </button>
+    <div class="lang-pill">
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="showApp()">
+      <span class="zh">免費試用 →</span><span class="en">Try Free →</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow">
+      PhotoCheck Docs · V3
+    </div>
+    <h1 class="serif">
+      <span class="zh">照片秒變<br><em>可編輯表格</em></span>
+      <span class="en">Turn Photos into<br><em>Editable Tables.</em></span>
+    </h1>
+    <p class="hero-desc">
+      <span class="zh">上傳菜單、進貨單、報表或手寫表格，AI 會幫你辨識文字、重建表格版面，輸出可編輯的 Excel、CSV、SVG 與列印版。</span>
+      <span class="en">Upload menus, purchase sheets, reports, or handwritten tables. PhotoCheck Docs helps recognize text, rebuild table layouts, and export editable Excel, CSV, SVG, and print-ready drafts.</span>
+    </p>
+    <div class="hero-ctas">
+      <button class="btn btn-gold" onclick="showApp()">
+        <span class="zh">✦ 免費試用 5 次</span>
+        <span class="en">✦ Try 5 times free</span>
+      </button>
+      <button class="btn btn-outline" onclick="scrollById('architecture')">
+        <span class="zh">了解功能</span>
+        <span class="en">See Features</span>
+      </button>
+    </div>
+    <div class="hero-notes">
+      <span class="hero-note-item"><span class="zh">匯出 Excel / CSV / SVG</span><span class="en">Export Excel / CSV / SVG</span></span>
+      <span class="hero-note-item"><span class="zh">SVG 向量草稿</span><span class="en">SVG vector draft</span></span>
+      <span class="hero-note-item"><span class="zh">PDF Print Beta</span><span class="en">PDF Print Beta</span></span>
+      <span class="hero-note-item"><span class="zh">支援進貨單 / 菜單 / 報表</span><span class="en">Invoices · Menus · Reports</span></span>
+    </div>
+  </div>
+
+  <!-- Schema card mockup -->
+  <div class="schema-card" aria-hidden="true">
+    <div class="sc-header">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <div class="sc-label">tableSchema v2</div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-pulse">
+        <div class="pulse-dot"></div>
+        ocrEngine: google-document-ai &nbsp;·&nbsp; 1 call total
+      </div>
+      <div class="sc-key">Columns</div>
+      <div class="mini-tbl">
+        <div class="mini-row">
+          <div class="mini-cell hd">label</div>
+          <div class="mini-cell hd">width</div>
+          <div class="mini-cell hd">locked</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">品名 / Item</div>
+          <div class="mini-cell">160</div>
+          <div class="mini-cell">false</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">數量 / Qty</div>
+          <div class="mini-cell">80</div>
+          <div class="mini-cell">false</div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-cell">單價 / Price</div>
+          <div class="mini-cell">100</div>
+          <div class="mini-cell">false</div>
+        </div>
+      </div>
+      <div class="sc-key">Export → from same schema</div>
+      <div class="badge-row">
+        <span class="badge badge-gold">XLSX ★ Primary</span>
+        <span class="badge badge-green">SVG Draft</span>
+        <span class="badge badge-green">PDF Beta</span>
+        <span class="badge badge-green">CSV</span>
+        <span class="badge badge-green">JSON</span>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ROADMAP -->
+<div id="roadmap" class="road-band">
+  <div class="road-inner">
+    <div class="center">
+      <div class="s-eyebrow" style="color:var(--gold)">Roadmap</div>
+      <h2 class="s-title serif center" style="color:#fff">
+        <span class="zh">版本規劃</span><span class="en">Version Roadmap</span>
+      </h2>
+    </div>
+    <div class="road-items">
+      <div class="road-item">
+        <div class="road-v">V1 · Released</div>
+        <div class="road-title"><span class="zh">OCR 草稿測試</span><span class="en">OCR Draft Testing</span></div>
+        <div class="road-desc">
+          <span class="zh">Google Document AI 辨識，CSV / JSON / XLSX / DOCX 匯出，人工校對流程。</span>
+          <span class="en">Google Document AI recognition, CSV / JSON / XLSX / DOCX export, manual review flow.</span>
+        </div>
+      </div>
+      <div class="road-item active">
+        <div class="road-v">V2 · Archived</div>
+        <div class="road-title"><span class="zh">Schema 引擎 + 版面重建</span><span class="en">Schema Engine + Layout Reconstruction</span></div>
+        <div class="road-desc">
+          <span class="zh">OCR 一次，轉 Local Table Schema，XLSX 主輸出，SVG 向量草稿，PDF Print Beta，雙語 UI。</span>
+          <span class="en">OCR once, local Table Schema, XLSX primary, SVG vector draft, PDF Print Beta, bilingual UI.</span>
+        </div>
+      </div>
+      <div class="road-item active">
+        <div class="road-v">V3 · Prototype ★ Current</div>
+        <div class="road-title"><span class="zh">文件理解 + 安全輸出分流</span><span class="en">Document Understanding + Secure Extraction</span></div>
+        <div class="road-desc">
+          <span class="zh">先判斷文件類型，再分流 Excel / 文件 / JSON。安全處理模式，不保存原始資料。</span>
+          <span class="en">Classify document type first, then route to Excel / Doc / JSON. Secure mode, no data retention.</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <button class="btn btn-gold" onclick="showApp()">
+        <span class="zh">立即試用 V2 Prototype →</span>
+        <span class="en">Try V2 Prototype Now →</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- V3 Security Section -->
+<div style="background:#0C0E14;padding:60px 0 56px">
+  <div class="container">
+    <div class="s-eyebrow" style="color:var(--gold);text-align:center">Security</div>
+    <h2 style="text-align:center;font-family:var(--serif);font-size:clamp(26px,4vw,38px);color:#fff;margin:10px 0 14px">
+      <span class="zh">安全處理你的文件</span>
+      <span class="en">Your Documents, Handled Safely</span>
+    </h2>
+    <p style="text-align:center;max-width:600px;margin:0 auto 36px;color:#AAA;font-size:15px;line-height:1.7">
+      <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
+      <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
+    </p>
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;max-width:720px;margin:0 auto">
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">🖼️</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存原始圖片</span><span class="en">No image retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">上傳的圖片僅在瀏覽器本次 session 使用，不會傳送到第三方伺服器保存。</span>
+          <span class="en">Uploaded images are used only in your current browser session.</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">🔤</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存辨識文字</span><span class="en">No text retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">AI 辨識結果僅用於本次輸出，關閉頁面後不再保留。</span>
+          <span class="en">AI recognition results are used only for the current export. Cleared on close.</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">📄</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存輸出檔案</span><span class="en">No output retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">下載的 XLSX、CSV、SVG 僅在你的裝置上，系統不存副本。</span>
+          <span class="en">Downloaded XLSX, CSV, and SVG files remain only on your device.</span>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:28px;font-size:11.5px;color:#555">
+      <span class="zh">高風險文件（含財務、個資、合約）會自動顯示「安全處理模式」提示。</span>
+      <span class="en">High-risk documents (financial, PII, contracts) automatically trigger Secure Mode notice.</span>
+    </p>
+  </div>
+</div>
+<!-- FEATURES -->
+<section id="features" class="section">
+  <div class="section-hd center" style="margin-bottom:0">
+    <div class="s-eyebrow">Features</div>
+    <h2 class="s-title serif center">
+      <span class="zh">從照片到可校對資料</span>
+      <span class="en">Photo to reviewable structured data</span>
+    </h2>
+    <p class="s-desc center">
+      <span class="zh">V2 的核心不是格式轉換，而是把照片中的表格重建成可編輯、可審查的結構化 Schema。</span>
+      <span class="en">V2 is not about format conversion. It reconstructs table photos into editable, reviewable structured data.</span>
+    </p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon">📷</div>
+      <div class="feat-title"><span class="zh">照片上傳</span><span class="en">Photo Upload</span></div>
+      <div class="feat-desc">
+        <span class="zh">支援 JPG / PNG / WebP，適合進貨單、報表、菜單、手寫紀錄。最大 5MB。</span>
+        <span class="en">JPG / PNG / WebP. Invoices, reports, menus, handwritten records. Up to 5MB.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-title"><span class="zh">AI 智慧辨識</span><span class="en">AI Recognition</span></div>
+      <div class="feat-desc">
+        <span class="zh">上傳照片後 AI 自動辨識文字，重建表格版面，可立即校對與修改。</span>
+        <span class="en">AI recognizes text and reconstructs table layout from your photo. Edit results immediately.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🗃️</div>
+      <div class="feat-title"><span class="zh">可直接校對編輯</span><span class="en">Edit & Review</span></div>
+      <div class="feat-desc">
+        <span class="zh">辨識結果可直接在表格中修改文字、新增列、調整欄寬，資料不離開裝置。</span>
+        <span class="en">Edit text, add rows, and adjust columns directly in the result table. Your data stays on device.</span>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title"><span class="zh">多格式匯出</span><span class="en">Multi-Format Export</span></div>
+      <div class="feat-desc">
+        <span class="zh">從同一份 Schema 匯出 XLSX（正式）、SVG（向量草稿）、PDF Beta、CSV、JSON。</span>
+        <span class="en">XLSX (primary), SVG (draft), PDF Beta, CSV, JSON — all from one schema.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow" class="section" style="padding-top:0">
+  <div class="center" style="margin-bottom:0">
+    <div class="s-eyebrow">How It Works</div>
+    <h2 class="s-title serif center">
+      <span class="zh">三步驟，文件數位化</span>
+      <span class="en">Three steps to digitize documents</span>
+    </h2>
+  </div>
+  <div class="wf-steps" style="margin-top:44px">
+    <div class="wf-step">
+      <div class="wf-num">01</div>
+      <div class="wf-title"><span class="zh">上傳表格照片</span><span class="en">Upload the photo</span></div>
+      <div class="wf-desc">
+        <span class="zh">把紙本進貨單、報表、菜單拍照或截圖，直接拖入上傳區。</span>
+        <span class="en">Photograph or screenshot any paper document. Drag it into the upload zone.</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">02</div>
+      <div class="wf-title"><span class="zh">AI 解析 → Schema</span><span class="en">AI parse → Schema</span></div>
+      <div class="wf-desc">
+        <span class="zh">系統呼叫一次 OCR，將辨識結果轉換為本機 Table Schema。辨識完成後不再聯網。</span>
+        <span class="en">One OCR call converts the result to a local Table Schema. No more network calls.</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">03</div>
+      <div class="wf-title"><span class="zh">校對並匯出</span><span class="en">Review &amp; export</span></div>
+      <div class="wf-desc">
+        <span class="zh">在網頁直接修改儲存格，確認後一鍵匯出 XLSX / SVG / PDF / CSV / JSON。</span>
+        <span class="en">Edit cells in the browser. Export XLSX / SVG / PDF / CSV / JSON in one click.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<div id="architecture" class="arch-band">
+  <div class="arch-inner">
+    <div class="arch-grid">
+      <div>
+        <div class="s-eyebrow">V2 Architecture</div>
+        <h2 class="s-title serif">
+          <span class="zh">一次辨識，<br>隨時匯出</span>
+          <span class="en">Recognize once.<br>Export anytime.</span>
+        </h2>
+        <p class="s-desc" style="margin-top:18px">
+          <span class="zh">上傳照片後，AI 辨識一次，結果存在瀏覽器本機。你可以隨時校對儲存格、調整欄位，再輸出你需要的格式，完全不需要重新掃描。</span>
+          <span class="en">After AI recognition, all your edits happen in the browser. Review cells, fix column labels, add rows, then download in any format — no need to re-scan the original photo.</span>
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:22px">
+          <span class="badge badge-gold">OCR Once</span>
+          <span class="badge badge-green">Local State</span>
+          <span class="badge badge-green">Schema-driven Export</span>
+          <span class="badge badge-green">No Build Required</span>
+        </div>
+      </div>
+      <div>
+        <div class="arch-code">
+<span class="ak">tableSchema</span> = {<br>
+&nbsp;&nbsp;<span class="ak">version</span>: <span class="as">"v2"</span>,<br>
+&nbsp;&nbsp;<span class="ak">source</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">imageName</span>, <span class="ak">imageWidth</span>, <span class="ak">imageHeight</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">ocrEngine</span>: <span class="as">"google-document-ai"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;<span class="ak">columns</span>: [ <span class="am">// id, x, width, label, locked</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="ak">id</span>, <span class="ak">label</span>, <span class="ak">width</span>, <span class="ak">locked</span>: <span class="av">false</span> }<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="ak">rows</span>: [ <span class="am">// id, y, height, type</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="ak">id</span>, <span class="ak">y</span>, <span class="ak">height</span>, <span class="ak">type</span>: <span class="as">"header"</span>|<span class="as">"data"</span> }<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="ak">cells</span>: [{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">id</span>, <span class="ak">rowId</span>, <span class="ak">colId</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">text</span>, <span class="ak">rowSpan</span>, <span class="ak">colSpan</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">confidence</span>, <span class="ak">bbox</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">style</span>: { <span class="ak">bold</span>, <span class="ak">align</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">borderTop</span>|<span class="ak">Right</span>|<span class="ak">Bottom</span>|<span class="ak">Left</span> }<br>
+&nbsp;&nbsp;}],<br>
+&nbsp;&nbsp;<span class="ak">meta</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">createdAt</span>, <span class="ak">language</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ak">reconstructionMode</span><br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT STRATEGY -->
+<section class="section">
+  <div class="center">
+    <div class="s-eyebrow">Export Strategy</div>
+    <h2 class="s-title serif center">
+      <span class="zh">同一份 Schema，五種輸出</span>
+      <span class="en">One schema, five outputs</span>
+    </h2>
+    <p class="s-desc center">
+      <span class="zh">所有格式都從同一份 tableSchema 匯出。XLSX 是正式核心輸出，其餘為補充格式。</span>
+      <span class="en">All formats export from the same tableSchema. XLSX is the primary output. Others are supplemental.</span>
+    </p>
+  </div>
+  <div class="exp-grid">
+    <div class="exp-card primary">
+      <div class="exp-tag">PRIMARY</div>
+      <div class="exp-fmt">XLSX</div>
+      <div class="exp-info">
+        <span class="zh">正式主輸出<br>欄寬可讀性優先<br>保留邊框結構</span>
+        <span class="en">Primary output<br>Readability-first columns<br>Border structure preserved</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--gold)">SVG</div>
+      <div class="exp-info">
+        <span class="zh">向量版面草稿<br>可在 Illustrator 編輯<br>&lt;line&gt; / &lt;rect&gt; / &lt;text&gt;</span>
+        <span class="en">Vector layout draft<br>Editable in Illustrator<br>&lt;line&gt; / &lt;rect&gt; / &lt;text&gt;</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dkm)">PDF</div>
+      <div class="exp-info" style="color:var(--gold)">
+        Print Beta<br>
+        <span style="color:var(--dkm)">
+          <span class="zh">瀏覽器列印<br>不承諾像素還原</span>
+          <span class="en">Browser print<br>No pixel-perfect promise</span>
+        </span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dks)">CSV</div>
+      <div class="exp-info">
+        <span class="zh">純文字<br>帶 BOM，可直接在<br>Excel 開啟中文</span>
+        <span class="en">Plain text<br>BOM included for<br>Excel compatibility</span>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div style="height:22px"></div>
+      <div class="exp-fmt" style="color:var(--dks)">JSON</div>
+      <div class="exp-info">
+        <span class="zh">完整 Schema 原始資料<br>可接後端 API<br>或 future OCR routing</span>
+        <span class="en">Full schema raw data<br>Ready for backend APIs<br>or future OCR routing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- FOOTER -->
+<footer class="lfoot">
+  <div>
+    <div class="brand-name" style="font-size:15px">PhotoCheck Docs</div>
+    <div class="lfoot-note" style="margin-top:4px">PhotoCheck Docs · V3</div>
+  </div>
+  <div class="lfoot-note">
+    <span class="zh">AI 產草稿，人類做判斷。未經確認，不自動視為正式資料。</span>
+    <span class="en">AI drafts. Humans verify. Unconfirmed results are not official records.</span>
+  </div>
+</footer>
+
+</div><!-- /#landing -->
+
+
+<!-- ========================================================
+     APP PROTOTYPE
+     ======================================================== -->
+<div id="app-view">
+
+  <nav class="anav">
+    <div class="anav-left">
+      <button class="back-btn" onclick="showLanding()">
+        <span class="zh">← 返回首頁</span><span class="en">← Back</span>
+      </button>
+      <div>
+        <div class="app-brand">PhotoCheck Docs</div>
+        <div class="app-sub-txt">V2 · AI Drafts. You Verify.</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="lang-pill" style="background:var(--cream);border-color:var(--line)">
+        <button class="lang-btn" data-lang="zh" onclick="setLang('zh')" style="color:var(--ink)">中</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="color:var(--ink)">EN</button>
+      </div>
+      <div class="credits-badge">
+        <span class="zh">剩餘次數：</span>
+        <span class="en">Credits:</span>
+        <span class="credits-n" id="credits-n">5</span>
+        <span class="credits-of">/ 5</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="app-main">
+
+    <!-- Step: Upload -->
+    <div id="step-upload">
+      <input type="file" id="file-input" accept="image/*" style="display:none">
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="dz-icon">🗂️</div>
+        <div class="dz-title">
+          <span class="zh">拖放圖片，或點擊上傳</span>
+          <span class="en">Drop image here, or click to upload</span>
+        </div>
+        <div class="dz-hint">
+          <span class="zh">支援 PNG · JPG · WebP｜上限 5MB</span>
+          <span class="en">PNG · JPG · WebP · Max 5MB</span>
+        </div>
+      </div>
+
+      <!-- V2.8 Safety Notice — always visible -->
+      <div class="safety-notice" id="safety-notice-base">
+        <span class="safety-notice-icon">🔒</span>
+        <span>
+          <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
+          <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
+        </span>
+      </div>
+      <!-- V2.8 High-Risk Safety Notice — shown for sensitive docs -->
+      <div class="safety-notice high-risk" id="safety-notice-high-risk" style="display:none">
+        <span class="safety-notice-icon">⚠️</span>
+        <div>
+          <span class="safety-icon-label">安全處理模式 / Secure Mode</span><br>
+          <span class="zh">偵測到此文件可能包含敏感資訊。本系統不會保存圖片、文字或輸出。如需進一步保護，請在私人網路環境下處理。</span>
+          <span class="en">This document may contain sensitive information. No image, text, or output is retained. For maximum security, process in a private network environment.</span>
+        </div>
+      </div>
+
+      <div class="upload-prev" id="upload-prev">
+        <img class="prev-img" id="prev-img" alt="preview">
+        <div class="prev-info">
+          <div class="prev-name" id="prev-name"></div>
+          <div class="prev-meta" id="prev-meta"></div>
+        </div>
+        <button class="prev-change" id="prev-change">
+          <span class="zh">更換圖片</span><span class="en">Change image</span>
+        </button>
+      </div>
+
+      <button class="recog-btn" id="recog-btn">
+        <span>✦</span>
+        <span class="zh">啟動 AI 辨識</span>
+        <span class="en">Start AI Recognition</span>
+      </button>
+
+      <div class="mode-group">
+        <button class="demo-btn mode-sample" onclick="startDemoMode()">
+          <span>⬡</span>
+          <span class="zh">使用範例資料</span>
+          <span class="en">Use sample data</span>
+        </button>
+        <button class="demo-btn mode-layout" onclick="analyzeLayoutOnly()" id="layout-btn">
+          <span>◈</span>
+          <span class="zh">只分析版面（不呼叫 AI）</span>
+          <span class="en">Analyze layout only (no AI)</span>
+        </button>
+      </div>
+      <div class="demo-note">
+        <span class="zh">「使用範例資料」：載入內建範例，不消耗次數。「只分析版面」：用你上傳的圖片偵測格線與黑底，不扣次數。</span>
+        <span class="en">"Sample data": loads a built-in example, no credits. "Analyze layout": detects grid lines &amp; dark fills from your image, no credits.</span>
+      </div>
+
+      <div class="app-msg" id="app-msg"></div>
+    </div>
+
+    <!-- Step: Processing -->
+    <div id="step-processing">
+      <div class="spinner"></div>
+      <div class="proc-title">
+        <span class="zh">AI 辨識中，請稍候…</span>
+        <span class="en">Recognizing… please wait</span>
+      </div>
+      <div class="proc-note">
+        <span class="zh">正在呼叫 OCR API（僅此一次）。完成後所有操作在本機進行。</span>
+        <span class="en">Calling OCR API (one time only). All operations are local after this.</span>
+      </div>
+    </div>
+
+    <!-- Step: Results -->
+    <div id="step-results">
+      <!-- V2.8 Architecture Meta Bar -->
+      <div class="arch-meta-bar" id="arch-meta-bar" style="display:none">
+        <div class="arch-meta-item">
+          <span class="arch-meta-label">Provider:</span>
+          <span id="meta-provider">—</span>
+        </div>
+        <div class="arch-meta-item">
+          <span class="arch-meta-label">Mode:</span>
+          <span id="meta-mode">—</span>
+        </div>
+        <div class="arch-meta-item">
+          <span class="arch-meta-label">Risk:</span>
+          <span id="meta-risk">—</span>
+        </div>
+        <div class="arch-meta-item">
+          <span class="arch-meta-label">Strategy:</span>
+          <span id="meta-strategy">—</span>
+        </div>
+        <div class="arch-meta-item" style="margin-left:auto;color:#aaa">
+          <span class="zh">🔒 不保存 · 本次處理後即刪除</span>
+          <span class="en">🔒 Not retained · Discarded after this session</span>
+        </div>
+      </div>
+      <div class="res-tabs">
+        <button class="res-tab active" data-tab="data" onclick="showTab('data')">
+          <span class="zh">📋 資料預覽</span><span class="en">📋 Data Preview</span>
+        </button>
+        <button class="res-tab" data-tab="visual" onclick="showTab('visual')">
+          <span class="zh">🖼️ 視覺預覽</span><span class="en">🖼️ Visual Preview</span>
+        </button>
+        <button class="res-tab" data-tab="export" onclick="showTab('export')">
+          <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
+        </button>
+      </div>
+
+      <!-- Data Preview -->
+      <div class="tab-panel active" id="tab-data">
+        <div class="data-panel">
+          <div class="dp-header">
+            <div>
+              <div class="dp-title">
+                <span class="zh">辨識結果 · 可直接編輯儲存格</span>
+                <span class="en">Recognition result · Cells directly editable</span>
+              </div>
+              <div class="dp-meta" id="dp-meta"></div>
+            </div>
+            <button class="dp-export-btn" onclick="showTab('export')">
+              <span class="zh">匯出 →</span><span class="en">Export →</span>
+            </button>
+          </div>
+          <div class="tbl-wrap">
+            <table class="schema-tbl" id="schema-tbl"></table>
+          </div>
+          <div class="tbl-toolbar">
+            <button class="tbar-btn" onclick="toolMergeCells()"><span class="zh">合併儲存格</span><span class="en">Merge cells</span></button>
+            <button class="tbar-btn" onclick="toolAdjustWidth()"><span class="zh">調整欄寬</span><span class="en">Adjust col width</span></button>
+            <button class="tbar-btn" onclick="toolAddRow()"><span class="zh">新增列</span><span class="en">Add row</span></button>
+            <button class="tbar-btn" onclick="toolEditColLabel()"><span class="zh">編輯欄標題</span><span class="en">Edit col label</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Preview -->
+      <div class="tab-panel" id="tab-visual">
+        <div class="visual-panel">
+          <div class="vis-header">
+            <div class="vis-title">
+              <span class="zh">SVG 向量版面草稿</span>
+              <span class="en">SVG Vector Layout Draft</span>
+            </div>
+            <span class="vis-badge">
+              <span class="zh">Editable vector draft · 可在 Illustrator 開啟</span>
+              <span class="en">Editable vector draft · Openable in Illustrator</span>
+            </span>
+          </div>
+          <div class="debug-bar">
+            <label class="debug-toggle-label">
+              <input type="checkbox" id="debug-chk" onchange="toggleDebugOverlay(this.checked)">
+              <span class="zh">Debug 線段偵測</span><span class="en">Debug Line Detection</span>
+            </label>
+          </div>
+          <canvas id="debug-canvas" style="display:none;max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;background:#fff"></canvas>
+          <div id="debug-stats" style="display:none;font-size:11px;color:var(--mut);margin-top:6px;font-family:monospace;line-height:1.8;padding:8px 12px;background:#f9f7f3;border-radius:4px;border:1px solid var(--line)"></div>
+          <div class="vis-body">
+            <div id="svg-preview"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="tab-panel" id="tab-export">
+        <div class="export-panel">
+          <div class="exp-primary">
+            <button class="exp-main-btn" id="btn-xlsx">
+              ⬇&nbsp;
+              <span class="zh">下載 XLSX（正式主輸出）</span>
+              <span class="en">Download XLSX (Primary Output)</span>
+            </button>
+            <div class="exp-main-note">
+              <span class="zh">欄寬可讀性優先 · 保留邊框 · 從 tableSchema 匯出</span>
+              <span class="en">Readability-first column widths · Borders preserved · Exported from tableSchema</span>
+            </div>
+          </div>
+          <div class="exp-secondary">
+            <div class="exp-sec" id="btn-svg">
+              <div class="exp-sec-fmt">SVG</div>
+              <div class="exp-sec-lbl"><span class="zh">向量草稿</span><span class="en">Vector draft</span></div>
+            </div>
+            <div class="exp-sec beta" id="btn-pdf">
+              <div class="exp-sec-fmt">PDF</div>
+              <div class="exp-sec-lbl">Print Beta</div>
+            </div>
+            <div class="exp-sec" id="btn-csv">
+              <div class="exp-sec-fmt">CSV</div>
+              <div class="exp-sec-lbl"><span class="zh">純文字</span><span class="en">Plain text</span></div>
+            </div>
+            <div class="exp-sec" id="btn-json">
+              <div class="exp-sec-fmt">JSON</div>
+              <div class="exp-sec-lbl"><span class="zh">完整 Schema</span><span class="en">Full schema</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- V2.7 Mode Gate (uncertain classification) -->
+      <div id="mode-gate" style="display:none"></div>
+
+      <!-- V2.7 Doc Mode Preview -->
+      <div id="doc-mode-panel" style="display:none">
+        <div class="doc-preview-panel">
+          <div class="doc-preview-header">
+            <div class="doc-preview-title">
+              <span class="zh">📄 文件模式預覽</span>
+              <span class="en">📄 Doc Mode Preview</span>
+            </div>
+            <span class="doc-mode-badge">Doc Mode Beta</span>
+          </div>
+          <div class="doc-preview-body" id="doc-preview-body"></div>
+          <div class="doc-mode-warning">
+            <span class="zh">⚠ 文件模式：未套用表格重建。如需 Excel 匯出，請點擊「強制 Excel 模式」。</span>
+            <span class="en">⚠ Doc Mode: table reconstruction skipped. Click "Force Excel Mode" to override.</span>
+          </div>
+          <div class="doc-export-bar">
+            <button class="doc-exp-btn" onclick="docDownloadTxt()">⬇ TXT</button>
+            <button class="doc-exp-btn" onclick="docDownloadJson()">⬇ JSON</button>
+            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="border-color:var(--gold-dim);color:var(--gold)">
+              <span class="zh">強制 Excel 模式</span><span class="en">Force Excel Mode</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /#step-results -->
+
+  </main>
+</div><!-- /#app-view -->
+
+<!-- ========================================================
+     JAVASCRIPT
+     ======================================================== -->
+<script>
+'use strict';
+
+/* ===========================================================
+   LANGUAGE SYSTEM
+   =========================================================== */
+let lang = localStorage.getItem('pcd_v2_lang') || 'zh';
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('pcd_v2_lang', l);
+  document.querySelectorAll('.zh').forEach(el => el.style.display = l === 'zh' ? '' : 'none');
+  document.querySelectorAll('.en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === l);
+  });
+  document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  if (tableSchema) updateDpMeta();
+}
+
+/* ===========================================================
+   USAGE / CREDITS
+   =========================================================== */
+const USAGE_KEY = 'pcd_v2_usage';
+const USED_SIGS_KEY = 'pcd_v2_sigs';
+const LIMIT = 5;
+
+function getUsage() { return Number(localStorage.getItem(USAGE_KEY) || 0); }
+
+/** Build a lightweight image signature from file name+size (no hashing needed). */
+function imageSignature(file) {
+  if (!file) return null;
+  return `${file.name}|${file.size}`;
+}
+
+/** Returns true if this image has already been OCR-processed (charged). */
+function isImageAlreadyCharged(file) {
+  const sig = imageSignature(file);
+  if (!sig) return false;
+  try {
+    const sigs = JSON.parse(localStorage.getItem(USED_SIGS_KEY) || '[]');
+    return sigs.includes(sig);
+  } catch { return false; }
+}
+
+/**
+ * Consume 1 credit for a successful OCR call on a new image.
+ * Does NOT charge if this image was already processed.
+ * Returns true if credit was consumed, false if skipped.
+ */
+function consumeCreditForOCR(file) {
+  if (isImageAlreadyCharged(file)) return false; // same image, no charge
+  const newCount = getUsage() + 1;
+  localStorage.setItem(USAGE_KEY, String(newCount));
+  // Record signature
+  try {
+    const sigs = JSON.parse(localStorage.getItem(USED_SIGS_KEY) || '[]');
+    const sig = imageSignature(file);
+    if (sig && !sigs.includes(sig)) {
+      sigs.push(sig);
+      localStorage.setItem(USED_SIGS_KEY, JSON.stringify(sigs.slice(-50))); // keep last 50
+    }
+  } catch {}
+  refreshCredits();
+  return true;
+}
+
+function incUsage() { consumeCreditForOCR(imageFile); } // legacy alias (not used by exports)
+function refreshCredits() {
+  const el = document.getElementById('credits-n');
+  if (el) el.textContent = Math.max(0, LIMIT - getUsage());
+}
+
+/* ===========================================================
+   NAVIGATION
+   =========================================================== */
+function showApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app-view').style.display = 'block';
+  refreshCredits();
+  window.scrollTo({ top: 0 });
+}
+function showLanding() {
+  document.getElementById('landing').style.display = '';
+  document.getElementById('app-view').style.display = 'none';
+  window.scrollTo({ top: 0 });
+}
+function scrollById(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ===========================================================
+   TAB SYSTEM
+   =========================================================== */
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.res-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name)?.classList.add('active');
+  document.querySelector(`.res-tab[data-tab="${name}"]`)?.classList.add('active');
+  if (name === 'visual' && tableSchema) renderSVGPreview();
+}
+
+/* ===========================================================
+   FILE UPLOAD
+   =========================================================== */
+let imageData = null;
+let imageFile = null;
+
+const fileInput  = document.getElementById('file-input');
+const dropZone   = document.getElementById('drop-zone');
+const uploadPrev = document.getElementById('upload-prev');
+
+// Click to open file dialog
+dropZone.addEventListener('click', () => fileInput.click());
+document.getElementById('prev-change').addEventListener('click', () => fileInput.click());
+
+// Drag-and-drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(f) {
+  if (!f) return;
+  if (!f.type.startsWith('image/')) {
+    showMsg(lang === 'zh' ? '請選擇圖片檔案（JPG / PNG / WebP）。' : 'Please select an image file (JPG / PNG / WebP).', 'err');
+    return;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    showMsg(lang === 'zh' ? '圖片超過 5MB，請先壓縮後再上傳。' : 'Image over 5MB. Please compress it first.', 'err');
+    return;
+  }
+  imageFile = f;
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageData = reader.result;
+    document.getElementById('prev-img').src = imageData;
+    document.getElementById('prev-name').textContent = f.name;
+    document.getElementById('prev-meta').textContent =
+      (f.size / 1024).toFixed(0) + ' KB · ' + (f.type.split('/')[1] || '').toUpperCase();
+    dropZone.style.display = 'none';
+    uploadPrev.style.display = 'flex';
+    showMsg('', '');
+    // V2.7: Full state reset on every new image upload
+    resetAllPreviousState();
+    const lb = document.getElementById('layout-btn');
+    if (lb) lb.disabled = false;
+  };
+  reader.readAsDataURL(f);
+  fileInput.value = ''; // allow re-selecting same file
+}
+
+/* ===========================================================
+   TABLE SCHEMA  —  Core V2 Data Structure
+   =========================================================== */
+let tableSchema = null;
+
+/**
+ * Create an empty tableSchema skeleton.
+ */
+function createSchema(imageName = 'unknown') {
+  return {
+    version: 'v2',
+    source: {
+      imageName,
+      imageWidth: 0,
+      imageHeight: 0,
+      ocrEngine: 'google-document-ai'
+    },
+    columns: [],
+    rows: [],
+    cells: [],
+    meta: {
+      createdAt: new Date().toISOString(),
+      language: lang,
+      reconstructionMode: 'auto'
+    }
+  };
+}
+
+/* ===========================================================
+   V2.2 LAYOUT RECONSTRUCTION ENGINE — CALIBRATED
+   Canvas edge detection → filtering → grid → OCR bbox assignment
+   =========================================================== */
+
+let lastDetectedGrid = null; // stored for debug overlay
+
+/**
+ * Detect H/V lines via per-row/col edge-strength scoring.
+ * Returns { rawH, rawV, filteredH, filteredV, rejectedH, rejectedV, w, h, scale }
+ */
+function detectGridFromCanvas(imgEl) {
+  const MAX_W = 900;
+  const scale = Math.min(1, MAX_W / (imgEl.naturalWidth || MAX_W));
+  const cw = Math.round((imgEl.naturalWidth || MAX_W) * scale);
+  const ch = Math.round((imgEl.naturalHeight || 600) * scale);
+
+  const cvs = document.createElement('canvas');
+  cvs.width = cw; cvs.height = ch;
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(imgEl, 0, 0, cw, ch);
+  const px = ctx.getImageData(0, 0, cw, ch).data;
+
+  const lum = (x, y) => {
+    const i = (Math.min(ch-1,y)*cw + Math.min(cw-1,x)) * 4;
+    return px[i]*.299 + px[i+1]*.587 + px[i+2]*.114;
+  };
+
+  // Edge-strength score per row: average |delta_y brightness| across columns
+  const hEdge = new Float32Array(ch);
+  for (let y = 1; y < ch-1; y++) {
+    let s = 0;
+    for (let x = 0; x < cw; x++) s += Math.abs(lum(x,y+1) - lum(x,y-1));
+    hEdge[y] = s / cw;
+  }
+  // Edge-strength score per column
+  const vEdge = new Float32Array(cw);
+  for (let x = 1; x < cw-1; x++) {
+    let s = 0;
+    for (let y = 0; y < ch; y++) s += Math.abs(lum(x+1,y) - lum(x-1,y));
+    vEdge[x] = s / ch;
+  }
+
+  // Darkness score to validate actual lines
+  const hDark = new Float32Array(ch);
+  for (let y = 0; y < ch; y++) {
+    let d = 0;
+    for (let x = 0; x < cw; x++) if (lum(x,y) < 140) d++;
+    hDark[y] = d / cw;
+  }
+  const vDark = new Float32Array(cw);
+  for (let x = 0; x < cw; x++) {
+    let d = 0;
+    for (let y = 0; y < ch; y++) if (lum(x,y) < 140) d++;
+    vDark[x] = d / ch;
+  }
+
+  // Adaptive threshold: mean + 0.7 * std
+  // V2.5: Lower threshold multiplier to catch faint row lines
+  function adaptiveThr(arr) {
+    const mean = arr.reduce((s,v)=>s+v,0)/arr.length;
+    const std = Math.sqrt(arr.reduce((s,v)=>s+(v-mean)**2,0)/arr.length);
+    return Math.max(4, mean + 0.45*std); // was 0.7 → 0.45 to preserve faint lines
+  }
+  const hThr = adaptiveThr(hEdge);
+  const vThr = adaptiveThr(vEdge);
+
+  // V2.5: Relaxed dark pixel requirement (was 0.04 → 0.02)
+  function extractPeaks(edge, dark, thr, gap) {
+    const raw = [];
+    for (let i = 2; i < edge.length-2; i++) {
+      if (edge[i] < thr) continue;
+      if (dark[i] < 0.02) continue; // relaxed: allow lighter lines
+      let isMax = true;
+      for (let j = Math.max(0,i-4); j <= Math.min(edge.length-1,i+4); j++) {
+        if (j !== i && edge[j] > edge[i]) { isMax=false; break; }
+      }
+      if (!isMax) continue;
+      if (raw.length && i - raw[raw.length-1] < gap) {
+        if (edge[i] > edge[raw[raw.length-1]]) raw[raw.length-1] = i;
+      } else {
+        raw.push(i);
+      }
+    }
+    return raw;
+  }
+
+  function mergeClose(lines, mergeGap) {
+    if (!lines.length) return lines;
+    const out = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i] - out[out.length-1] < mergeGap) {
+        out[out.length-1] = Math.round((out[out.length-1]+lines[i])/2);
+      } else out.push(lines[i]);
+    }
+    return out;
+  }
+
+  // V2.5: Also fill large Y gaps with estimated row lines
+  function fillYGaps(lines, totalH, minRowH) {
+    if (lines.length < 2) return lines;
+    const filled = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      const gap = lines[i] - filled[filled.length-1];
+      if (gap > minRowH * 2.5) {
+        // Insert estimated intermediate lines
+        const nInsert = Math.round(gap / minRowH) - 1;
+        const step = gap / (nInsert + 1);
+        for (let k = 1; k <= nInsert; k++) {
+          filled.push(Math.round(filled[filled.length - (k===1?1:0)] + (k===1?step:step)));
+        }
+      }
+      filled.push(lines[i]);
+    }
+    return filled;
+  }
+
+  const rawHpx = extractPeaks(hEdge, hDark, hThr, 6); // gap reduced 8→6 for dense rows
+  const rawVpx = extractPeaks(vEdge, vDark, vThr, 10);
+  const filtHpx = mergeClose(rawHpx, 8); // merge 10→8
+  const filtVpx = mergeClose(rawVpx, 13);
+
+  const toOrig = (v) => Math.round(v / scale);
+  const rawH = rawHpx.map(toOrig), rawV = rawVpx.map(toOrig);
+  const filtH = filtHpx.map(toOrig), filtV = filtVpx.map(toOrig);
+
+  const W = imgEl.naturalWidth || cw;
+  const H = imgEl.naturalHeight || ch;
+
+  // Detect outer border (lines within 4% of image edge)
+  const hTol = Math.round(H * 0.04), vTol = Math.round(W * 0.04);
+  const outerBorder = {
+    top:    filtH.find(y => y < hTol) ?? null,
+    bottom: [...filtH].reverse().find(y => y > H-hTol) ?? null,
+    left:   filtV.find(x => x < vTol) ?? null,
+    right:  [...filtV].reverse().find(x => x > W-vTol) ?? null
+  };
+
+  const interiorH = filtH.filter(y => y !== outerBorder.top && y !== outerBorder.bottom);
+  const interiorV = filtV.filter(x => x !== outerBorder.left && x !== outerBorder.right)
+                         .slice(0, 11); // max 12 columns
+
+  const rejectedH = rawH.filter(v => !filtH.includes(v));
+  const rejectedV = rawV.filter(v => !filtV.includes(v));
+
+  return {
+    rawH, rawV, filteredH: filtH, filteredV: filtV,
+    rejectedH, rejectedV, interiorH, interiorV, outerBorder,
+    w: W, h: H, scale, _cvs: cvs, _cw: cw, _ch: ch
+  };
+}
+
+/** Build tableSchema from calibrated grid. Merges narrow cols (< 40px). */
+function reconstructGridSchema(grid, ocr, file) {
+  const { interiorH, interiorV, outerBorder, w, h } = grid;
+  const schema = createSchema(file?.name || 'uploaded-image');
+  schema.source.imageWidth = w; schema.source.imageHeight = h;
+  schema.meta.reconstructionMode = 'canvasGrid-v22';
+  schema.meta._debug = {
+    rawH: grid.rawH.length, rawV: grid.rawV.length,
+    filteredH: grid.filteredH.length, filteredV: grid.filteredV.length,
+    rejectedH: grid.rejectedH.length, rejectedV: grid.rejectedV.length,
+    rowGapWarnings: [] // filled after ys computed
+  };
+
+  const le = outerBorder.left   ?? 0,  re = outerBorder.right  ?? w;
+  const te = outerBorder.top    ?? 0,  be = outerBorder.bottom ?? h;
+
+  let xs = [...new Set([le, ...interiorV, re])].sort((a,b)=>a-b);
+  let rawYs = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
+  if (xs.length < 2 || rawYs.length < 2) return null;
+
+  // V2.5: Detect row gaps → insert placeholder rows to prevent skipped rows
+  const rowGapWarnings = [];
+  const medRowH = (() => {
+    const gaps = [];
+    for (let i=1;i<rawYs.length;i++) gaps.push(rawYs[i]-rawYs[i-1]);
+    gaps.sort((a,b)=>a-b);
+    return gaps[Math.floor(gaps.length/2)] || 20;
+  })();
+  const ys = [];
+  for (let i=0;i<rawYs.length;i++) {
+    ys.push(rawYs[i]);
+    if (i < rawYs.length-1) {
+      const gap = rawYs[i+1] - rawYs[i];
+      if (gap > medRowH * 2.8 && medRowH > 5) {
+        const nInsert = Math.min(30, Math.max(1, Math.round(gap/medRowH)-1));
+        const step = gap / (nInsert+1);
+        const fromLabel = Math.round((rawYs[i] - rawYs[0]) / medRowH);
+        const toLabel   = Math.round((rawYs[i+1] - rawYs[0]) / medRowH);
+        rowGapWarnings.push({ fromLabel, toLabel, gapPx: gap, inserted: nInsert, action:'inserted-placeholder-rows' });
+        for (let k=1;k<=nInsert;k++) ys.push(Math.round(rawYs[i] + step*k));
+      }
+    }
+  }
+  ys.sort((a,b)=>a-b);
+
+  // Merge narrow columns
+  const MIN_COL_W = 40;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < xs.length-1; i++) {
+      if (xs[i+1]-xs[i] < MIN_COL_W) { xs.splice(i+1,1); changed=true; break; }
+    }
+  }
+
+  const nC = xs.length-1, nR = ys.length-1;
+  schema.columns = xs.slice(0,-1).map((x,i) => ({
+    id:`col_${i}`, x, width:xs[i+1]-x, label:`Col ${i+1}`, locked:false
+  }));
+  schema.rows = ys.slice(0,-1).map((y,j) => ({
+    id:`row_${j}`, y, height:ys[j+1]-y, type:j===0?'header':'data'
+  }));
+
+  schema.cells = [];
+  schema.rows.forEach((row,ri) => schema.columns.forEach((col,ci) => {
+    const isOuter = { t:ri===0, b:ri===nR-1, l:ci===0, r:ci===nC-1 };
+    schema.cells.push({
+      id:`cell_${ri}_${ci}`, rowId:row.id, colId:col.id,
+      text:'', rowSpan:1, colSpan:1, confidence:null,
+      bbox:{x:col.x, y:row.y, w:col.width, h:row.height},
+      style:{
+        bold:ri===0, align:ci===0?'left':'center',
+        borderTop:    isOuter.t ? 'thick' : 'thin',
+        borderBottom: isOuter.b ? 'thick' : (ri===0?'medium':'thin'),
+        borderLeft:   isOuter.l ? 'thick' : 'thin',
+        borderRight:  isOuter.r ? 'thick' : 'thin'
+      }
+    });
+  }));
+
+  const words = extractOCRWords(ocr);
+  if (words.length) assignWordsToCells(words, schema);
+
+  // V2.5: Store row gap warnings in debug meta
+  if (schema.meta._debug) schema.meta._debug.rowGapWarnings = rowGapWarnings;
+
+  // V2.3: Detect black-fill cells from canvas pixel sampling
+  detectCellBackgrounds(schema, grid._cvs, grid.scale);
+  return schema;
+}
+
+/**
+ * V2.4: Sample each cell bbox, detect dark-fill cells.
+ * Also merges contiguous black cells in the same row into black regions.
+ * Black regions become section headers (bold, white text).
+ */
+/* ===========================================================
+   V2.6.1 CONSERVATIVE black cell detection
+   Key guards (spec §6):
+   - col_0 pure-number cells are row labels, not section headers
+   - contiguous black runs that resolve to pure-number text → revert
+   - NO colSpan / _merged / schema structure changes (V2.5.1 safe)
+   =========================================================== */
+
+/** True if text is a pure integer (row number / index). */
+function isPureNumber(text) {
+  return /^\d+$/.test((text || '').trim());
+}
+
+function detectCellBackgrounds(schema, cvs, scale) {
+  // V2.7: Black cell detection must NOT run in Doc Mode (§6.5)
+  if (currentDocMode === 'doc') return;
+  if (!cvs) return;
+  const BLACK_THR = 0.35;
+  const ctx = cvs.getContext('2d');
+  const cw = cvs.width, ch = cvs.height;
+
+  // Step 1: Score each cell via canvas pixel sampling
+  const darkRatio = new Map();
+  schema.cells.forEach(cell => {
+    if (!cell.bbox) return;
+    const bx = Math.round(cell.bbox.x * scale);
+    const by = Math.round(cell.bbox.y * scale);
+    const bw = Math.max(1, Math.round(cell.bbox.w * scale));
+    const bh = Math.max(1, Math.round(cell.bbox.h * scale));
+    const x0 = Math.max(0, bx + 2), y0 = Math.max(0, by + 2);
+    const x1 = Math.min(cw, bx + bw - 2), y1 = Math.min(ch, by + bh - 2);
+    if (x1 <= x0 || y1 <= y0) { darkRatio.set(cell.id, 0); return; }
+    const iData = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
+    const total = (x1-x0)*(y1-y0);
+    let dark = 0;
+    for (let i = 0; i < iData.length; i += 4) {
+      const lum = iData[i]*.299 + iData[i+1]*.587 + iData[i+2]*.114;
+      if (lum < 90) dark++;
+    }
+    darkRatio.set(cell.id, dark / total);
+  });
+
+  // Step 2: Mark individual black cells
+  // V2.6.1 guard: skip col_0 cells that already contain pure numbers (row labels)
+  const col0Id = schema.columns[0]?.id;
+  schema.cells.forEach(cell => {
+    if ((darkRatio.get(cell.id) || 0) >= BLACK_THR) {
+      // §6.2 guard: if col_0 cell has a pure-number text, treat as row label, not black header
+      if (cell.colId === col0Id && isPureNumber(cell.text)) return;
+      cell.style.fill = 'black';
+      cell.style.textColor = 'white';
+      cell.style.bold = true;
+    }
+  });
+
+  // Step 3: Per-row contiguous black run detection
+  // V2.6.1: only enforces style, NO colSpan / _merged changes
+  // §6.3 fail-safe: if a run's only non-empty texts are pure numbers, revert the whole run
+  schema.rows.forEach(row => {
+    const rowCells = schema.columns.map(col =>
+      schema.cells.find(c => c.rowId === row.id && c.colId === col.id)
+    ).filter(Boolean);
+
+    let runStart = -1;
+    const closeRun = (endIdx) => {
+      if (runStart === -1) return;
+      const run = rowCells.slice(runStart, endIdx);
+      // §6.6 fail-safe: if every non-empty text in this run is a pure number → revert
+      const nonEmptyTexts = run.map(rc => (rc.text||'').trim()).filter(t => t.length > 0);
+      const allPureNumbers = nonEmptyTexts.length > 0 && nonEmptyTexts.every(t => isPureNumber(t));
+      if (!allPureNumbers) {
+        // Safe to mark as black
+        run.forEach(rc => {
+          rc.style.fill = 'black';
+          rc.style.textColor = 'white';
+          rc.style.bold = true;
+        });
+      }
+      // If allPureNumbers, leave cells as-is (revert any prior marking)
+      runStart = -1;
+    };
+
+    rowCells.forEach((cell, i) => {
+      const isBlack = cell.style.fill === 'black';
+      if (isBlack && runStart === -1) runStart = i;
+      if (!isBlack && runStart !== -1) closeRun(i);
+    });
+    closeRun(rowCells.length);
+  });
+
+  // Store debug info
+  const blackCells = schema.cells.filter(c => c.style?.fill === 'black');
+  if (schema.meta._debug) {
+    schema.meta._debug.blackCellAssignment = {
+      blackCellsDetected: blackCells.length,
+      rowsWithBlackCells: new Set(blackCells.map(c => c.rowId)).size
+    };
+  }
+}
+
+/** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
+function extractOCRWords(ocr) {
+  if (!ocr) return [];
+  const words = [];
+  if (Array.isArray(ocr.rows) && ocr.rows.length) {
+    ocr.rows.forEach((row,ri) => Object.keys(row).forEach((k,ci) => {
+      const v = String(row[k]??'').trim();
+      if (v) words.push({text:v, sr:ri, sc:ci, key:k});
+    }));
+    return words;
+  }
+  if (Array.isArray(ocr) && ocr.length && typeof ocr[0]==='object') {
+    ocr.forEach((row,ri) => Object.keys(row).forEach((k,ci) => {
+      const v = String(row[k]??'').trim();
+      if (v) words.push({text:v, sr:ri, sc:ci});
+    }));
+    return words;
+  }
+  const wl = ocr.layoutData?.words || ocr.words || [];
+  wl.forEach(w => {
+    if (w.text && w.bbox)
+      words.push({text:w.text, x:w.bbox.x, y:w.bbox.y,
+        w:w.bbox.w||w.bbox.width||10, h:w.bbox.h||w.bbox.height||12});
+  });
+  return words;
+}
+
+/**
+ * V2.6.1 text assignment: same bbox center-point logic as V2.2,
+ * plus black-cell priority for words whose center is inside a black cell.
+ * NO colSpan / NO _merged / NO schema structure changes.
+ * Guard: pure-number text is never routed to a black section-header cell
+ *        if a non-black cell on the same row is a better fit.
+ */
+function assignWordsToCells(words, schema) {
+  const hasBbox = words.some(w => w.x != null);
+  if (hasBbox) {
+    const buckets = {};
+    schema.cells.forEach(c => { buckets[c.id] = []; });
+
+    // Pre-build set of black cell ids for fast lookup
+    const blackCellIds = new Set(
+      schema.cells.filter(c => c.style?.fill === 'black').map(c => c.id)
+    );
+    // col_0 id for row-label guard
+    const col0Id = schema.columns[0]?.id;
+
+    words.forEach(word => {
+      const wx = word.x, wy = word.y, ww = word.w||8, wh = word.h||12;
+      const cx = wx + ww/2, cy = wy + wh/2;
+
+      // V2.6.1: §6.1 row-label guard
+      // If word is pure-number, skip black cells in col_0 as destination
+      const wordIsPureNum = isPureNumber(word.text);
+
+      let bestCell = null, bestScore = -1;
+
+      // Pass 1: prefer black cells (centre-in) — but not for pure-number words into col_0
+      schema.cells.forEach(cell => {
+        if (!cell.bbox || !blackCellIds.has(cell.id)) return;
+        // §6.1: pure-number word must not land in col_0 black cell
+        if (wordIsPureNum && cell.colId === col0Id) return;
+        const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
+                       cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
+        if (!inCell) return;
+        const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
+        const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
+        const score = Math.max(0,ox)*Math.max(0,oy);
+        if (score > bestScore) { bestScore = score; bestCell = cell; }
+      });
+
+      // Pass 2: any cell (centre-in) if no black cell found
+      if (!bestCell) {
+        schema.cells.forEach(cell => {
+          if (!cell.bbox) return;
+          const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
+                         cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
+          if (!inCell) return;
+          const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
+          const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
+          const score = Math.max(0,ox)*Math.max(0,oy);
+          if (score > bestScore) { bestScore = score; bestCell = cell; }
+        });
+      }
+
+      // Pass 3: fallback max overlap (centre outside)
+      if (!bestCell) {
+        schema.cells.forEach(cell => {
+          if (!cell.bbox) return;
+          const ox=Math.max(0,Math.min(wx+ww,cell.bbox.x+cell.bbox.w)-Math.max(wx,cell.bbox.x));
+          const oy=Math.max(0,Math.min(wy+wh,cell.bbox.y+cell.bbox.h)-Math.max(wy,cell.bbox.y));
+          if (ox*oy > bestScore) { bestScore=ox*oy; bestCell=cell; }
+        });
+      }
+
+      if (bestCell) buckets[bestCell.id].push(word.text);
+    });
+
+    schema.cells.forEach(cell => {
+      if (buckets[cell.id]?.length) {
+        // V2.6.1 §6.3: if assigned text to a black cell is ALL pure numbers → keep original
+        const joined = buckets[cell.id].join('\n');
+        const isBlackCell = blackCellIds.has(cell.id);
+        if (isBlackCell && isPureNumber(joined.replace(/\n/g,' ').trim())) {
+          // Reject: do not overwrite with row number
+          console.warn('[V2.6.1] Rejected pure-number assignment to black cell:', cell.id, joined);
+        } else {
+          cell.text = joined;
+          if (cell.rowId===schema.rows[0]?.id) {
+            const col = schema.columns.find(c=>c.id===cell.colId);
+            if (col) col.label = cell.text.split('\n')[0];
+          }
+        }
+      }
+    });
+  } else {
+    // No bbox: sequential sr/sc (unchanged from V2.2)
+    const nC = schema.columns.length, nR = schema.rows.length;
+    words.filter(w=>w.sr===0).forEach(w => {
+      const ci = Math.min(w.sc,nC-1);
+      const hc = schema.cells.find(c=>c.rowId==='row_0'&&c.colId===`col_${ci}`);
+      if (hc) { hc.text=w.text; schema.columns[ci].label=w.text; }
+    });
+    words.filter(w=>w.sr>0).forEach(w => {
+      const ri=Math.min(w.sr,nR-1), ci=Math.min(w.sc,nC-1);
+      const cell=schema.cells.find(c=>c.rowId===`row_${ri}`&&c.colId===`col_${ci}`);
+      if (cell) cell.text=w.text;
+    });
+  }
+}
+
+/** V2.2 entry: canvas grid priority, OCR-only fallback. */
+function mapOCRToSchemaV21(ocrResponse, file) {
+  const imgEl = document.getElementById('prev-img');
+  let schema = null;
+  lastDetectedGrid = null;
+  try {
+    if (imgEl && imgEl.naturalWidth > 0) {
+      const grid = detectGridFromCanvas(imgEl);
+      lastDetectedGrid = grid;
+      if (grid.filteredH.length >= 2 && grid.filteredV.length >= 2) {
+        schema = reconstructGridSchema(grid, ocrResponse, file);
+      }
+    }
+  } catch(e) { console.warn('[V2.2]', e); schema=null; }
+  if (!schema || !schema.cells.length) {
+    schema = mapOCRToSchema(ocrResponse, file);
+    schema.meta.reconstructionMode += '+fallback';
+  }
+  return schema;
+}
+
+/* ===========================================================
+   V2.2 DEBUG OVERLAY
+   =========================================================== */
+function toggleDebugOverlay(on) {
+  const canvas = document.getElementById('debug-canvas');
+  const stats  = document.getElementById('debug-stats');
+  if (!on) { canvas.style.display='none'; stats.style.display='none'; return; }
+  if (!lastDetectedGrid || !tableSchema) {
+    stats.style.display='block'; canvas.style.display='none';
+    stats.innerHTML='<span style="color:#B03922">Run recognition first to see debug data.</span>';
+    return;
+  }
+  const g = lastDetectedGrid;
+  const { rawH, rawV, filteredH, filteredV, rejectedH, rejectedV,
+          interiorH, interiorV, outerBorder, _cvs, _cw, _ch, scale } = g;
+
+  canvas.width = _cw; canvas.height = _ch; canvas.style.display='block';
+  const dctx = canvas.getContext('2d');
+  dctx.drawImage(_cvs, 0, 0);
+
+  const draw = (lines, isH, color, dash, alpha, lw) => {
+    dctx.save(); dctx.globalAlpha=alpha; dctx.strokeStyle=color;
+    dctx.lineWidth=lw; dctx.setLineDash(dash);
+    lines.forEach(v => {
+      const p = v*scale;
+      dctx.beginPath();
+      if (isH) { dctx.moveTo(0,p); dctx.lineTo(_cw,p); }
+      else      { dctx.moveTo(p,0); dctx.lineTo(p,_ch); }
+      dctx.stroke();
+    });
+    dctx.restore();
+  };
+
+  draw(rejectedH, true,  '#FF4444', [3,3], 0.5, 1);
+  draw(rejectedV, false, '#FF4444', [3,3], 0.5, 1);
+  draw(rawH.filter(v=>!rejectedH.includes(v)), true,  '#FF9800', [6,3], 0.55, 1);
+  draw(rawV.filter(v=>!rejectedV.includes(v)), false, '#FF9800', [6,3], 0.55, 1);
+  draw(filteredH, true,  '#1E88E5', [], 0.7, 1.5);
+  draw(filteredV, false, '#1E88E5', [], 0.7, 1.5);
+  const ob = outerBorder;
+  draw([ob.top,ob.bottom].filter(v=>v!=null), true,  '#43A047', [], 0.9, 2.5);
+  draw([ob.left,ob.right].filter(v=>v!=null), false, '#43A047', [], 0.9, 2.5);
+
+  // Legend
+  const leg=[['#FF4444','Rejected'],['#FF9800','Raw detected'],['#1E88E5','Filtered'],['#43A047','Outer border']];
+  leg.forEach(([c,l],i)=>{
+    dctx.fillStyle=c; dctx.fillRect(8,8+i*18,14,10);
+    dctx.fillStyle='#111'; dctx.font='10px Arial'; dctx.fillText(l,26,18+i*18);
+  });
+
+  const nC=tableSchema?.columns?.length??'–', nR=tableSchema?.rows?.length??'–';
+  stats.style.display='block';
+  stats.innerHTML=[
+    `<b>Mode:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
+    `<b>Raw H:</b> ${rawH.length} | <b>Raw V:</b> ${rawV.length}`,
+    `<b>Filtered H:</b> ${filteredH.length} | <b>Filtered V:</b> ${filteredV.length}`,
+    `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
+    `<b>Interior H:</b> ${interiorH.length} | <b>Interior V:</b> ${interiorV.length}`,
+    `<b>Final:</b> ${nC} cols × ${nR} rows`,
+    tableSchema?.meta?._debug?.rowGapWarnings?.length
+      ? `<b style="color:#B03922">⚠ Row gaps:</b> ${tableSchema.meta._debug.rowGapWarnings.map(w=>`rows ${w.fromLabel}→${w.toLabel} (+${w.inserted} placeholders)`).join(', ')}`
+      : `<b style="color:#1E6B2E">✓ No row gaps detected</b>`,
+    `<b>Border:</b> top=${ob.top??'–'} bot=${ob.bottom??'–'} left=${ob.left??'–'} right=${ob.right??'–'}`
+  ].join('<br>');
+}
+
+/* ===========================================================
+   OCR → SCHEMA MAPPING
+   =========================================================== */
+/**
+ * Map raw OCR response to tableSchema.
+ * Priority:
+ *   1. ocrResponse.layoutData.gridCandidates[0]
+ *   2. ocrResponse.rows  (array of row objects)
+ *   3. ocrResponse itself (flat array)
+ *   4. Fallback empty row
+ */
+function mapOCRToSchema(ocrResponse, file) {
+  const schema = createSchema(file?.name || 'uploaded-image');
+
+  // Capture image natural dimensions if available
+  const img = document.getElementById('prev-img');
+  if (img) {
+    schema.source.imageWidth  = img.naturalWidth  || 0;
+    schema.source.imageHeight = img.naturalHeight || 0;
+  }
+
+  if (ocrResponse.layoutData?.gridCandidates?.length) {
+    schema.meta.reconstructionMode = 'gridCandidates';
+    mapFromGridCandidates(ocrResponse.layoutData.gridCandidates[0], schema);
+  } else if (Array.isArray(ocrResponse.rows) && ocrResponse.rows.length) {
+    schema.meta.reconstructionMode = 'rows';
+    mapFromRows(ocrResponse.rows, schema);
+  } else if (Array.isArray(ocrResponse) && ocrResponse.length) {
+    schema.meta.reconstructionMode = 'flat';
+    mapFromRows(ocrResponse, schema);
+  } else {
+    schema.meta.reconstructionMode = 'fallback';
+    mapFromRows([{
+      [lang === 'zh' ? '警告' : 'Warning']:
+      lang === 'zh' ? '辨識結果為空，請確認圖片品質' : 'Empty result — check image quality'
+    }], schema);
+  }
+
+  return schema;
+}
+
+function mapFromGridCandidates(grid, schema) {
+  // gridCandidates may contain columns, rows, cells
+  if (Array.isArray(grid.columns)) {
+    schema.columns = grid.columns.map((c, i) => ({
+      id: `col_${i}`, x: c.x || i,
+      width: c.width || 120, label: c.label || `Col ${i + 1}`, locked: false
+    }));
+  }
+  if (Array.isArray(grid.rows)) {
+    schema.rows = grid.rows.map((r, i) => ({
+      id: `row_${i}`, y: r.y || i,
+      height: r.height || 32, type: i === 0 ? 'header' : 'data'
+    }));
+  }
+  if (Array.isArray(grid.cells) && grid.cells.length) {
+    schema.cells = grid.cells.map((c, i) => ({
+      id: `cell_${i}`,
+      rowId: c.rowId || `row_${c.row || 0}`,
+      colId: c.colId || `col_${c.col || 0}`,
+      text: c.text || '', rowSpan: c.rowSpan || 1, colSpan: c.colSpan || 1,
+      confidence: c.confidence || null, bbox: c.bbox || null,
+      style: {
+        borderTop: c.style?.borderTop || 'thin',
+        borderRight: c.style?.borderRight || 'thin',
+        borderBottom: c.style?.borderBottom || 'thin',
+        borderLeft: c.style?.borderLeft || 'thin',
+        bold: c.style?.bold || false, align: c.style?.align || 'left'
+      }
+    }));
+  } else {
+    // No cells in grid — fall back to row-based mapping if rows have data
+    mapFromRows([], schema);
+  }
+}
+
+function mapFromRows(rows, schema) {
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  if (!keys.length) return;
+
+  // Columns
+  schema.columns = keys.map((k, i) => ({
+    id: `col_${i}`, x: i,
+    width: estimateColWidth(k, rows), label: k, locked: false
+  }));
+
+  // Rows (header + data)
+  schema.rows = [{ id: 'row_header', y: 0, height: 36, type: 'header' }];
+  rows.forEach((_, i) => schema.rows.push({ id: `row_${i}`, y: i + 1, height: 32, type: 'data' }));
+
+  // Header cells
+  keys.forEach((k, j) => schema.cells.push({
+    id: `cell_h_${j}`, rowId: 'row_header', colId: `col_${j}`,
+    text: k, rowSpan: 1, colSpan: 1, confidence: 1.0, bbox: null,
+    style: { bold: true, align: 'left', borderBottom: 'medium' }
+  }));
+
+  // Data cells
+  rows.forEach((r, i) => {
+    keys.forEach((k, j) => schema.cells.push({
+      id: `cell_${i}_${j}`, rowId: `row_${i}`, colId: `col_${j}`,
+      text: String(r[k] != null ? r[k] : ''),
+      rowSpan: 1, colSpan: 1, confidence: null, bbox: null,
+      style: { bold: false, align: 'left' }
+    }));
+  });
+}
+
+function estimateColWidth(key, rows) {
+  const hLen = key.length;
+  const maxD = rows.reduce((m, r) => Math.max(m, String(r[key] || '').length), 0);
+  const max  = Math.max(hLen, maxD);
+  if (max <= 5) return 72;
+  if (max <= 10) return 110;
+  if (max <= 20) return 160;
+  if (max <= 36) return 210;
+  return 260;
+}
+
+/* ===========================================================
+   OCR API CALL
+   =========================================================== */
+document.getElementById('recog-btn').addEventListener('click', startOCR);
+
+/* ===========================================================
+   MOCK DATA — used by Demo Mode (no API call)
+   =========================================================== */
+const MOCK_SCHEMA = {
+  version: "v2",
+  source: { imageName: "sample-invoice.jpg", imageWidth: 800, imageHeight: 600, ocrEngine: "mock" },
+  columns: [
+    { id: "c1", x: 0,   width: 140, label: "項目 / Item",   locked: false },
+    { id: "c2", x: 140, width: 120, label: "數量 / Qty",    locked: false },
+    { id: "c3", x: 260, width: 130, label: "單價 / Price",  locked: false },
+    { id: "c4", x: 390, width: 130, label: "小計 / Subtotal",locked: false },
+    { id: "c5", x: 520, width: 140, label: "備註 / Remark", locked: false }
+  ],
+  rows: [
+    { id: "r0", y: 0,   height: 36, type: "header" },
+    { id: "r1", y: 36,  height: 32, type: "data" },
+    { id: "r2", y: 68,  height: 32, type: "data" },
+    { id: "r3", y: 100, height: 32, type: "data" },
+    { id: "r4", y: 132, height: 32, type: "data" },
+    { id: "r5", y: 164, height: 32, type: "data" }
+  ],
+  cells: [
+    {id:"h-c1",rowId:"r0",colId:"c1",text:"項目 / Item",   rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c2",rowId:"r0",colId:"c2",text:"數量 / Qty",    rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c3",rowId:"r0",colId:"c3",text:"單價 / Price",  rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c4",rowId:"r0",colId:"c4",text:"小計 / Subtotal",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"h-c5",rowId:"r0",colId:"c5",text:"備註 / Remark",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"center",borderBottom:"2px solid #C8A96E"}},
+    {id:"d1-c1",rowId:"r1",colId:"c1",text:"A4 影印紙",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"left"}},
+    {id:"d1-c2",rowId:"r1",colId:"c2",text:"10",rowSpan:1,colSpan:1,confidence:.98,bbox:null,style:{align:"center"}},
+    {id:"d1-c3",rowId:"r1",colId:"c3",text:"NT$120",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d1-c4",rowId:"r1",colId:"c4",text:"NT$1,200",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d1-c5",rowId:"r1",colId:"c5",text:"含稅",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"left"}},
+    {id:"d2-c1",rowId:"r2",colId:"c1",text:"USB-C 傳輸線",rowSpan:1,colSpan:1,confidence:.94,bbox:null,style:{align:"left"}},
+    {id:"d2-c2",rowId:"r2",colId:"c2",text:"5",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d2-c3",rowId:"r2",colId:"c3",text:"NT$350",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"right"}},
+    {id:"d2-c4",rowId:"r2",colId:"c4",text:"NT$1,750",rowSpan:1,colSpan:1,confidence:.96,bbox:null,style:{align:"right"}},
+    {id:"d2-c5",rowId:"r2",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d3-c1",rowId:"r3",colId:"c1",text:"筆記本",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"left"}},
+    {id:"d3-c2",rowId:"r3",colId:"c2",text:"20",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d3-c3",rowId:"r3",colId:"c3",text:"NT$85",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d3-c4",rowId:"r3",colId:"c4",text:"NT$1,700",rowSpan:1,colSpan:1,confidence:.97,bbox:null,style:{align:"right"}},
+    {id:"d3-c5",rowId:"r3",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d4-c1",rowId:"r4",colId:"c1",text:"原子筆（12入）",rowSpan:1,colSpan:1,confidence:.93,bbox:null,style:{align:"left"}},
+    {id:"d4-c2",rowId:"r4",colId:"c2",text:"3",rowSpan:1,colSpan:1,confidence:.99,bbox:null,style:{align:"center"}},
+    {id:"d4-c3",rowId:"r4",colId:"c3",text:"NT$240",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"right"}},
+    {id:"d4-c4",rowId:"r4",colId:"c4",text:"NT$720",rowSpan:1,colSpan:1,confidence:.95,bbox:null,style:{align:"right"}},
+    {id:"d4-c5",rowId:"r4",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:.90,bbox:null,style:{align:"left"}},
+    {id:"d5-c1",rowId:"r5",colId:"c1",text:"合計",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"right"}},
+    {id:"d5-c2",rowId:"r5",colId:"c2",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}},
+    {id:"d5-c3",rowId:"r5",colId:"c3",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}},
+    {id:"d5-c4",rowId:"r5",colId:"c4",text:"NT$5,370",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{bold:true,align:"right"}},
+    {id:"d5-c5",rowId:"r5",colId:"c5",text:"",rowSpan:1,colSpan:1,confidence:1,bbox:null,style:{}}
+  ],
+  meta: { createdAt: new Date().toISOString(), language: "zh-Hant", reconstructionMode: "mock" }
+};
+
+/* ===========================================================
+   DEMO MODE — load mock schema without API call
+   =========================================================== */
+/* ============================================================
+   SELECTED CELL TRACKING (for toolbar operations)
+   ============================================================ */
+let selectedCellId = null;
+let selectedColId  = null;
+
+function setSelectedCell(cellId, colId) {
+  selectedCellId = cellId;
+  selectedColId  = colId;
+}
+
+/* ============================================================
+   TOOLBAR ACTIONS
+   ============================================================ */
+function toolAddRow() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const newId = 'row_added_' + Date.now();
+  const lastRow = tableSchema.rows[tableSchema.rows.length - 1];
+  const newY = lastRow ? lastRow.y + lastRow.height : 0;
+  tableSchema.rows.push({ id: newId, y: newY, height: 32, type: 'data' });
+  tableSchema.columns.forEach((col, ci) => {
+    tableSchema.cells.push({
+      id: `cell_${newId}_${ci}`, rowId: newId, colId: col.id,
+      text: '', rowSpan: 1, colSpan: 1, confidence: null, bbox: null,
+      style: { bold: false, align: 'left', borderTop:'thin', borderBottom:'thin', borderLeft: ci===0?'thick':'thin', borderRight: ci===tableSchema.columns.length-1?'thick':'thin' }
+    });
+  });
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'已新增一列。':'Row added.','ok');
+}
+
+function toolEditColLabel() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const cols = tableSchema.columns;
+  if (!cols.length) return;
+  // Build prompt with column list
+  const list = cols.map((c,i)=>`${i+1}. ${c.label}`).join('\n');
+  const choice = window.prompt(
+    (lang==='zh'?'請輸入要編輯的欄號（1–'+cols.length+'）：\n':'Enter column number to edit (1–'+cols.length+'):\n') + list
+  );
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= cols.length) return;
+  const newLabel = window.prompt(
+    (lang==='zh'?'新欄名（目前：':'New label (current: ') + cols[idx].label + '）:', cols[idx].label
+  );
+  if (!newLabel && newLabel !== '') return;
+  cols[idx].label = newLabel.trim() || cols[idx].label;
+  // Update header cell text
+  const hRow = tableSchema.rows.find(r=>r.type==='header');
+  if (hRow) {
+    const hCell = tableSchema.cells.find(c=>c.rowId===hRow.id&&c.colId===cols[idx].id);
+    if (hCell) hCell.text = cols[idx].label;
+  }
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'欄名已更新。':'Column label updated.','ok');
+}
+
+function toolAdjustWidth() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  const cols = tableSchema.columns;
+  const list = cols.map((c,i)=>`${i+1}. ${c.label} (${c.width}px)`).join('\n');
+  const choice = window.prompt(
+    (lang==='zh'?'請輸入要調整的欄號（1–'+cols.length+'）：\n':'Column number (1–'+cols.length+'):\n') + list
+  );
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= cols.length) return;
+  const newW = window.prompt(
+    (lang==='zh'?'新欄寬（px，目前：':'Width in px (current: ') + cols[idx].width + '):', cols[idx].width
+  );
+  const w = parseInt(newW);
+  if (isNaN(w) || w < 40) { showMsg(lang==='zh'?'寬度需 ≥ 40px。':'Width must be ≥ 40px.','err'); return; }
+  cols[idx].width = w;
+  // Update cell bboxes for this column
+  tableSchema.cells.filter(cell=>cell.colId===cols[idx].id).forEach(cell=>{
+    if (cell.bbox) cell.bbox.w = w;
+  });
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'欄寬已更新。':'Column width updated.','ok');
+}
+
+function toolMergeCells() {
+  if (!tableSchema) { showMsg(lang==='zh'?'請先辨識圖片。':'Run recognition first.','err'); return; }
+  // Find the focused cell
+  const focused = document.querySelector('.cell-edit:focus');
+  if (!focused) {
+    showMsg(lang==='zh'?'請先點擊要合併的起始格。':'Click a cell first, then press Merge.','err'); return;
+  }
+  const cid = focused.dataset.cid;
+  const cell = tableSchema.cells.find(c=>c.id===cid);
+  if (!cell) return;
+  const colIdx = tableSchema.columns.findIndex(c=>c.id===cell.colId);
+  const nextCol = tableSchema.columns[colIdx+1];
+  if (!nextCol) { showMsg(lang==='zh'?'右側沒有可合併的欄。':'No column to the right to merge.','err'); return; }
+  // Find right cell (same row)
+  const rCell = tableSchema.cells.find(c=>c.rowId===cell.rowId&&c.colId===nextCol.id);
+  if (!rCell) return;
+  // Merge: extend colSpan, combine text, mark right cell as merged
+  cell.colSpan = (cell.colSpan||1) + (rCell.colSpan||1);
+  cell.text = [cell.text, rCell.text].filter(Boolean).join(' ');
+  if (cell.bbox && rCell.bbox) cell.bbox.w = cell.bbox.w + rCell.bbox.w;
+  rCell._merged = true;
+  rCell.text = '';
+  renderTableFromSchema();
+  showMsg(lang==='zh'?'已合併儲存格（水平）。':'Cells merged (horizontal).','ok');
+}
+
+/* ============================================================
+   DEMO MODE — SAMPLE DATA (no API, no credits)
+   ============================================================ */
+function startDemoMode() {
+  tableSchema = JSON.parse(JSON.stringify(MOCK_SCHEMA));
+  tableSchema.meta.createdAt = new Date().toISOString();
+
+  document.getElementById('step-processing').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+
+  renderTableFromSchema();
+  updateDpMeta();
+  showTab('data');
+  showMsg(
+    lang === 'zh'
+      ? '⬡ 已載入範例資料，所有匯出功能皆可使用。不消耗辨識次數。'
+      : '⬡ Sample data loaded. All export functions available. No credits used.',
+    'ok'
+  );
+  document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================================================
+   ANALYZE LAYOUT ONLY — canvas detection, no OCR, no credits
+   ============================================================ */
+async function analyzeLayoutOnly() {
+  if (!imageData) {
+    showMsg(lang === 'zh' ? '請先上傳圖片。' : 'Please upload an image first.', 'err');
+    return;
+  }
+  resetAllPreviousState(); // V2.7: clear previous state
+  currentDocMode = 'excel'; // layout-only always uses Excel mode (no black cell detection without OCR)
+  const btn = document.getElementById('layout-btn');
+  if (btn) btn.disabled = true;
+  document.getElementById('step-processing').style.display = 'block';
+  document.getElementById('step-results').style.display = 'none';
+  showMsg('', '');
+
+  await new Promise(r => setTimeout(r, 50)); // allow repaint
+
+  try {
+    const imgEl = document.getElementById('prev-img');
+    if (!imgEl || !imgEl.naturalWidth) throw new Error('Image not loaded');
+
+    const grid = detectGridFromCanvas(imgEl);
+    lastDetectedGrid = grid;
+
+    // Build empty schema from grid (no OCR text)
+    let schema = null;
+    if (grid.filteredH.length >= 2 && grid.filteredV.length >= 2) {
+      schema = reconstructGridSchema(grid, null, imageFile);
+    }
+    if (!schema) {
+      schema = createSchema(imageFile?.name || 'uploaded-image');
+      schema.source.imageWidth = imgEl.naturalWidth;
+      schema.source.imageHeight = imgEl.naturalHeight;
+      schema.meta.reconstructionMode = 'layout-only-fallback';
+    }
+    tableSchema = schema;
+
+    document.getElementById('step-processing').style.display = 'none';
+    document.getElementById('step-results').style.display = 'block';
+    renderTableFromSchema();
+    updateDpMeta();
+    // V2.7: restore table tabs (layout-only is always Excel mode)
+    document.getElementById('tab-data').style.display   = '';
+    document.getElementById('tab-visual').style.display = '';
+    document.getElementById('tab-export').style.display = '';
+    showTab('visual'); // default to visual for layout-only
+    showMsg(
+      lang === 'zh'
+        ? '◈ 版面分析完成。顯示偵測到的格線與結構，不含文字辨識。啟用 Debug 可查看偵測細節。不消耗辨識次數。'
+        : '◈ Layout analysis done. Showing detected grid. No text recognition. Enable Debug to inspect. No credits used.',
+      'ok'
+    );
+    document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    showMsg((lang==='zh'?'版面分析失敗：':'Layout analysis failed: ') + err.message, 'err');
+    document.getElementById('step-processing').style.display = 'none';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* ===========================================================
+   V2.7 DOCUMENT TYPE ROUTER
+   =========================================================== */
+
+let currentDocMode = null;   // 'excel' | 'doc' | 'uncertain' | null
+let docModeOcrRaw  = null;   // raw OCR result stored for Doc Mode
+
+/** Full state reset — V3: clears all state on every new image upload. */
+function resetAllPreviousState() {
+  tableSchema        = null;
+  normalizedDoc      = null;   // V3: clear normalized document
+  currentDocMode     = null;
+  currentDocMode     = null;
+  docModeOcrRaw      = null;
+  lastDetectedGrid   = null;
+  // Hide results area and sub-panels
+  document.getElementById('step-results').style.display    = 'none';
+  document.getElementById('mode-gate').style.display       = 'none';
+  document.getElementById('doc-mode-panel').style.display  = 'none';
+  // Hide arch meta bar
+  const bar = document.getElementById('arch-meta-bar');
+  if (bar) bar.style.display = 'none';
+  // Restore standard safety notice
+  const base = document.getElementById('safety-notice-base');
+  const highRisk = document.getElementById('safety-notice-high-risk');
+  if (base) base.style.display = 'flex';
+  if (highRisk) highRisk.style.display = 'none';
+  // Clear table
+  const tbl = document.getElementById('schema-tbl');
+  if (tbl) tbl.innerHTML = '';
+  // Clear SVG preview
+  const svgP = document.getElementById('svg-preview');
+  if (svgP) svgP.innerHTML = '';
+  // Clear debug overlay
+  const dbgCvs = document.getElementById('debug-canvas');
+  if (dbgCvs) dbgCvs.style.display = 'none';
+  const dbgSt = document.getElementById('debug-stats');
+  if (dbgSt) { dbgSt.style.display = 'none'; dbgSt.innerHTML = ''; }
+  const dbgChk = document.getElementById('debug-chk');
+  if (dbgChk) dbgChk.checked = false;
+  // Clear meta
+  const dpMeta = document.getElementById('dp-meta');
+  if (dpMeta) dpMeta.innerHTML = '';
+}
+
+/**
+ * Classify document type from OCR result + canvas grid signals.
+ * Returns { mode: 'table-like'|'doc-like'|'uncertain', confidence: 0-1, reasons: [] }
+ */
+/* ===========================================================
+   V2.7.1 DOCUMENT TYPE CLASSIFIER — 4-class
+   Modes: simple-table | structured-form | doc-like | uncertain
+   =========================================================== */
+
+/**
+ * Classify document type into one of four modes.
+ * simple-table    → direct Excel Mode
+ * structured-form → Mode Gate (user chooses)
+ * doc-like        → Doc Mode (no table reconstruction)
+ * uncertain       → Mode Gate (user chooses)
+ */
+function classifyDocumentType(ocrResult, grid) {
+  const reasons = [];
+  const dbg = {};
+
+  // ── 1. Grid signals ─────────────────────────────────────────────────────
+  const hLines       = grid?.filteredH?.length ?? 0;
+  const vLines       = grid?.filteredV?.length ?? 0;
+  const interiorH    = grid?.interiorH?.length ?? hLines;
+  const interiorV    = grid?.interiorV?.length ?? vLines;
+  const hasGrid      = hLines >= 2 && vLines >= 2;
+  const intersections = hLines * vLines;
+  const detectedCols = vLines > 0 ? vLines + 1 : 0;
+  const detectedRows = hLines > 0 ? hLines + 1 : 0;
+
+  dbg.hLines = hLines; dbg.vLines = vLines; dbg.intersections = intersections;
+  dbg.detectedCols = detectedCols; dbg.detectedRows = detectedRows;
+
+  // Column regularity: ratio of interior lines to total lines (stable grid = high ratio)
+  const hRegularity = hLines > 0 ? interiorH / hLines : 0;
+  const vRegularity = vLines > 0 ? interiorV / vLines : 0;
+  const gridRegularity = (hRegularity + vRegularity) / 2;
+  dbg.gridRegularity = gridRegularity.toFixed(2);
+
+  // Aspect ratio of detected grid (cols/rows): simple tables tend to be wide-ish
+  const colRowRatio = detectedRows > 0 ? detectedCols / detectedRows : 0;
+  dbg.colRowRatio = colRowRatio.toFixed(2);
+
+  // ── 2. OCR text signals ──────────────────────────────────────────────────
+  const words       = extractOCRWords(ocrResult);
+  const totalWords  = words.length;
+  const hasBbox     = words.some(w => w.x != null);
+
+  dbg.totalWords = totalWords; dbg.hasBbox = hasBbox;
+
+  if (totalWords === 0) {
+    reasons.push('no OCR text — cannot classify');
+    return { mode: 'uncertain', confidence: 0.4, reasons, debug: dbg };
+  }
+
+  // Distinct rows / cols in OCR output
+  const srSet = new Set(words.filter(w => w.sr != null).map(w => w.sr));
+  const scSet = new Set(words.filter(w => w.sc != null).map(w => w.sc));
+  const nOcrRows = srSet.size || 1;
+  const nOcrCols = scSet.size || 1;
+  dbg.nOcrRows = nOcrRows; dbg.nOcrCols = nOcrCols;
+
+  // Long text blocks (>40 chars) signal prose/doc-like content
+  const longItems = words.filter(w => (w.text||'').length > 40).length;
+  const longRatio  = longItems / totalWords;
+  dbg.longItems = longItems; dbg.longRatio = longRatio.toFixed(2);
+
+  // Very short words (1–2 chars) typical of sparse structured forms
+  const shortItems = words.filter(w => (w.text||'').trim().length <= 2).length;
+  const shortRatio = shortItems / totalWords;
+  dbg.shortItems = shortItems; dbg.shortRatio = shortRatio.toFixed(2);
+
+  // Paragraph-mode: no bbox + many words
+  const isParagraphMode = !hasBbox && totalWords > 20;
+
+  // ── 3. Structural abnormality signals ────────────────────────────────────
+  // Too many columns with low H-line count → likely false multi-col detection
+  const suspiciousColCount = detectedCols > 10 && hLines < 5;
+  // Extreme row/col ratio: >40 rows or >12 cols → complex form, not simple table
+  const extremeRows = detectedRows > 40;
+  const extremeCols = detectedCols > 12;
+  // Low grid regularity → uneven column widths → structured form
+  const irregularGrid = gridRegularity < 0.55 && hasGrid;
+  // Many OCR rows with few OCR cols → dense vertical listing → doc-like or form
+  const denseVertical = nOcrRows > 20 && nOcrCols <= 2;
+  // High long-text ratio → prose content
+  const proseHeavy = longRatio > 0.25;
+
+  dbg.suspiciousColCount = suspiciousColCount;
+  dbg.extremeRows = extremeRows; dbg.extremeCols = extremeCols;
+  dbg.irregularGrid = irregularGrid; dbg.proseHeavy = proseHeavy;
+  dbg.isParagraphMode = isParagraphMode;
+
+  // ── 4. Classification scoring ─────────────────────────────────────────────
+  let simpleTableScore = 0, formScore = 0, docScore = 0;
+
+  // Grid presence
+  if (hasGrid && intersections >= 6)  { simpleTableScore += 2; reasons.push(`grid: ${hLines}H×${vLines}V, intersect=${intersections}`); }
+  if (!hasGrid)                       { docScore += 2; reasons.push('no stable grid'); }
+  if (hasGrid && intersections < 6)   { formScore += 1; reasons.push('weak grid'); }
+
+  // Grid regularity
+  if (gridRegularity >= 0.65 && hasGrid) { simpleTableScore += 2; reasons.push(`regular grid (${(gridRegularity*100).toFixed(0)}%)`); }
+  if (irregularGrid)                     { formScore += 2; reasons.push(`irregular grid (${(gridRegularity*100).toFixed(0)}%)`); }
+
+  // Column / row counts
+  if (detectedCols >= 2 && detectedCols <= 10 && !suspiciousColCount) { simpleTableScore += 1; reasons.push(`${detectedCols} cols, reasonable`); }
+  if (suspiciousColCount) { formScore += 2; docScore += 1; reasons.push('suspicious col count'); }
+  if (extremeRows)        { formScore += 2; reasons.push(`extreme rows: ${detectedRows}`); }
+  if (extremeCols)        { formScore += 2; reasons.push(`extreme cols: ${detectedCols}`); }
+
+  // OCR text character
+  if (proseHeavy)      { docScore += 3;  reasons.push(`prose-heavy: ${(longRatio*100).toFixed(0)}% long text`); }
+  if (longItems > 8)   { docScore += 1;  reasons.push(`${longItems} long text blocks`); }
+  if (isParagraphMode) { docScore += 2;  reasons.push('paragraph OCR mode'); }
+  if (denseVertical)   { docScore += 2;  reasons.push('dense vertical listing'); }
+
+  // OCR col/row structure fits grid
+  if (nOcrCols >= 3 && nOcrCols <= 10 && hasGrid && gridRegularity >= 0.55) {
+    simpleTableScore += 1;
+    reasons.push(`OCR: ${nOcrCols} cols, ${nOcrRows} rows`);
+  }
+  // Many OCR cols with irregular grid → structured form
+  if (nOcrCols > 4 && irregularGrid) { formScore += 1; reasons.push('many cols + irregular grid → form'); }
+
+  // Short-text heavy (sparse form cells)
+  if (shortRatio > 0.5 && hasGrid) { formScore += 1; reasons.push(`short-text heavy (${(shortRatio*100).toFixed(0)}%)`); }
+
+  // col/row ratio: very wide (>3) or very tall (<0.3) → form-like
+  if (colRowRatio > 3 || (colRowRatio < 0.3 && detectedRows > 8)) { formScore += 1; reasons.push(`unusual col/row ratio: ${colRowRatio.toFixed(2)}`); }
+
+  dbg.simpleTableScore = simpleTableScore; dbg.formScore = formScore; dbg.docScore = docScore;
+
+  // ── 5. Final decision ─────────────────────────────────────────────────────
+  const total = simpleTableScore + formScore + docScore || 1;
+  const simpleTableConf = simpleTableScore / total;
+  const formConf        = formScore / total;
+  const docConf         = docScore  / total;
+
+  let mode, confidence;
+
+  // simple-table: clear winner AND not overruled by form/doc signals
+  if (simpleTableConf >= 0.50 && formScore <= 2 && docScore <= 2) {
+    mode = 'simple-table'; confidence = simpleTableConf;
+  }
+  // doc-like: clear prose document
+  else if (docConf >= 0.50 && simpleTableScore <= 2) {
+    mode = 'doc-like'; confidence = docConf;
+  }
+  // structured-form: has table structure but too complex / irregular for simple Excel
+  else if (formConf >= 0.35 || (hasGrid && (extremeRows || extremeCols || irregularGrid))) {
+    mode = 'structured-form'; confidence = formConf;
+  }
+  // uncertain: mixed signals
+  else {
+    mode = 'uncertain';
+    confidence = Math.max(simpleTableConf, formConf, docConf);
+  }
+
+  return {
+    mode, confidence,
+    simpleTableScore, formScore, docScore,
+    simpleTableConf, formConf, docConf,
+    reasons, debug: dbg
+  };
+}
+
+/**
+ * V2.7.1 Mode Gate — richer copy for structured-form vs uncertain.
+ * Also adds "OCR text only" button.
+ */
+function showModeGateCard(classification, ocrResult) {
+  const gate = document.getElementById('mode-gate');
+  const conf = Math.round(classification.confidence * 100);
+  const isForm = classification.mode === 'structured-form';
+
+  // Bilingual gate copy
+  const titleZh = isForm
+    ? `📋 偵測到表單型文件（信心度 ${conf}%）`
+    : `❓ 文件類型不確定（信心度 ${conf}%）`;
+  const titleEn = isForm
+    ? `📋 Structured form detected (confidence ${conf}%)`
+    : `❓ Document type uncertain (confidence ${conf}%)`;
+  const bodyZh = isForm
+    ? '這張圖片可能是表單、維修紀錄或密集印刷表格。<br>若你想保留欄位格線，請選 <b>Excel 模式</b>；若你想保留文字內容，請選<b>文件模式</b>。'
+    : '系統無法確定這是表格還是文件。<br>請選擇最符合你需求的輸出模式。';
+  const bodyEn = isForm
+    ? 'This image may be a form, maintenance record, or dense printed table.<br>Choose <b>Excel Mode</b> to preserve grid structure, or <b>Doc Mode</b> to extract text.'
+    : "The system can't confidently determine whether this is a table or document.<br>Please choose the output mode that best fits your needs.";
+
+  const reasonsHtml = classification.reasons.slice(0,5).map(r => `• ${r}`).join('<br>');
+
+  gate.innerHTML = `
+    <div class="mode-gate-card">
+      <div class="mode-gate-title">
+        <span class="zh">${titleZh}</span>
+        <span class="en">${titleEn}</span>
+      </div>
+      <div class="mode-gate-reason">
+        <span class="zh">${bodyZh}</span>
+        <span class="en">${bodyEn}</span>
+        <div style="margin-top:10px;font-size:11px;color:#aaa">${reasonsHtml}</div>
+      </div>
+      <div class="mode-gate-btns">
+        <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
+          <span class="zh">📊 使用 Excel 模式</span>
+          <span class="en">📊 Excel Mode</span>
+        </button>
+        <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
+          <span class="zh">📄 使用文件模式</span>
+          <span class="en">📄 Doc Mode</span>
+        </button>
+        <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
+          <span class="zh">🔤 只看 OCR 文字</span>
+          <span class="en">🔤 OCR text only</span>
+        </button>
+      </div>
+    </div>`;
+  gate.style.display = 'block';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('doc-mode-panel').style.display = 'none';
+}
+
+/** Run Excel Mode (table reconstruction). Black cell detection allowed. */
+function runExcelMode(json, file, grid) {
+  currentDocMode = 'excel';
+  tableSchema = mapOCRToSchemaV21(json, file);
+  renderTableFromSchema();
+  updateDpMeta();
+
+  // V2.7 §6.7: mobile dense-column warning
+  const nCols = tableSchema?.columns?.length ?? 0;
+  const isMobile = window.innerWidth < 700;
+  if (isMobile && nCols > 8) {
+    showMsg(lang==='zh'
+      ? `⚠ 偵測到 ${nCols} 欄，手機瀏覽可能難以閱讀。建議切換到桌面版或選擇「文件模式」。`
+      : `⚠ ${nCols} columns detected. Mobile view may be cramped. Consider Doc Mode or desktop review.`,
+      'err');
+  }
+
+  showTab('data');
+  document.getElementById('tab-data').style.display = '';
+  document.getElementById('tab-visual').style.display = '';
+  document.getElementById('tab-export').style.display = '';
+  document.getElementById('mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/** Run Doc Mode — no table reconstruction, no black cell detection. */
+function runDocMode(json) {
+  currentDocMode = 'doc';
+  docModeOcrRaw = json;
+  // Build plain-text preview from OCR result
+  const words = extractOCRWords(json);
+  let text = '';
+  if (words.length) {
+    // Group by sr (row), join columns with tab
+    const byRow = {};
+    words.forEach(w => {
+      const r = w.sr ?? 0;
+      if (!byRow[r]) byRow[r] = [];
+      byRow[r].push(w.text);
+    });
+    const rows = Object.keys(byRow).sort((a,b)=>a-b);
+    text = rows.map(r => byRow[r].join('\t')).join('\n');
+  } else if (json && typeof json === 'object') {
+    text = JSON.stringify(json, null, 2);
+  }
+  if (!text) text = lang==='zh' ? '（無法提取文字）' : '(No text extracted)';
+
+  document.getElementById('doc-preview-body').textContent = text;
+  document.getElementById('mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'block';
+  // Hide table-specific tabs
+  document.getElementById('tab-data').style.display   = 'none';
+  document.getElementById('tab-visual').style.display = 'none';
+  document.getElementById('tab-export').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(lang==='zh'
+    ? '📄 偵測為文件類型，已進入文件模式。如需表格輸出請點「強制 Excel 模式」。'
+    : '📄 Detected as document. Doc Mode active. Click "Force Excel Mode" to override.', 'ok');
+}
+
+function forceExcelModeFromGate() {
+  document.getElementById('mode-gate').style.display = 'none';
+  if (docModeOcrRaw) {
+    // Update normalizedDoc strategy if it exists
+    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'excel'; updateArchMetaBar(normalizedDoc); }
+    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+  }
+}
+
+function forceDocModeFromGate() {
+  if (docModeOcrRaw) {
+    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'doc'; updateArchMetaBar(normalizedDoc); }
+    runDocModeV3(docModeOcrRaw, normalizedDoc);
+  }
+}
+
+/** V2.7.1: Show raw OCR text without any reconstruction — ultra-safe fallback. */
+function forceOcrTextMode() {
+  if (docModeOcrRaw) {
+    runDocMode(docModeOcrRaw);
+    // Override the mode label
+    currentDocMode = 'doc';
+    showMsg(lang==='zh'
+      ? '🔤 已切換到 OCR 純文字模式。'
+      : '🔤 Switched to OCR text-only mode.', 'ok');
+  }
+}
+
+function docForceExcelMode() {
+  if (docModeOcrRaw) runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+}
+
+function docDownloadTxt() {
+  const body = document.getElementById('doc-preview-body');
+  const text = body ? body.textContent : '';
+  if (!text) { showMsg(lang==='zh'?'無文字內容。':'No text content.','err'); return; }
+  saveBlob('photocheck-doc-export.txt', new Blob([text], { type:'text/plain;charset=utf-8' }));
+  showMsg(lang==='zh'?'✓ TXT 已下載。':'✓ TXT downloaded.','ok');
+}
+
+function docDownloadJson() {
+  if (!docModeOcrRaw) { showMsg(lang==='zh'?'無資料。':'No data.','err'); return; }
+  saveBlob('photocheck-doc-ocr.json', new Blob([JSON.stringify(docModeOcrRaw,null,2)],{type:'application/json'}));
+  showMsg(lang==='zh'?'✓ JSON 已下載。':'✓ JSON downloaded.','ok');
+}
+
+/* ===========================================================
+   V3 DOCUMENT UNDERSTANDING + SECURE EXTRACTION ARCHITECTURE
+   ─────────────────────────────────────────────────────────────
+   Pipeline:
+     Upload → resetAllPreviousState
+           → Safety Notice (always visible)
+           → [startOCR] → detectGridFromCanvas → classifyDocumentType
+           → runExtractionPipeline
+                 Layer 1: Document Understanding (googleDocumentAIAdapter)
+                 Layer 2: Risk Assessment (computeRiskLevel)
+                 Layer 3: Extraction Strategy Router
+                       simple-table    → runExcelMode (legacy grid)
+                       structured-form → showModeGateCard
+                       document        → runDocModeV3
+                       uncertain       → showModeGateCard
+   =========================================================== */
+
+/* ══════════════════════════════════════════════════════════════
+   LAYER 1 — NORMALIZED DOCUMENT JSON V3 SCHEMA
+   ══════════════════════════════════════════════════════════════
+   normalizedDocumentJSON = {
+     version: "v3",
+     documentType: "simple-table" | "structured-form" | "document" | "uncertain",
+     riskLevel:    "low" | "medium" | "high",
+     extractionStrategy: "excel" | "form" | "doc" | "ask-user",
+     confidence:   0–1,
+     providerMeta: {
+       name: "google-document-ai" | "azure-document-intelligence"
+             | "aws-textract" | "paddleocr" | "legacy-canvas-grid" | "mock",
+       processingTime: ms,
+       ocrEngine: string,
+       replaceable: true,   // adapter interface — can be swapped
+     },
+     blocks: [
+       {
+         id:           string,
+         blockType:    "table" | "kv-pair" | "paragraph" | "heading" | "list" | "unknown",
+         confidence:   0–1,
+         bbox:         { x, y, w, h } | null,
+         readingOrder: integer,
+         content: {
+           text?:  string,          // paragraph / heading / list
+           key?:   string,          // kv-pair key
+           value?: string,          // kv-pair value
+           rows?:  [{ cells: [{ text, bbox? }] }],  // table rows
+         }
+       }
+     ],
+     tables:     [],  // refs to blocks where blockType === "table"
+     forms:      [],  // refs to blocks where blockType === "kv-pair"
+     paragraphs: [],  // refs to blocks where blockType === "paragraph"|"heading"|"list"
+     meta: {
+       createdAt:        ISO string,
+       processingNotes:  [],
+       _debug:           {},
+       _noRetain:        true,  // NEVER persist — discard after session
+     }
+   }
+   ════════════════════════════════════════════════════════════ */
+
+let normalizedDoc = null;  // current V3 normalized document
+
+/** Create an empty normalizedDocumentJSON shell (V3). */
+function createNormalizedDoc(opts = {}) {
+  return {
+    version: 'v3',
+    documentType:       opts.documentType       || 'uncertain',
+    riskLevel:          opts.riskLevel          || 'low',
+    extractionStrategy: opts.extractionStrategy || 'ask-user',
+    confidence:         opts.confidence         || 0,
+    providerMeta: {
+      name:           opts.provider   || 'legacy-canvas-grid',
+      processingTime: 0,
+      ocrEngine:      opts.ocrEngine  || 'google-document-ai',
+      replaceable:    true,
+    },
+    blocks: [],
+    tables: [],
+    forms:  [],
+    paragraphs: [],
+    meta: {
+      createdAt:       new Date().toISOString(),
+      processingNotes: [],
+      _debug:          {},
+      _noRetain:       true,
+    }
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYER 1 — PROVIDER ADAPTER INTERFACE
+   providerAdapter(ocrResult, file, grid, classification) → normalizedDocumentJSON
+   All providers implement this interface. Drop-in replaceable.
+   Supported: google-document-ai (active), azure-document-intelligence (planned),
+              aws-textract (planned), paddleocr (planned), mock
+   ════════════════════════════════════════════════════════════ */
+
+/**
+ * Google Document AI Adapter (active provider — V3).
+ * Bridges existing OCR JSON + canvas grid → normalizedDocumentJSON v3.
+ * Future: replace body with real Document AI structured response parsing.
+ */
+function googleDocumentAIAdapter(ocrResult, file, grid, classification) {
+  const t0 = Date.now();
+  const docType  = mapClassToDocType(classification.mode);
+  const strategy = mapClassToStrategy(classification.mode);
+  const risk     = computeRiskLevel(ocrResult, classification);
+
+  const doc = createNormalizedDoc({
+    documentType:       docType,
+    riskLevel:          risk,
+    extractionStrategy: strategy,
+    confidence:         classification.confidence,
+    provider:           'google-document-ai',
+    ocrEngine:          ocrResult?.ocrEngine || 'google-document-ai',
+  });
+
+  const words = extractOCRWords(ocrResult);
+  // Group OCR words by reading order (sr = row, sc = col)
+  const byRow = {};
+  words.forEach(w => {
+    const r = w.sr ?? 0;
+    if (!byRow[r]) byRow[r] = [];
+    byRow[r].push(w);
+  });
+  const sortedRows = Object.keys(byRow).map(Number).sort((a,b)=>a-b);
+  let order = 0;
+
+  if (docType === 'simple-table') {
+    // Single table block — legacy grid handles reconstruction
+    const tableBlock = {
+      id: 'block_table_0', blockType: 'table',
+      confidence: classification.confidence,
+      bbox: grid ? { x: grid.outerBorder?.left??0, y: grid.outerBorder?.top??0,
+                     w: grid.w, h: grid.h } : null,
+      readingOrder: order++,
+      content: {
+        rows: sortedRows.map(r => ({
+          cells: byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0))
+                         .map(w => ({ text: w.text, bbox: w.x!=null?{x:w.x,y:w.y,w:w.w||8,h:w.h||12}:null }))
+        }))
+      }
+    };
+    doc.blocks.push(tableBlock);
+    doc.tables.push(tableBlock);
+
+  } else if (docType === 'structured-form') {
+    // Key-value extraction + table fragments
+    sortedRows.forEach(r => {
+      const rowW = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0));
+      if (rowW.length === 2) {
+        const kv = { id:`block_kv_${r}`, blockType:'kv-pair',
+                     confidence:0.72, bbox:null, readingOrder:order++,
+                     content:{ key:rowW[0].text, value:rowW[1].text } };
+        doc.blocks.push(kv); doc.forms.push(kv);
+      } else {
+        const text = rowW.map(w=>w.text).join(' ');
+        const para = { id:`block_row_${r}`, blockType: rowW.length>2?'list':'paragraph',
+                       confidence:0.75, bbox:null, readingOrder:order++,
+                       content:{ text } };
+        doc.blocks.push(para); doc.paragraphs.push(para);
+      }
+    });
+
+  } else {
+    // Document / uncertain — reading-order paragraphs
+    sortedRows.forEach(r => {
+      const text = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join(' ');
+      if (!text.trim()) return;
+      const isHdr = text.length < 60 && r === sortedRows[0];
+      const blk = { id:`block_${r}`, blockType: isHdr?'heading':'paragraph',
+                    confidence:0.8, bbox:null, readingOrder:order++,
+                    content:{ text } };
+      doc.blocks.push(blk); doc.paragraphs.push(blk);
+    });
+  }
+
+  doc.providerMeta.processingTime = Date.now() - t0;
+  doc.meta._debug = {
+    classification: classification.debug, words: words.length,
+    blocks: doc.blocks.length, provider: 'google-document-ai'
+  };
+  doc.meta.processingNotes.push(`Processed by google-document-ai adapter in ${doc.providerMeta.processingTime}ms`);
+  return doc;
+}
+
+/** Map V3 classifier mode → normalizedDocumentJSON documentType. */
+function mapClassToDocType(mode) {
+  return { 'simple-table':'simple-table', 'structured-form':'structured-form',
+           'doc-like':'document', 'uncertain':'uncertain' }[mode] || 'uncertain';
+}
+
+/** Map classifier mode → extraction strategy. */
+function mapClassToStrategy(mode) {
+  return { 'simple-table':'excel', 'structured-form':'ask-user',
+           'doc-like':'doc', 'uncertain':'ask-user' }[mode] || 'ask-user';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYER 2 — RISK ASSESSMENT
+   riskLevel: "low" | "medium" | "high"
+   ════════════════════════════════════════════════════════════ */
+
+/**
+ * Assess document risk level from OCR text signals.
+ * Drives safety notice UX — no data is routed differently.
+ * Audit trail: only records risk level, not the source text.
+ */
+function computeRiskLevel(ocrResult, classification) {
+  const words   = extractOCRWords(ocrResult);
+  const allText = words.map(w=>w.text||'').join(' ');
+
+  const HIGH = [
+    /合約|contract|agreement/i,
+    /身分證|national\s?id|passport/i,
+    /診斷|medical\s?record|病歷/i,
+    /股東|shareholder|board\s?meeting/i,
+    /[\$￥€£]\s?[\d,]+/,
+    /nt\$[\d,]+|usd\s?[\d,]+/i,
+    /機密|confidential|classified/i,
+    /法院|court|訴訟|lawsuit/i,
+    /保險|insurance/i,
+  ];
+  const MEDIUM = [
+    /電話|phone|tel[\s:]/i,
+    /地址|address/i,
+    /\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/,
+    /總計|合計|subtotal|total[\s:]/i,
+    /發票|invoice|receipt|收據/i,
+    /報價|quotation|quote/i,
+  ];
+
+  if (HIGH.some(r => r.test(allText)))   return 'high';
+  if (MEDIUM.some(r => r.test(allText))) return 'medium';
+  // Structured forms with data are at least medium
+  if (classification.mode === 'structured-form') return 'medium';
+  return 'low';
+}
+
+/** Update safety notice banner based on V3 riskLevel. */
+function updateSafetyNotice(riskLevel) {
+  const base     = document.getElementById('safety-notice-base');
+  const highRisk = document.getElementById('safety-notice-high-risk');
+  if (!base || !highRisk) return;
+  if (riskLevel === 'high' || riskLevel === 'medium') {
+    base.style.display = 'none';
+    highRisk.style.display = 'flex';
+  } else {
+    base.style.display = 'flex';
+    highRisk.style.display = 'none';
+  }
+}
+
+/** Update arch-meta-bar with V3 providerMeta and risk. */
+function updateArchMetaBar(nDoc) {
+  const bar = document.getElementById('arch-meta-bar');
+  if (bar) bar.style.display = 'flex';
+  const set = (id, val, style) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    if (style) Object.assign(el.style, style);
+  };
+  set('meta-provider', nDoc.providerMeta.name);
+  set('meta-mode',     nDoc.documentType);
+  const riskColor = { high:'#B03922', medium:'#7A5C1E', low:'inherit' };
+  set('meta-risk',     nDoc.riskLevel, { color: riskColor[nDoc.riskLevel]||'inherit' });
+  set('meta-strategy', nDoc.extractionStrategy);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYER 3 — OUTPUT BUILDERS (from normalizedDocumentJSON)
+   ════════════════════════════════════════════════════════════ */
+
+/**
+ * Build plain-text / reading-order output from normalizedDoc.
+ * Used by Doc Mode and TXT export.
+ */
+function buildTxtFromNormalizedDoc(doc) {
+  return doc.blocks
+    .sort((a,b) => a.readingOrder - b.readingOrder)
+    .map(block => {
+      switch (block.blockType) {
+        case 'heading':   return '## ' + (block.content.text||'');
+        case 'paragraph': return block.content.text||'';
+        case 'list':      return '• '  + (block.content.text||'');
+        case 'kv-pair':   return `${block.content.key||''}: ${block.content.value||''}`;
+        case 'table': {
+          const rows = block.content.rows||[];
+          return rows.map(row => row.cells.map(c=>c.text).join('\t')).join('\n');
+        }
+        default: return block.content.text||'';
+      }
+    })
+    .filter(t => t.trim())
+    .join('\n\n');
+}
+
+/**
+ * Build structured JSON export from normalizedDoc.
+ * Per §audit: strips _debug and internal fields.
+ * Schema version "v3" — compatible with future ERP / system integration.
+ */
+function buildJsonFromNormalizedDoc(doc) {
+  return JSON.stringify({
+    _schema:             'photocheck-docs-normalized-v3',
+    version:             doc.version,
+    documentType:        doc.documentType,
+    riskLevel:           doc.riskLevel,
+    extractionStrategy:  doc.extractionStrategy,
+    confidence:          doc.confidence,
+    provider:            doc.providerMeta.name,
+    processingTime:      doc.providerMeta.processingTime,
+    blocks: doc.blocks.map(b => ({
+      id:           b.id,
+      blockType:    b.blockType,
+      confidence:   b.confidence,
+      readingOrder: b.readingOrder,
+      content:      b.content,
+    })),
+    exportedAt:    new Date().toISOString(),
+    _noRetain:     true,
+  }, null, 2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYER 3 — EXTRACTION STRATEGY RUNNERS
+   ════════════════════════════════════════════════════════════ */
+
+/**
+ * V3 Extraction Pipeline — main entry point.
+ * Called from startOCR after classification.
+ */
+function runExtractionPipeline(ocrResult, file, grid, classification) {
+  // Provider Adapter → normalizedDocumentJSON
+  normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
+
+  // Safety UX
+  updateSafetyNotice(normalizedDoc.riskLevel);
+  updateArchMetaBar(normalizedDoc);
+
+  const mode = classification.mode;
+
+  if (mode === 'simple-table') {
+    // Excel path: legacy V2.5.1 grid pipeline (accurate for menus, price lists)
+    runExcelMode(ocrResult, file, grid);
+
+  } else if (mode === 'doc-like') {
+    // Document path: reading-order blocks, no table reconstruction
+    runDocModeV3(ocrResult, normalizedDoc);
+
+  } else {
+    // structured-form / uncertain → Mode Gate (user decides)
+    showModeGateCard(classification, ocrResult);
+  }
+}
+
+/**
+ * V3 Doc Mode — renders normalizedDoc blocks in reading order.
+ * Black cell detection is structurally skipped (currentDocMode guard).
+ */
+function runDocModeV3(ocrResult, nDoc) {
+  currentDocMode = 'doc';
+  docModeOcrRaw  = ocrResult;
+
+  const displayText = (nDoc && nDoc.blocks.length)
+    ? buildTxtFromNormalizedDoc(nDoc)
+    : (() => {
+        const words = extractOCRWords(ocrResult);
+        const byRow = {};
+        words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
+        return Object.keys(byRow).sort((a,b)=>a-b)
+          .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+          .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
+      })();
+
+  document.getElementById('doc-preview-body').textContent = displayText;
+  document.getElementById('mode-gate').style.display       = 'none';
+  document.getElementById('doc-mode-panel').style.display  = 'block';
+  document.getElementById('tab-data').style.display        = 'none';
+  document.getElementById('tab-visual').style.display      = 'none';
+  document.getElementById('tab-export').style.display      = 'none';
+  document.getElementById('step-results').style.display    = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(lang==='zh'
+    ? '📄 已進入文件模式，顯示閱讀順序文字。如需表格輸出請點「強制 Excel 模式」。'
+    : '📄 Document mode: reading-order text displayed. Click "Force Excel Mode" to override.', 'ok');
+}
+
+/** V3 docDownloadJson — uses normalizedDoc when available. */
+function docDownloadJson() {
+  if (!normalizedDoc && !docModeOcrRaw) {
+    showMsg(lang==='zh'?'無資料。':'No data.','err'); return;
+  }
+  const data = normalizedDoc
+    ? buildJsonFromNormalizedDoc(normalizedDoc)
+    : JSON.stringify(docModeOcrRaw, null, 2);
+  saveBlob('photocheck-v3-doc.json', new Blob([data], {type:'application/json'}));
+  showMsg(lang==='zh'?'✓ JSON 已下載。':'✓ JSON downloaded.','ok');
+}
+
+/** Override handlers — update normalizedDoc strategy before routing. */
+function forceExcelModeFromGate() {
+  document.getElementById('mode-gate').style.display = 'none';
+  if (!docModeOcrRaw) return;
+  if (normalizedDoc) { normalizedDoc.extractionStrategy='excel'; updateArchMetaBar(normalizedDoc); }
+  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+}
+
+function forceDocModeFromGate() {
+  if (!docModeOcrRaw) return;
+  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
+  runDocModeV3(docModeOcrRaw, normalizedDoc);
+}
+
+/** V3 forceOcrTextMode — ultra-safe: raw OCR text, zero reconstruction. */
+function forceOcrTextMode() {
+  if (!docModeOcrRaw) return;
+  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
+  runDocModeV3(docModeOcrRaw, normalizedDoc);
+  showMsg(lang==='zh'?'🔤 已切換到 OCR 純文字模式。':'🔤 Switched to OCR text-only mode.','ok');
+}
+
+
+
+
+async function startOCR() {
+  if (!imageData) {
+    showMsg(lang === 'zh' ? '請先上傳圖片。' : 'Please upload an image first.', 'err');
+    return;
+  }
+  if (getUsage() >= LIMIT) {
+    showMsg(lang === 'zh' ? '免費次數已用完。' : 'Free credits exhausted.', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('recog-btn');
+  btn.disabled = true;
+  document.getElementById('step-processing').style.display = 'block';
+  document.getElementById('step-results').style.display = 'none';
+  showMsg('', '');
+
+  try {
+    const res = await fetch('/api/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+
+    // ★ API Guard: read text first, check for HTML fallback
+    const raw = await res.text();
+    const trimmed = raw.trimStart();
+    const isHTML = trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<!doctype');
+
+    if (isHTML || !res.ok) {
+      const msg = lang === 'zh'
+        ? '目前預覽環境無法連接 OCR API。請部署到 Vercel 同網域後測試，或點擊「使用範例資料」體驗完整功能。'
+        : 'OCR API is not available in preview mode. Deploy this file under the same Vercel domain to test recognition, or click "Use sample data" to explore all features.';
+      throw new Error(msg);
+    }
+
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (parseErr) {
+      throw new Error(
+        lang === 'zh'
+          ? 'OCR API 回傳非預期格式，請確認 /api/ocr 是否正常運作。'
+          : 'OCR API returned an unexpected format. Please verify /api/ocr is working correctly.'
+      );
+    }
+
+    if (json.error) throw new Error(json.error);
+
+    // V2.7: Classify document type before table reconstruction
+    const imgEl = document.getElementById('prev-img');
+    let grid = null;
+    try {
+      if (imgEl && imgEl.naturalWidth > 0) {
+        grid = detectGridFromCanvas(imgEl);
+        lastDetectedGrid = grid;
+      }
+    } catch(e) { console.warn('[V2.7] grid pre-check failed:', e); }
+
+    const classification = classifyDocumentType(json, grid);
+    docModeOcrRaw = json; // store for override buttons
+
+    // Add to debug meta
+    if (!json._v27debug) json._v27debug = {};
+    json._v27debug.documentType = classification;
+
+    // V3: Only charge credit for successful new-image OCR (same as V2.3 rule)
+    consumeCreditForOCR(imageFile);
+
+    document.getElementById('step-processing').style.display = 'none';
+
+    // V3: Route through extraction pipeline (Layer1: Understanding → Layer2: Risk → Layer3: Strategy)
+    runExtractionPipeline(json, imageFile, grid, classification);
+
+  } catch (err) {
+    showMsg(err.message, 'err');
+    document.getElementById('step-processing').style.display = 'none';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ===========================================================
+   RENDER TABLE FROM SCHEMA
+   =========================================================== */
+function renderTableFromSchema() {
+  if (!tableSchema) return;
+  const { columns: cols, rows, cells } = tableSchema;
+
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+
+  let html = '<colgroup>';
+  cols.forEach(col => { html += `<col style="width:${col.width}px;min-width:${Math.min(col.width, 80)}px">`; });
+  html += '</colgroup>';
+
+  if (headerRow) {
+    html += '<thead><tr>';
+    cols.forEach(col => {
+      const c = cmap[`${headerRow.id}|${col.id}`];
+      const isBlack = c?.style?.fill === 'black';
+      html += `<th${isBlack?' class="cell-black"':''}>${escH(c ? c.text : col.label)}</th>`;
+    });
+    html += '</tr></thead>';
+  }
+
+  html += '<tbody>';
+  dataRows.forEach((row, ri) => {
+    html += '<tr>';
+    cols.forEach((col, ci) => {
+      const c  = cmap[`${row.id}|${col.id}`];
+      const id = c ? c.id : `_${ri}_${ci}`;
+      if (c?._merged) return; // skip merged-away cells
+      const isBlack = c?.style?.fill === 'black';
+      const colSpan = (c?.colSpan||1) > 1 ? ` colspan="${c.colSpan}"` : '';
+      const tdCls = isBlack ? ' class="cell-black"' : '';
+      const taCls = isBlack ? ' cell-edit-black' : '';
+      html += `<td${tdCls}${colSpan}><textarea class="cell-edit${taCls}" data-cid="${escA(id)}" rows="1"
+        onfocus="setSelectedCell('${escA(id)}','${escA(col.id)}')"
+        oninput="onCellInput(this)">${escH(c ? c.text : '')}</textarea></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+
+  const tbl = document.getElementById('schema-tbl');
+  tbl.innerHTML = html;
+  tbl.querySelectorAll('.cell-edit').forEach(autoGrow);
+}
+
+function onCellInput(el) {
+  autoGrow(el);
+  if (!tableSchema) return;
+  const id = el.dataset.cid;
+  const cell = tableSchema.cells.find(c => c.id === id);
+  if (cell) cell.text = el.value;
+}
+
+function updateDpMeta() {
+  const el = document.getElementById('dp-meta');
+  if (!el || !tableSchema) return;
+  const nCols = tableSchema.columns.length;
+  const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
+  const mode  = tableSchema.meta.reconstructionMode;
+  const gaps  = tableSchema.meta._debug?.rowGapWarnings;
+  const gapNote = gaps?.length
+    ? (lang==='zh' ? ` · ⚠ 偵測到 ${gaps.length} 個列間距，已插入空白列` : ` · ⚠ ${gaps.length} row gap(s) filled with placeholders`)
+    : '';
+  const modeNote = currentDocMode
+    ? ` · ${currentDocMode === 'excel' ? '📊 Excel Mode' : currentDocMode === 'doc' ? '📄 Doc Mode' : currentDocMode + ' Mode'}`
+    : '';
+  el.innerHTML = (lang === 'zh'
+    ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
+    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`)
+    + modeNote
+    + (gapNote ? `<span style="color:#B03922">${gapNote}</span>` : '');
+}
+
+/* ===========================================================
+   SVG PREVIEW
+   =========================================================== */
+function renderSVGPreview() {
+  const container = document.getElementById('svg-preview');
+  if (!container || !tableSchema) return;
+  const blob = buildSVGFromSchema(tableSchema);
+  const url  = URL.createObjectURL(blob);
+  container.innerHTML = `<img src="${url}" alt="SVG Vector Layout Draft">`;
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+}
+
+/* ===========================================================
+   EXPORT FUNCTIONS
+   =========================================================== */
+document.getElementById('btn-xlsx').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-export.xlsx', buildXLSXFromSchema(tableSchema)); });
+// SVG download — robust handler with error surfacing (Fix V2.5)
+function downloadSvg() {
+  try {
+    if (!tableSchema || !tableSchema.cells || !tableSchema.cells.length) {
+      showMsg(lang==='zh'
+        ? '請先執行 Demo、版面分析或 AI 辨識。'
+        : 'Please run demo, layout analysis, or AI recognition first.', 'err');
+      return;
+    }
+    const result = buildSVGFromSchema(tableSchema);
+    let blob;
+    if (result instanceof Blob) {
+      blob = result;
+    } else if (typeof result === 'string') {
+      if (!result.includes('<svg')) throw new Error('SVG string missing <svg> tag');
+      blob = new Blob([result], { type: 'image/svg+xml;charset=utf-8' });
+    } else if (result instanceof SVGElement) {
+      const s = new XMLSerializer().serializeToString(result);
+      blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
+    } else {
+      throw new Error('buildSVGFromSchema returned unexpected type: ' + typeof result);
+    }
+    if (!blob || blob.size < 10) throw new Error('SVG blob is empty');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'photocheck-v2-export.svg';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showMsg(lang==='zh' ? '✓ SVG 已下載。' : '✓ SVG downloaded.', 'ok');
+  } catch(err) {
+    console.error('[V2.5.1] SVG download failed:', err);
+    showMsg(
+      (lang==='zh' ? 'SVG 下載失敗：' : 'SVG download failed: ') + (err.message || String(err)),
+      'err'
+    );
+  }
+}
+// Bind SVG button — works for both <button> and <div role="button">
+const _svgEl = document.getElementById('btn-svg');
+if (_svgEl) {
+  _svgEl.style.cursor = 'pointer';
+  _svgEl.addEventListener('click', downloadSvg);
+  _svgEl.setAttribute('role', 'button');
+  _svgEl.setAttribute('tabindex', '0');
+  _svgEl.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') downloadSvg(); });
+}
+document.getElementById('btn-csv').addEventListener('click',  () => { if (tableSchema) saveBlob('photocheck-v2-export.csv',  buildCSVFromSchema(tableSchema)); });
+document.getElementById('btn-json').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-schema.json', new Blob([JSON.stringify(tableSchema, null, 2)], { type: 'application/json' })); });
+document.getElementById('btn-pdf').addEventListener('click',  () => { if (tableSchema) exportPDF(); });
+
+/* ===========================================================
+   BUILD XLSX FROM SCHEMA
+   =========================================================== */
+function buildXLSXFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const isGridMode = schema.meta?.reconstructionMode?.startsWith('canvasGrid');
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+  const allRows   = [];
+
+  if (headerRow) allRows.push({ row: headerRow, isH: true });
+  dataRows.forEach(r => allRows.push({ row: r, isH: false }));
+
+  // Column widths from detected grid (px → Excel char, readability-first)
+  const colXml = '<cols>' + cols.map((col, i) => {
+    // Use actual pixel width from grid; ensure min 8, max 60 chars
+    const charW = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
+    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1"/>`;
+  }).join('') + '</cols>';
+
+  // Determine border style per cell from schema style
+  // We use 5 border styles: 0=none, 1=thin, 2=medium, 3=thick (for outer)
+  // styleId: 0=default, 1=data, 2=header, 3=data-outer, 4=header-outer
+  const getBorderStyleId = (cell, ri, nR, nC) => {
+    if (!isGridMode) return cell.style?.bold ? 2 : 1;
+    const s = cell.style || {};
+    const isHdr = cell.rowId === headerRow?.id;
+    const isBlack = s.fill === 'black';
+    if (isBlack && isHdr) return 6;
+    if (isBlack) return 5;
+    const outer = (s.borderTop==='thick'||s.borderBottom==='thick'||
+                   s.borderLeft==='thick'||s.borderRight==='thick');
+    if (isHdr && outer) return 4;
+    if (isHdr) return 2;
+    if (outer) return 3;
+    return 1;
+  };
+
+  const nR = allRows.length, nC = cols.length;
+  const sheetData = allRows.map(({ row, isH }, ri) => {
+    const maxL = Math.max(...cols.map(col => {
+      const c = cmap[`${row.id}|${col.id}`];
+      return String(c?.text || '').length;
+    }), 1);
+    // Row height: use detected height if available, else auto
+    const detectedHt = row.height ? Math.min(120, Math.max(14, row.height * 0.75)) : null;
+    const ht = detectedHt ?? (isH ? 22 : Math.min(120, Math.max(18, Math.ceil(maxL/22)*16)));
+    return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">` +
+      cols.map((col, ci) => {
+        const c = cmap[`${row.id}|${col.id}`];
+        const text = c ? c.text : (isH ? col.label : '');
+        // Replace newlines with space for Excel (Excel uses Alt+Enter = &#10; in shared strings)
+        const xmlText = escX(text.replace(/\n/g, ' '));
+        const sid = getBorderStyleId(c || {style:{}}, ri, nR, nC);
+        return `<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${sid}">` +
+               `<is><t xml:space="preserve">${xmlText}</t></is></c>`;
+      }).join('') + '</row>';
+  }).join('');
+
+  const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData></worksheet>`;
+
+  // 5 border styles: none, thin, thin+bold-hdr, thick-outer, thick-outer+bold-hdr
+  const mkBorder = (l,r,t,b) =>
+    `<border><left style="${l}"><color rgb="FF8C7B6B"/></left>` +
+    `<right style="${r}"><color rgb="FF8C7B6B"/></right>` +
+    `<top style="${t}"><color rgb="FF1A1A18"/></top>` +
+    `<bottom style="${b}"><color rgb="FF1A1A18"/></bottom><diagonal/></border>`;
+
+  const styles = `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="3">
+  <font><sz val="11"/><name val="Arial"/></font>
+  <font><b/><sz val="11"/><name val="Arial"/></font>
+  <font><b/><sz val="11"/><name val="Arial"/><color rgb="FFFFFFFF"/></font>
+</fonts>
+<fills count="4">
+  <fill><patternFill patternType="none"/></fill>
+  <fill><patternFill patternType="gray125"/></fill>
+  <fill><patternFill patternType="solid"><fgColor rgb="FFF5F0E8"/><bgColor indexed="64"/></patternFill></fill>
+  <fill><patternFill patternType="solid"><fgColor rgb="FF111111"/><bgColor indexed="64"/></patternFill></fill>
+</fills>
+<borders count="5">
+  ${mkBorder('none','none','none','none')}
+  ${mkBorder('thin','thin','thin','thin')}
+  ${mkBorder('thin','thin','medium','medium')}
+  ${mkBorder('thick','thick','thick','thick')}
+  ${mkBorder('thick','thick','thick','thick')}
+</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="7">
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="0" fillId="0" borderId="3" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="1" fillId="2" borderId="4" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="2" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="2" fillId="3" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  return zipFiles([
+    ['[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml',`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PhotoCheck V2.2" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', styles],
+    ['xl/worksheets/sheet1.xml', sheet]
+  ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+
+/* ===========================================================
+   BUILD SVG FROM SCHEMA — V2.2 GRID-FAITHFUL
+   Uses actual bbox coords from reconstructed grid
+   =========================================================== */
+function buildSVGFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const isGridMode = schema.meta?.reconstructionMode?.startsWith('canvasGrid');
+  const MARGIN = 32;
+
+  // Use actual grid pixel dimensions if available; else fall back to computed
+  const gridW = isGridMode
+    ? (cols[cols.length-1].x + cols[cols.length-1].width - cols[0].x)
+    : cols.reduce((s,c)=>s+c.width, 0);
+  const gridH = isGridMode
+    ? (rows[rows.length-1].y + rows[rows.length-1].height - rows[0].y)
+    : rows.reduce((s,r)=>s+r.height, 0);
+
+  const svgW = gridW + MARGIN*2;
+  const svgH = gridH + MARGIN*2 + 24;
+  const OX   = MARGIN;
+  const OY   = MARGIN + 16;
+
+  // Offset so grid starts at (OX, OY) regardless of source coords
+  const originX = isGridMode ? cols[0].x : 0;
+  const originY = isGridMode ? rows[0].y : 0;
+  const tx = c => OX + (c - originX);  // translate x
+  const ty = r => OY + (r - originY);  // translate y
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
+  svg += `<rect width="100%" height="100%" fill="white"/>`;
+  svg += `<text x="${MARGIN}" y="13" font-size="9.5" font-family="Arial,'Noto Sans TC',sans-serif" fill="#AAA">`;
+  svg += `PhotoCheck Docs V2.2 · Grid-Faithful SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
+
+  // Zebra stripes (data rows)
+  rows.filter(r=>r.type==='data').forEach((row,i) => {
+    if (i%2===0)
+      svg += `<rect x="${tx(cols[0].x)}" y="${ty(row.y)}" width="${gridW}" height="${row.height}" fill="#FDFAF5"/>`;
+  });
+
+  // Header background
+  const hdrRow = rows.find(r=>r.type==='header');
+  if (hdrRow)
+    svg += `<rect x="${tx(cols[0].x)}" y="${ty(hdrRow.y)}" width="${gridW}" height="${hdrRow.height}" fill="#F5F0E8"/>`;
+
+  // Draw all cell borders faithfully from schema style
+  cells.forEach(cell => {
+    const row = rows.find(r=>r.id===cell.rowId);
+    const col = cols.find(c=>c.id===cell.colId);
+    if (!row||!col) return;
+    const x1=tx(col.x), y1=ty(row.y), x2=tx(col.x+col.width), y2=ty(row.y+row.height);
+    const s = cell.style||{};
+    // V2.3: Black-fill cell background
+    if (s.fill==='black') {
+      svg+=`<rect x="${x1.toFixed(1)}" y="${y1.toFixed(1)}" width="${(x2-x1).toFixed(1)}" height="${(y2-y1).toFixed(1)}" fill="#111"/>`;
+    }
+    const strokeW = st => st==='thick'?2.5:st==='medium'?1.5:0.75;
+    const strokeC = st => (st==='thick'||st==='medium')?'#1A1A18':'#C8BCA8';
+    const drawLine = (x1,y1,x2,y2,st) => {
+      if (!st||st==='none') return;
+      svg+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${strokeC(st)}" stroke-width="${strokeW(st)}"/>`;
+    };
+    drawLine(x1,y1,x2,y1, s.borderTop);
+    drawLine(x1,y2,x2,y2, s.borderBottom);
+    drawLine(x1,y1,x1,y2, s.borderLeft);
+    drawLine(x2,y1,x2,y2, s.borderRight);
+  });
+
+  // Cell text
+  cells.forEach(cell => {
+    const row = rows.find(r=>r.id===cell.rowId);
+    const col = cols.find(c=>c.id===cell.colId);
+    if (!row||!col||!cell.text) return;
+    const isHdr = row.type==='header';
+    const isBlack = cell.style?.fill==='black';
+    const cx = tx(col.x), cy = ty(row.y);
+    const fs = (isHdr||isBlack) ? 12 : 11;
+    const fw = (isHdr||isBlack) ? 'bold' : 'normal';
+    const fill = isBlack ? '#fff' : (isHdr ? '#1A1A18' : '#333');
+    const PAD_X = 7; // fixed: was referencing undefined `padX`
+    const maxChars = Math.max(4, Math.floor(col.width/7));
+    // Multi-line text support
+    const lines = cell.text.split('\n');
+    const lineH = fs + 3;
+    const startY = cy + row.height/2 - (lines.length-1)*lineH/2 + fs*0.35;
+    lines.forEach((line,li) => {
+      const txt = truncStr(line, maxChars);
+      svg += `<text x="${(cx+PAD_X).toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
+             `font-size="${fs}" font-weight="${fw}" `+
+             `font-family="Arial,'Noto Sans TC',sans-serif" fill="${fill}">${escX(txt)}</text>`;
+    });
+  });
+
+  svg += '</svg>';
+  return new Blob([svg], { type: 'image/svg+xml' });
+}
+
+/* ===========================================================
+   BUILD CSV FROM SCHEMA
+   =========================================================== */
+function buildCSVFromSchema(schema) {
+  const { columns: cols, rows, cells } = schema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const allRows = [];
+  const headerRow = rows.find(r => r.type === 'header');
+  if (headerRow) allRows.push(headerRow);
+  rows.filter(r => r.type === 'data').forEach(r => allRows.push(r));
+
+  const csv = allRows.map(row =>
+    cols.map(col => {
+      const c    = cmap[`${row.id}|${col.id}`];
+      const text = c ? c.text : (row.type === 'header' ? col.label : '');
+      return '"' + text.replace(/"/g, '""') + '"';
+    }).join(',')
+  ).join('\r\n');
+
+  // \uFEFF BOM for Excel Chinese compatibility
+  return new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+}
+
+/* ===========================================================
+   PDF EXPORT (Browser Print Fallback)
+   =========================================================== */
+function exportPDF() {
+  const { columns: cols, rows, cells } = tableSchema;
+  const cmap = {};
+  cells.forEach(c => { cmap[`${c.rowId}|${c.colId}`] = c; });
+
+  const headerRow = rows.find(r => r.type === 'header');
+  const dataRows  = rows.filter(r => r.type === 'data');
+
+  let tbl = `<table style="border-collapse:collapse;width:100%;font-family:Arial,'Noto Sans TC',sans-serif;font-size:12px">`;
+  if (headerRow) {
+    tbl += '<thead><tr>';
+    cols.forEach(col => {
+      const c = cmap[`${headerRow.id}|${col.id}`];
+      tbl += `<th style="border:1.5px solid #333;padding:8px 10px;background:#F5F0E8;text-align:left;font-weight:700">${escH(c ? c.text : col.label)}</th>`;
+    });
+    tbl += '</tr></thead>';
+  }
+  tbl += '<tbody>';
+  dataRows.forEach(row => {
+    tbl += '<tr>';
+    cols.forEach(col => {
+      const c = cmap[`${row.id}|${col.id}`];
+      tbl += `<td style="border:1px solid #ccc;padding:7px 10px;vertical-align:top">${escH(c ? c.text : '')}</td>`;
+    });
+    tbl += '</tr>';
+  });
+  tbl += '</tbody></table>';
+
+  const note = lang === 'zh'
+    ? '快速列印預覽 · PDF Print Beta · 不承諾像素級還原 · PhotoCheck Docs V2'
+    : 'Quick print preview · PDF Print Beta · No pixel-perfect promise · PhotoCheck Docs V2';
+
+  const win = window.open('', '_blank');
+  if (!win) { alert(lang === 'zh' ? '請允許彈出視窗以列印。' : 'Please allow popups to print.'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>PhotoCheck Docs V2 · PDF Print Beta</title>
+<style>body{font-family:Arial,'Noto Sans TC',sans-serif;margin:24px}
+.note{font-size:11px;color:#777;padding:8px 12px;background:#fff8e1;border-left:3px solid #C8A96E;margin-bottom:18px}
+@media print{.note{display:none}}</style></head><body>
+<div class="note">${escH(note)}</div>${tbl}
+<script>window.onload=()=>window.print();<\/script></body></html>`);
+  win.document.close();
+}
+
+/* ===========================================================
+   UTILITIES
+   =========================================================== */
+function escH(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+function escA(s) {
+  return String(s ?? '').replace(/"/g, '&quot;');
+}
+function escX(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;' }[c]));
+}
+function truncStr(s, max) {
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(Math.max(el.scrollHeight, 32), 200) + 'px';
+}
+function saveBlob(name, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+}
+function showMsg(text, type) {
+  const el = document.getElementById('app-msg');
+  if (!el) return;
+  if (!text) { el.className = 'app-msg'; return; }
+  el.className = `app-msg ${type} show`;
+  el.textContent = text;
+}
+function xlCol(n) {
+  let s = ''; n++;
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+/* ===========================================================
+   ZIP BUILDER (for XLSX — no external dependencies)
+   =========================================================== */
+function crc32(bytes) {
+  let c = ~0;
+  for (let i = 0; i < bytes.length; i++) {
+    c ^= bytes[i];
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+  }
+  return ~c >>> 0;
+}
+
+function zipFiles(files, mime = 'application/zip') {
+  const enc = new TextEncoder();
+  const entries = []; let offset = 0;
+  for (const [name, content] of files) {
+    const nb = enc.encode(name), data = enc.encode(content), crc = crc32(data);
+    entries.push({ nb, data, crc, offset });
+    offset += 30 + nb.length + data.length;
+  }
+  const csz = entries.reduce((s, e) => s + 46 + e.nb.length, 0);
+  const out  = new Uint8Array(offset + csz + 22);
+  const dv   = new DataView(out.buffer); let p = 0;
+  const w16 = v => { dv.setUint16(p, v, true); p += 2; };
+  const w32 = v => { dv.setUint32(p, v >>> 0, true); p += 4; };
+  const put = b => { out.set(b, p); p += b.length; };
+  for (const e of entries) {
+    e.lhOff = p;
+    w32(0x04034b50); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.data.length); w32(e.data.length);
+    w16(e.nb.length); w16(0); put(e.nb); put(e.data);
+  }
+  const cs = p;
+  for (const e of entries) {
+    w32(0x02014b50); w16(20); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(e.crc); w32(e.data.length); w32(e.data.length);
+    w16(e.nb.length); w16(0); w16(0); w16(0); w16(0);
+    w32(0); w32(e.lhOff); put(e.nb);
+  }
+  const ce = p;
+  w32(0x06054b50); w16(0); w16(0);
+  w16(entries.length); w16(entries.length);
+  w32(ce - cs); w32(cs); w16(0);
+  return new Blob([out], { type: mime });
+}
+
+/* ===========================================================
+   INIT
+   =========================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(lang);
+  refreshCredits();
+});
+</script>
+</body>
+</html>

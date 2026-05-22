@@ -373,7 +373,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 .tab-panel.active{display:block}
 
 /* Data panel */
-.data-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.data-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:visible;display:flex;flex-direction:column}
 .dp-header{
   padding:14px 20px;border-bottom:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between
@@ -387,8 +387,9 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   font-family:var(--sans);transition:all .15s
 }
 .dp-export-btn:hover{background:var(--gold-lt)}
-.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:clamp(260px,60vh,700px);border:1px solid var(--line);border-radius:var(--r-s);background:#fff}
+.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:clamp(300px,65vh,800px);border:1px solid var(--line);border-radius:var(--r-s);background:#fff;flex:1 1 auto}
 .schema-tbl{border-collapse:collapse;width:100%;font-size:12.5px;min-width:400px;table-layout:auto}
+@media(max-width:600px){.tbl-wrap{max-height:55vh}}
 .schema-tbl th{
   background:var(--cream);padding:10px 13px;font-weight:700;
   text-align:left;border-bottom:2px solid var(--line);
@@ -1326,20 +1327,21 @@ function detectGridFromCanvas(imgEl) {
   }
 
   // Adaptive threshold: mean + 0.7 * std
+  // V2.5: Lower threshold multiplier to catch faint row lines
   function adaptiveThr(arr) {
     const mean = arr.reduce((s,v)=>s+v,0)/arr.length;
     const std = Math.sqrt(arr.reduce((s,v)=>s+(v-mean)**2,0)/arr.length);
-    return Math.max(6, mean + 0.7*std);
+    return Math.max(4, mean + 0.45*std); // was 0.7 → 0.45 to preserve faint lines
   }
   const hThr = adaptiveThr(hEdge);
   const vThr = adaptiveThr(vEdge);
 
-  // Extract local maxima peaks above threshold, enforcing min gap
+  // V2.5: Relaxed dark pixel requirement (was 0.04 → 0.02)
   function extractPeaks(edge, dark, thr, gap) {
     const raw = [];
     for (let i = 2; i < edge.length-2; i++) {
       if (edge[i] < thr) continue;
-      if (dark[i] < 0.04) continue; // must have some dark pixels
+      if (dark[i] < 0.02) continue; // relaxed: allow lighter lines
       let isMax = true;
       for (let j = Math.max(0,i-4); j <= Math.min(edge.length-1,i+4); j++) {
         if (j !== i && edge[j] > edge[i]) { isMax=false; break; }
@@ -1354,7 +1356,6 @@ function detectGridFromCanvas(imgEl) {
     return raw;
   }
 
-  // Merge close parallel lines
   function mergeClose(lines, mergeGap) {
     if (!lines.length) return lines;
     const out = [lines[0]];
@@ -1366,9 +1367,28 @@ function detectGridFromCanvas(imgEl) {
     return out;
   }
 
-  const rawHpx = extractPeaks(hEdge, hDark, hThr, 8);
+  // V2.5: Also fill large Y gaps with estimated row lines
+  function fillYGaps(lines, totalH, minRowH) {
+    if (lines.length < 2) return lines;
+    const filled = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      const gap = lines[i] - filled[filled.length-1];
+      if (gap > minRowH * 2.5) {
+        // Insert estimated intermediate lines
+        const nInsert = Math.round(gap / minRowH) - 1;
+        const step = gap / (nInsert + 1);
+        for (let k = 1; k <= nInsert; k++) {
+          filled.push(Math.round(filled[filled.length - (k===1?1:0)] + (k===1?step:step)));
+        }
+      }
+      filled.push(lines[i]);
+    }
+    return filled;
+  }
+
+  const rawHpx = extractPeaks(hEdge, hDark, hThr, 6); // gap reduced 8→6 for dense rows
   const rawVpx = extractPeaks(vEdge, vDark, vThr, 10);
-  const filtHpx = mergeClose(rawHpx, 10);
+  const filtHpx = mergeClose(rawHpx, 8); // merge 10→8
   const filtVpx = mergeClose(rawVpx, 13);
 
   const toOrig = (v) => Math.round(v / scale);
@@ -1410,15 +1430,41 @@ function reconstructGridSchema(grid, ocr, file) {
   schema.meta._debug = {
     rawH: grid.rawH.length, rawV: grid.rawV.length,
     filteredH: grid.filteredH.length, filteredV: grid.filteredV.length,
-    rejectedH: grid.rejectedH.length, rejectedV: grid.rejectedV.length
+    rejectedH: grid.rejectedH.length, rejectedV: grid.rejectedV.length,
+    rowGapWarnings: [] // filled after ys computed
   };
 
   const le = outerBorder.left   ?? 0,  re = outerBorder.right  ?? w;
   const te = outerBorder.top    ?? 0,  be = outerBorder.bottom ?? h;
 
   let xs = [...new Set([le, ...interiorV, re])].sort((a,b)=>a-b);
-  const ys = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
-  if (xs.length < 2 || ys.length < 2) return null;
+  let rawYs = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
+  if (xs.length < 2 || rawYs.length < 2) return null;
+
+  // V2.5: Detect row gaps → insert placeholder rows to prevent skipped rows
+  const rowGapWarnings = [];
+  const medRowH = (() => {
+    const gaps = [];
+    for (let i=1;i<rawYs.length;i++) gaps.push(rawYs[i]-rawYs[i-1]);
+    gaps.sort((a,b)=>a-b);
+    return gaps[Math.floor(gaps.length/2)] || 20;
+  })();
+  const ys = [];
+  for (let i=0;i<rawYs.length;i++) {
+    ys.push(rawYs[i]);
+    if (i < rawYs.length-1) {
+      const gap = rawYs[i+1] - rawYs[i];
+      if (gap > medRowH * 2.8 && medRowH > 5) {
+        const nInsert = Math.min(30, Math.max(1, Math.round(gap/medRowH)-1));
+        const step = gap / (nInsert+1);
+        const fromLabel = Math.round((rawYs[i] - rawYs[0]) / medRowH);
+        const toLabel   = Math.round((rawYs[i+1] - rawYs[0]) / medRowH);
+        rowGapWarnings.push({ fromLabel, toLabel, gapPx: gap, inserted: nInsert, action:'inserted-placeholder-rows' });
+        for (let k=1;k<=nInsert;k++) ys.push(Math.round(rawYs[i] + step*k));
+      }
+    }
+  }
+  ys.sort((a,b)=>a-b);
 
   // Merge narrow columns
   const MIN_COL_W = 40;
@@ -1457,6 +1503,9 @@ function reconstructGridSchema(grid, ocr, file) {
 
   const words = extractOCRWords(ocr);
   if (words.length) assignWordsToCells(words, schema);
+
+  // V2.5: Store row gap warnings in debug meta
+  if (schema.meta._debug) schema.meta._debug.rowGapWarnings = rowGapWarnings;
 
   // V2.3: Detect black-fill cells from canvas pixel sampling
   detectCellBackgrounds(schema, grid._cvs, grid.scale);
@@ -1704,6 +1753,9 @@ function toggleDebugOverlay(on) {
     `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
     `<b>Interior H:</b> ${interiorH.length} | <b>Interior V:</b> ${interiorV.length}`,
     `<b>Final:</b> ${nC} cols × ${nR} rows`,
+    tableSchema?.meta?._debug?.rowGapWarnings?.length
+      ? `<b style="color:#B03922">⚠ Row gaps:</b> ${tableSchema.meta._debug.rowGapWarnings.map(w=>`rows ${w.fromLabel}→${w.toLabel} (+${w.inserted} placeholders)`).join(', ')}`
+      : `<b style="color:#1E6B2E">✓ No row gaps detected</b>`,
     `<b>Border:</b> top=${ob.top??'–'} bot=${ob.bottom??'–'} left=${ob.left??'–'} right=${ob.right??'–'}`
   ].join('<br>');
 }
@@ -2211,9 +2263,14 @@ function updateDpMeta() {
   const nCols = tableSchema.columns.length;
   const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
   const mode  = tableSchema.meta.reconstructionMode;
-  el.textContent = lang === 'zh'
+  const gaps  = tableSchema.meta._debug?.rowGapWarnings;
+  const gapNote = gaps?.length
+    ? (lang==='zh' ? ` · ⚠ 偵測到 ${gaps.length} 個列間距，已插入空白列` : ` · ⚠ ${gaps.length} row gap(s) filled with placeholders`)
+    : '';
+  el.innerHTML = (lang === 'zh'
     ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
-    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`;
+    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`)
+    + (gapNote ? `<span style="color:#B03922">${gapNote}</span>` : '');
 }
 
 /* ===========================================================
@@ -2232,7 +2289,38 @@ function renderSVGPreview() {
    EXPORT FUNCTIONS
    =========================================================== */
 document.getElementById('btn-xlsx').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-export.xlsx', buildXLSXFromSchema(tableSchema)); });
-document.getElementById('btn-svg').addEventListener('click',  () => { if (tableSchema) saveBlob('photocheck-v2-layout.svg',  buildSVGFromSchema(tableSchema)); });
+// SVG download — robust handler with error surfacing (Fix V2.5)
+function downloadSvg() {
+  try {
+    if (!tableSchema || !tableSchema.cells || !tableSchema.cells.length) {
+      showMsg(lang==='zh'
+        ? '請先執行 Demo、版面分析或 AI 辨識。'
+        : 'Please run demo, layout analysis, or AI recognition first.', 'err');
+      return;
+    }
+    const blob = buildSVGFromSchema(tableSchema);
+    if (!blob || blob.size < 10) throw new Error('SVG blob empty');
+    // Use explicit download via anchor (works in all browsers incl. sandboxed)
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'photocheck-v2-export.svg';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showMsg(lang==='zh' ? '✓ SVG 已下載。' : '✓ SVG downloaded.', 'ok');
+  } catch(err) {
+    console.error('[V2.5] SVG download failed:', err);
+    showMsg(lang==='zh' ? 'SVG 下載失敗，請重試。' : 'SVG download failed. Please try again.', 'err');
+  }
+}
+// Bind SVG button — works for both <button> and <div role="button">
+const _svgEl = document.getElementById('btn-svg');
+if (_svgEl) {
+  _svgEl.style.cursor = 'pointer';
+  _svgEl.addEventListener('click', downloadSvg);
+  _svgEl.setAttribute('role', 'button');
+  _svgEl.setAttribute('tabindex', '0');
+  _svgEl.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') downloadSvg(); });
+}
 document.getElementById('btn-csv').addEventListener('click',  () => { if (tableSchema) saveBlob('photocheck-v2-export.csv',  buildCSVFromSchema(tableSchema)); });
 document.getElementById('btn-json').addEventListener('click', () => { if (tableSchema) saveBlob('photocheck-v2-schema.json', new Blob([JSON.stringify(tableSchema, null, 2)], { type: 'application/json' })); });
 document.getElementById('btn-pdf').addEventListener('click',  () => { if (tableSchema) exportPDF(); });

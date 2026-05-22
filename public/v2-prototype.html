@@ -1501,14 +1501,16 @@ function reconstructGridSchema(grid, ocr, file) {
     });
   }));
 
+  // V2.6: detectCellBackgrounds must run FIRST — it builds black regions + colSpan
+  detectCellBackgrounds(schema, grid._cvs, grid.scale);
+
+  // V2.6: Assign OCR text with black-region priority
   const words = extractOCRWords(ocr);
-  if (words.length) assignWordsToCells(words, schema);
+  if (words.length) assignWordsToBlackRegionsThenCells(words, schema);
 
   // V2.5: Store row gap warnings in debug meta
   if (schema.meta._debug) schema.meta._debug.rowGapWarnings = rowGapWarnings;
 
-  // V2.3: Detect black-fill cells from canvas pixel sampling
-  detectCellBackgrounds(schema, grid._cvs, grid.scale);
   return schema;
 }
 
@@ -1517,73 +1519,236 @@ function reconstructGridSchema(grid, ocr, file) {
  * Also merges contiguous black cells in the same row into black regions.
  * Black regions become section headers (bold, white text).
  */
+/* ===========================================================
+   V2.6 BLACK REGION PIPELINE
+   1. Score each cell dark ratio
+   2. Build black region layout objects
+   3. Merge contiguous black runs per row
+   4. Re-assign OCR text by overlap priority
+   5. Apply colSpan + mark covered cells
+   =========================================================== */
+
+/**
+ * Sample dark-pixel ratio for a cell bbox on the canvas.
+ */
+function sampleDarkRatio(ctx, cw, ch, bbox, scale) {
+  const bx = Math.round(bbox.x * scale);
+  const by = Math.round(bbox.y * scale);
+  const bw = Math.max(1, Math.round(bbox.w * scale));
+  const bh = Math.max(1, Math.round(bbox.h * scale));
+  const x0 = Math.max(0, bx + 2), y0 = Math.max(0, by + 2);
+  const x1 = Math.min(cw, bx + bw - 2), y1 = Math.min(ch, by + bh - 2);
+  if (x1 <= x0 || y1 <= y0) return 0;
+  const iData = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
+  const total = (x1-x0)*(y1-y0);
+  let dark = 0;
+  for (let i = 0; i < iData.length; i += 4) {
+    const lum = iData[i]*.299 + iData[i+1]*.587 + iData[i+2]*.114;
+    if (lum < 90) dark++;
+  }
+  return dark / total;
+}
+
+/**
+ * Compute axis-aligned overlap ratio of box A vs box B.
+ * Returns intersection_area / area_of_A (0–1).
+ */
+function bboxOverlapRatio(a, b) {
+  const ix = Math.max(0, Math.min(a.x+a.w, b.x+b.w) - Math.max(a.x, b.x));
+  const iy = Math.max(0, Math.min(a.y+a.h, b.y+b.h) - Math.max(a.y, b.y));
+  const inter = ix * iy;
+  const areaA = a.w * a.h;
+  return areaA > 0 ? inter / areaA : 0;
+}
+
+/**
+ * V2.6: Full black-region pipeline.
+ * Called after reconstructGridSchema and BEFORE assignWordsToCells.
+ * Returns array of black region objects (stored on schema.meta._blackRegions).
+ */
 function detectCellBackgrounds(schema, cvs, scale) {
   if (!cvs) return;
   const BLACK_THR = 0.35;
   const ctx = cvs.getContext('2d');
   const cw = cvs.width, ch = cvs.height;
 
-  // Step 1: Score each cell
-  const darkRatio = new Map(); // cell.id → ratio
+  // ── Step 1: Score every cell ──────────────────────────────
+  const darkRatio = new Map();
   schema.cells.forEach(cell => {
-    if (!cell.bbox) return;
-    const bx = Math.round(cell.bbox.x * scale);
-    const by = Math.round(cell.bbox.y * scale);
-    const bw = Math.max(1, Math.round(cell.bbox.w * scale));
-    const bh = Math.max(1, Math.round(cell.bbox.h * scale));
-    const x0 = Math.max(0, bx + 2), y0 = Math.max(0, by + 2);
-    const x1 = Math.min(cw, bx + bw - 2), y1 = Math.min(ch, by + bh - 2);
-    if (x1 <= x0 || y1 <= y0) { darkRatio.set(cell.id, 0); return; }
-    const iData = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
-    const total = (x1-x0)*(y1-y0);
-    let dark = 0;
-    for (let i = 0; i < iData.length; i += 4) {
-      const lum = iData[i]*.299 + iData[i+1]*.587 + iData[i+2]*.114;
-      if (lum < 90) dark++;
-    }
-    darkRatio.set(cell.id, dark / total);
+    if (!cell.bbox) { darkRatio.set(cell.id, 0); return; }
+    darkRatio.set(cell.id, sampleDarkRatio(ctx, cw, ch, cell.bbox, scale));
   });
 
-  // Step 2: Mark individual black cells
+  // ── Step 2: Mark individual dark cells ───────────────────
   schema.cells.forEach(cell => {
-    if ((darkRatio.get(cell.id) || 0) >= BLACK_THR) {
+    if ((darkRatio.get(cell.id)||0) >= BLACK_THR) {
       cell.style.fill = 'black';
       cell.style.textColor = 'white';
       cell.style.bold = true;
     }
   });
 
-  // Step 3: Per-row contiguous black region detection
-  // If a row has a run of 2+ black cells, treat whole run as a black region
+  // ── Step 3: Build black region layout objects per row ─────
+  // Each run of contiguous black cells in a row becomes a region.
+  const blackRegions = []; // [{id, rowId, colIds[], bbox, isBlackRegion, text:''}]
+  let regionCounter = 0;
+
   schema.rows.forEach(row => {
     const rowCells = schema.columns.map(col =>
       schema.cells.find(c => c.rowId === row.id && c.colId === col.id)
     ).filter(Boolean);
 
-    // Find runs of black cells
     let runStart = -1;
+    const closeRun = (endIdx) => {
+      if (runStart === -1) return;
+      const runCells = rowCells.slice(runStart, endIdx);
+      // Enforce black style on all in run
+      runCells.forEach(rc => {
+        rc.style.fill = 'black'; rc.style.textColor = 'white'; rc.style.bold = true;
+      });
+      // Build region bbox spanning all cells in run
+      const firstBbox = runCells[0].bbox;
+      const lastBbox  = runCells[runCells.length-1].bbox;
+      if (!firstBbox || !lastBbox) { runStart = -1; return; }
+      const regionBbox = {
+        x: firstBbox.x,
+        y: firstBbox.y,
+        w: (lastBbox.x + lastBbox.w) - firstBbox.x,
+        h: Math.max(...runCells.map(rc => rc.bbox?.h||0))
+      };
+      const region = {
+        id: `br_${regionCounter++}`,
+        rowId: row.id,
+        colIds: runCells.map(rc => rc.colId),
+        leadCellId: runCells[0].id,   // primary cell gets colSpan + text
+        bbox: regionBbox,
+        isBlackRegion: true,
+        colRange: [runStart, endIdx-1],
+        rowRange: [schema.rows.indexOf(row), schema.rows.indexOf(row)],
+        text: ''
+      };
+      blackRegions.push(region);
+      // Apply colSpan to lead cell; mark rest as covered
+      const leadCell = runCells[0];
+      leadCell.colSpan = runCells.length;
+      leadCell.style.align = 'center';
+      runCells.slice(1).forEach(rc => { rc._merged = true; rc._coveredBy = leadCell.id; });
+      runStart = -1;
+    };
+
     rowCells.forEach((cell, i) => {
       const isBlack = cell.style.fill === 'black';
       if (isBlack && runStart === -1) runStart = i;
-      if (!isBlack && runStart !== -1) {
-        // End of run — enforce all in run
-        for (let j = runStart; j < i; j++) {
-          rowCells[j].style.fill = 'black';
-          rowCells[j].style.textColor = 'white';
-          rowCells[j].style.bold = true;
+      if (!isBlack && runStart !== -1) closeRun(i);
+    });
+    closeRun(rowCells.length);
+  });
+
+  // Store on schema for use by text assignment and debug
+  schema.meta._blackRegions = blackRegions;
+  return blackRegions;
+}
+
+/**
+ * V2.6: Re-assign OCR words with black-region priority.
+ * Black regions are first-class layout objects; general cells are fallback.
+ */
+function assignWordsToBlackRegionsThenCells(words, schema) {
+  const blackRegions = schema.meta._blackRegions || [];
+  const hasBbox = words.some(w => w.x != null);
+  const debugStats = { textAssignedToBlackRegions:0, fallbackToGridCells:0,
+                       mergedBlackRegions: blackRegions.filter(r=>r.colIds.length>1).length,
+                       regionsDetected: blackRegions.length };
+
+  if (hasBbox) {
+    // Buckets: leadCellId or regular cellId → text[]
+    const buckets = {};
+    schema.cells.forEach(c => { if (!c._merged) buckets[c.id] = []; });
+
+    words.forEach(word => {
+      const wx = word.x, wy = word.y, ww = word.w||8, wh = word.h||12;
+      const cx = wx + ww/2, cy = wy + wh/2;
+      const wordBbox = {x:wx, y:wy, w:ww, h:wh};
+
+      // ── Priority 1: center-in or overlap > 0.35 with a black region ──
+      let bestRegion = null, bestRegionScore = -1;
+      blackRegions.forEach(region => {
+        const rb = region.bbox;
+        const centerIn = cx>=rb.x && cx<=rb.x+rb.w && cy>=rb.y && cy<=rb.y+rb.h;
+        const overlap  = bboxOverlapRatio(wordBbox, rb);
+        const score = centerIn ? 1 + overlap : (overlap > 0.35 ? overlap : -1);
+        if (score > bestRegionScore) { bestRegionScore=score; bestRegion=region; }
+      });
+      if (bestRegion && bestRegionScore > 0) {
+        if (buckets[bestRegion.leadCellId] !== undefined)
+          buckets[bestRegion.leadCellId].push(word.text);
+        debugStats.textAssignedToBlackRegions++;
+        return;
+      }
+
+      // ── Priority 2: regular cell center overlap ────────────────────
+      let bestCell=null, bestScore=-1;
+      schema.cells.forEach(cell => {
+        if (cell._merged || !cell.bbox) return;
+        const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
+                       cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
+        if (!inCell) return;
+        const ox=Math.min(wx+ww,cell.bbox.x+cell.bbox.w)-Math.max(wx,cell.bbox.x);
+        const oy=Math.min(wy+wh,cell.bbox.y+cell.bbox.h)-Math.max(wy,cell.bbox.y);
+        if (Math.max(0,ox)*Math.max(0,oy) > bestScore) {
+          bestScore=ox*oy; bestCell=cell;
         }
-        runStart = -1;
+      });
+      // Fallback: max overlap even if center outside
+      if (!bestCell) {
+        schema.cells.forEach(cell => {
+          if (cell._merged || !cell.bbox) return;
+          const ox=Math.max(0,Math.min(wx+ww,cell.bbox.x+cell.bbox.w)-Math.max(wx,cell.bbox.x));
+          const oy=Math.max(0,Math.min(wy+wh,cell.bbox.y+cell.bbox.h)-Math.max(wy,cell.bbox.y));
+          if (ox*oy>bestScore) { bestScore=ox*oy; bestCell=cell; }
+        });
+      }
+      if (bestCell) { buckets[bestCell.id].push(word.text); debugStats.fallbackToGridCells++; }
+    });
+
+    // Flush buckets → cell.text (join with newline)
+    schema.cells.forEach(cell => {
+      if (cell._merged) return;
+      if (buckets[cell.id]?.length) {
+        cell.text = buckets[cell.id].join('\n');
+        // Update column label for header cells
+        if (cell.rowId===schema.rows[0]?.id) {
+          const col = schema.columns.find(c=>c.id===cell.colId);
+          if (col) col.label = cell.text.split('\n')[0];
+        }
       }
     });
-    if (runStart !== -1) {
-      // Run extends to end of row
-      for (let j = runStart; j < rowCells.length; j++) {
-        rowCells[j].style.fill = 'black';
-        rowCells[j].style.textColor = 'white';
-        rowCells[j].style.bold = true;
-      }
-    }
-  });
+
+    // Propagate black region text to leadCell (already done via buckets above)
+    // Also update the region.text for debug
+    blackRegions.forEach(region => {
+      const lead = schema.cells.find(c=>c.id===region.leadCellId);
+      if (lead) region.text = lead.text;
+    });
+  } else {
+    // No bbox: sequential sr/sc fallback (unchanged from V2.2)
+    const nC = schema.columns.length, nR = schema.rows.length;
+    words.filter(w=>w.sr===0).forEach(w => {
+      const ci=Math.min(w.sc,nC-1);
+      const hc=schema.cells.find(c=>c.rowId==='row_0'&&c.colId===`col_${ci}`);
+      if (hc) { hc.text=w.text; schema.columns[ci].label=w.text; }
+    });
+    words.filter(w=>w.sr>0).forEach(w => {
+      const ri=Math.min(w.sr,nR-1), ci=Math.min(w.sc,nC-1);
+      const cell=schema.cells.find(c=>c.rowId===`row_${ri}`&&c.colId===`col_${ci}`);
+      if (cell&&!cell._merged) cell.text=w.text;
+    });
+    debugStats.fallbackToGridCells = words.length;
+  }
+
+  if (schema.meta._debug) {
+    schema.meta._debug.blackRegionAssignment = debugStats;
+  }
 }
 
 /** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
@@ -2218,9 +2383,11 @@ function renderTableFromSchema() {
   if (headerRow) {
     html += '<thead><tr>';
     cols.forEach(col => {
-      const c = cmap[`${headerRow.id}|${col.id}`];
-      const isBlack = c?.style?.fill === 'black';
-      html += `<th${isBlack?' class="cell-black"':''}>${escH(c ? c.text : col.label)}</th>`;
+      const cell = cmap[`${headerRow.id}|${col.id}`];
+      if (cell?._merged) return; // skip covered cells in header
+      const isBlack = cell?.style?.fill === 'black';
+      const cs = (cell?.colSpan||1) > 1 ? ` colspan="${cell.colSpan}"` : '';
+      html += `<th${isBlack?' class="cell-black"':''}${cs}>${escH(cell ? cell.text : col.label)}</th>`;
     });
     html += '</tr></thead>';
   }
@@ -2381,27 +2548,42 @@ function buildXLSXFromSchema(schema) {
   };
 
   const nR = allRows.length, nC = cols.length;
+  // V2.6: collect merge directives for <mergeCells>
+  const mergeList = []; // [{ref:'A1:C1'}]
+
   const sheetData = allRows.map(({ row, isH }, ri) => {
     const maxL = Math.max(...cols.map(col => {
-      const c = cmap[`${row.id}|${col.id}`];
-      return String(c?.text || '').length;
+      const cv = cmap[`${row.id}|${col.id}`];
+      return String(cv?.text || '').length;
     }), 1);
-    // Row height: use detected height if available, else auto
     const detectedHt = row.height ? Math.min(120, Math.max(14, row.height * 0.75)) : null;
     const ht = detectedHt ?? (isH ? 22 : Math.min(120, Math.max(18, Math.ceil(maxL/22)*16)));
-    return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">` +
-      cols.map((col, ci) => {
-        const c = cmap[`${row.id}|${col.id}`];
-        const text = c ? c.text : (isH ? col.label : '');
-        // Replace newlines with space for Excel (Excel uses Alt+Enter = &#10; in shared strings)
-        const xmlText = escX(text.replace(/\n/g, ' '));
-        const sid = getBorderStyleId(c || {style:{}}, ri, nR, nC);
-        return `<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${sid}">` +
-               `<is><t xml:space="preserve">${xmlText}</t></is></c>`;
-      }).join('') + '</row>';
+    let ci = 0;
+    const cells_xml = [];
+    while (ci < cols.length) {
+      const col = cols[ci];
+      const cv = cmap[`${row.id}|${col.id}`];
+      // Skip cells covered by a colSpan
+      if (cv?._merged) { ci++; continue; }
+      const span = cv?.colSpan || 1;
+      const text = cv ? cv.text : (isH ? col.label : '');
+      const xmlText = escX(text.replace(/\n/g, ' '));
+      const sid = getBorderStyleId(cv || {style:{}}, ri, nR, nC);
+      cells_xml.push(`<c r="${xlCol(ci)}${ri+1}" t="inlineStr" s="${sid}"><is><t xml:space="preserve">${xmlText}</t></is></c>`);
+      // Register colSpan merge
+      if (span > 1) {
+        const endCol = Math.min(ci + span - 1, cols.length - 1);
+        mergeList.push(`<mergeCell ref="${xlCol(ci)}${ri+1}:${xlCol(endCol)}${ri+1}"/>`);
+      }
+      ci += span;
+    }
+    return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">${cells_xml.join('')}</row>`;
   }).join('');
 
-  const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData></worksheet>`;
+  const mergeCellsXml = mergeList.length
+    ? `<mergeCells count="${mergeList.length}">${mergeList.join('')}</mergeCells>` : '';
+
+  const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colXml}<sheetData>${sheetData}</sheetData>${mergeCellsXml}</worksheet>`;
 
   // 5 border styles: none, thin, thin+bold-hdr, thick-outer, thick-outer+bold-hdr
   const mkBorder = (l,r,t,b) =>
@@ -2499,14 +2681,22 @@ function buildSVGFromSchema(schema) {
   if (hdrRow)
     svg += `<rect x="${tx(cols[0].x)}" y="${ty(hdrRow.y)}" width="${gridW}" height="${hdrRow.height}" fill="#F5F0E8"/>`;
 
-  // Draw all cell borders faithfully from schema style
+  // Draw all cell borders faithfully from schema style (V2.6: skip covered/merged cells)
   cells.forEach(cell => {
+    if (cell._merged) return; // skip cells covered by colSpan
     const row = rows.find(r=>r.id===cell.rowId);
     const col = cols.find(c=>c.id===cell.colId);
     if (!row||!col) return;
-    const x1=tx(col.x), y1=ty(row.y), x2=tx(col.x+col.width), y2=ty(row.y+row.height);
+    // V2.6: for colSpan cells, extend x2 across spanned columns
+    let x2base = col.x + col.width;
+    if ((cell.colSpan||1) > 1) {
+      const colIdx = cols.indexOf(col);
+      const lastSpanned = cols[Math.min(colIdx + cell.colSpan - 1, cols.length-1)];
+      if (lastSpanned) x2base = lastSpanned.x + lastSpanned.width;
+    }
+    const x1=tx(col.x), y1=ty(row.y), x2=tx(x2base), y2=ty(row.y+row.height);
     const s = cell.style||{};
-    // V2.3: Black-fill cell background
+    // V2.3: Black-fill cell background (colSpan-aware)
     if (s.fill==='black') {
       svg+=`<rect x="${x1.toFixed(1)}" y="${y1.toFixed(1)}" width="${(x2-x1).toFixed(1)}" height="${(y2-y1).toFixed(1)}" fill="#111"/>`;
     }
@@ -2522,27 +2712,36 @@ function buildSVGFromSchema(schema) {
     drawLine(x2,y1,x2,y2, s.borderRight);
   });
 
-  // Cell text
+  // Cell text (V2.6: skip merged, use colSpan-aware center for black regions)
   cells.forEach(cell => {
+    if (cell._merged) return; // skip covered cells
     const row = rows.find(r=>r.id===cell.rowId);
     const col = cols.find(c=>c.id===cell.colId);
     if (!row||!col||!cell.text) return;
     const isHdr = row.type==='header';
     const isBlack = cell.style?.fill==='black';
+    // V2.6: colSpan — compute actual width for text centering
+    let cellW = col.width;
+    if ((cell.colSpan||1) > 1) {
+      const colIdx = cols.indexOf(col);
+      const lastSpanned = cols[Math.min(colIdx + cell.colSpan - 1, cols.length-1)];
+      if (lastSpanned) cellW = (lastSpanned.x + lastSpanned.width) - col.x;
+    }
     const cx = tx(col.x), cy = ty(row.y);
     const fs = (isHdr||isBlack) ? 12 : 11;
     const fw = (isHdr||isBlack) ? 'bold' : 'normal';
     const fill = isBlack ? '#fff' : (isHdr ? '#1A1A18' : '#333');
-    const PAD_X = 7; // fixed: was referencing undefined `padX`
-    const maxChars = Math.max(4, Math.floor(col.width/7));
-    // Multi-line text support
+    // Center text horizontally for black regions (colSpan > 1)
+    const textX = isBlack && (cell.colSpan||1) > 1 ? cx + cellW/2 : cx + 7;
+    const anchor = isBlack && (cell.colSpan||1) > 1 ? 'middle' : 'start';
+    const maxChars = Math.max(4, Math.floor(cellW/7));
     const lines = cell.text.split('\n');
     const lineH = fs + 3;
     const startY = cy + row.height/2 - (lines.length-1)*lineH/2 + fs*0.35;
     lines.forEach((line,li) => {
       const txt = truncStr(line, maxChars);
-      svg += `<text x="${(cx+PAD_X).toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
-             `font-size="${fs}" font-weight="${fw}" `+
+      svg += `<text x="${textX.toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
+             `text-anchor="${anchor}" font-size="${fs}" font-weight="${fw}" `+
              `font-family="Arial,'Noto Sans TC',sans-serif" fill="${fill}">${escX(txt)}</text>`;
     });
   });

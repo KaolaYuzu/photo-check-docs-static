@@ -2298,9 +2298,20 @@ function downloadSvg() {
         : 'Please run demo, layout analysis, or AI recognition first.', 'err');
       return;
     }
-    const blob = buildSVGFromSchema(tableSchema);
-    if (!blob || blob.size < 10) throw new Error('SVG blob empty');
-    // Use explicit download via anchor (works in all browsers incl. sandboxed)
+    const result = buildSVGFromSchema(tableSchema);
+    let blob;
+    if (result instanceof Blob) {
+      blob = result;
+    } else if (typeof result === 'string') {
+      if (!result.includes('<svg')) throw new Error('SVG string missing <svg> tag');
+      blob = new Blob([result], { type: 'image/svg+xml;charset=utf-8' });
+    } else if (result instanceof SVGElement) {
+      const s = new XMLSerializer().serializeToString(result);
+      blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
+    } else {
+      throw new Error('buildSVGFromSchema returned unexpected type: ' + typeof result);
+    }
+    if (!blob || blob.size < 10) throw new Error('SVG blob is empty');
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'photocheck-v2-export.svg';
@@ -2308,8 +2319,11 @@ function downloadSvg() {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     showMsg(lang==='zh' ? '✓ SVG 已下載。' : '✓ SVG downloaded.', 'ok');
   } catch(err) {
-    console.error('[V2.5] SVG download failed:', err);
-    showMsg(lang==='zh' ? 'SVG 下載失敗，請重試。' : 'SVG download failed. Please try again.', 'err');
+    console.error('[V2.5.1] SVG download failed:', err);
+    showMsg(
+      (lang==='zh' ? 'SVG 下載失敗：' : 'SVG download failed: ') + (err.message || String(err)),
+      'err'
+    );
   }
 }
 // Bind SVG button — works for both <button> and <div role="button">
@@ -2519,6 +2533,7 @@ function buildSVGFromSchema(schema) {
     const fs = (isHdr||isBlack) ? 12 : 11;
     const fw = (isHdr||isBlack) ? 'bold' : 'normal';
     const fill = isBlack ? '#fff' : (isHdr ? '#1A1A18' : '#333');
+    const PAD_X = 7; // fixed: was referencing undefined `padX`
     const maxChars = Math.max(4, Math.floor(col.width/7));
     // Multi-line text support
     const lines = cell.text.split('\n');
@@ -2526,7 +2541,7 @@ function buildSVGFromSchema(schema) {
     const startY = cy + row.height/2 - (lines.length-1)*lineH/2 + fs*0.35;
     lines.forEach((line,li) => {
       const txt = truncStr(line, maxChars);
-      svg += `<text x="${(cx+padX).toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
+      svg += `<text x="${(cx+PAD_X).toFixed(1)}" y="${(startY+li*lineH).toFixed(1)}" `+
              `font-size="${fs}" font-weight="${fw}" `+
              `font-family="Arial,'Noto Sans TC',sans-serif" fill="${fill}">${escX(txt)}</text>`;
     });

@@ -1517,14 +1517,27 @@ function reconstructGridSchema(grid, ocr, file) {
  * Also merges contiguous black cells in the same row into black regions.
  * Black regions become section headers (bold, white text).
  */
+/* ===========================================================
+   V2.6.1 CONSERVATIVE black cell detection
+   Key guards (spec §6):
+   - col_0 pure-number cells are row labels, not section headers
+   - contiguous black runs that resolve to pure-number text → revert
+   - NO colSpan / _merged / schema structure changes (V2.5.1 safe)
+   =========================================================== */
+
+/** True if text is a pure integer (row number / index). */
+function isPureNumber(text) {
+  return /^\d+$/.test((text || '').trim());
+}
+
 function detectCellBackgrounds(schema, cvs, scale) {
   if (!cvs) return;
   const BLACK_THR = 0.35;
   const ctx = cvs.getContext('2d');
   const cw = cvs.width, ch = cvs.height;
 
-  // Step 1: Score each cell
-  const darkRatio = new Map(); // cell.id → ratio
+  // Step 1: Score each cell via canvas pixel sampling
+  const darkRatio = new Map();
   schema.cells.forEach(cell => {
     if (!cell.bbox) return;
     const bx = Math.round(cell.bbox.x * scale);
@@ -1545,45 +1558,61 @@ function detectCellBackgrounds(schema, cvs, scale) {
   });
 
   // Step 2: Mark individual black cells
+  // V2.6.1 guard: skip col_0 cells that already contain pure numbers (row labels)
+  const col0Id = schema.columns[0]?.id;
   schema.cells.forEach(cell => {
     if ((darkRatio.get(cell.id) || 0) >= BLACK_THR) {
+      // §6.2 guard: if col_0 cell has a pure-number text, treat as row label, not black header
+      if (cell.colId === col0Id && isPureNumber(cell.text)) return;
       cell.style.fill = 'black';
       cell.style.textColor = 'white';
       cell.style.bold = true;
     }
   });
 
-  // Step 3: Per-row contiguous black region detection
-  // If a row has a run of 2+ black cells, treat whole run as a black region
+  // Step 3: Per-row contiguous black run detection
+  // V2.6.1: only enforces style, NO colSpan / _merged changes
+  // §6.3 fail-safe: if a run's only non-empty texts are pure numbers, revert the whole run
   schema.rows.forEach(row => {
     const rowCells = schema.columns.map(col =>
       schema.cells.find(c => c.rowId === row.id && c.colId === col.id)
     ).filter(Boolean);
 
-    // Find runs of black cells
     let runStart = -1;
+    const closeRun = (endIdx) => {
+      if (runStart === -1) return;
+      const run = rowCells.slice(runStart, endIdx);
+      // §6.6 fail-safe: if every non-empty text in this run is a pure number → revert
+      const nonEmptyTexts = run.map(rc => (rc.text||'').trim()).filter(t => t.length > 0);
+      const allPureNumbers = nonEmptyTexts.length > 0 && nonEmptyTexts.every(t => isPureNumber(t));
+      if (!allPureNumbers) {
+        // Safe to mark as black
+        run.forEach(rc => {
+          rc.style.fill = 'black';
+          rc.style.textColor = 'white';
+          rc.style.bold = true;
+        });
+      }
+      // If allPureNumbers, leave cells as-is (revert any prior marking)
+      runStart = -1;
+    };
+
     rowCells.forEach((cell, i) => {
       const isBlack = cell.style.fill === 'black';
       if (isBlack && runStart === -1) runStart = i;
-      if (!isBlack && runStart !== -1) {
-        // End of run — enforce all in run
-        for (let j = runStart; j < i; j++) {
-          rowCells[j].style.fill = 'black';
-          rowCells[j].style.textColor = 'white';
-          rowCells[j].style.bold = true;
-        }
-        runStart = -1;
-      }
+      if (!isBlack && runStart !== -1) closeRun(i);
     });
-    if (runStart !== -1) {
-      // Run extends to end of row
-      for (let j = runStart; j < rowCells.length; j++) {
-        rowCells[j].style.fill = 'black';
-        rowCells[j].style.textColor = 'white';
-        rowCells[j].style.bold = true;
-      }
-    }
+    closeRun(rowCells.length);
   });
+
+  // Store debug info
+  const blackCells = schema.cells.filter(c => c.style?.fill === 'black');
+  if (schema.meta._debug) {
+    schema.meta._debug.blackCellAssignment = {
+      blackCellsDetected: blackCells.length,
+      rowsWithBlackCells: new Set(blackCells.map(c => c.rowId)).size
+    };
+  }
 }
 
 /** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
@@ -1614,51 +1643,95 @@ function extractOCRWords(ocr) {
 }
 
 /**
- * V2.2 text assignment: bbox center-point → cell; multi-text → newline join.
- * Falls back to sequential sr/sc if no bbox.
+ * V2.6.1 text assignment: same bbox center-point logic as V2.2,
+ * plus black-cell priority for words whose center is inside a black cell.
+ * NO colSpan / NO _merged / NO schema structure changes.
+ * Guard: pure-number text is never routed to a black section-header cell
+ *        if a non-black cell on the same row is a better fit.
  */
 function assignWordsToCells(words, schema) {
   const hasBbox = words.some(w => w.x != null);
   if (hasBbox) {
     const buckets = {};
     schema.cells.forEach(c => { buckets[c.id] = []; });
+
+    // Pre-build set of black cell ids for fast lookup
+    const blackCellIds = new Set(
+      schema.cells.filter(c => c.style?.fill === 'black').map(c => c.id)
+    );
+    // col_0 id for row-label guard
+    const col0Id = schema.columns[0]?.id;
+
     words.forEach(word => {
-      const cx = word.x + (word.w||8)/2;
-      const cy = word.y + (word.h||12)/2;
-      let bestCell=null, bestScore=-1;
+      const wx = word.x, wy = word.y, ww = word.w||8, wh = word.h||12;
+      const cx = wx + ww/2, cy = wy + wh/2;
+
+      // V2.6.1: §6.1 row-label guard
+      // If word is pure-number, skip black cells in col_0 as destination
+      const wordIsPureNum = isPureNumber(word.text);
+
+      let bestCell = null, bestScore = -1;
+
+      // Pass 1: prefer black cells (centre-in) — but not for pure-number words into col_0
       schema.cells.forEach(cell => {
-        if (!cell.bbox) return;
+        if (!cell.bbox || !blackCellIds.has(cell.id)) return;
+        // §6.1: pure-number word must not land in col_0 black cell
+        if (wordIsPureNum && cell.colId === col0Id) return;
         const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
                        cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
         if (!inCell) return;
-        const ox = Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x);
-        const oy = Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y);
-        if (Math.max(0,ox)*Math.max(0,oy) > bestScore) {
-          bestScore=ox*oy; bestCell=cell;
-        }
+        const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
+        const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
+        const score = Math.max(0,ox)*Math.max(0,oy);
+        if (score > bestScore) { bestScore = score; bestCell = cell; }
       });
-      // Fallback: max overlap even if center outside
+
+      // Pass 2: any cell (centre-in) if no black cell found
       if (!bestCell) {
         schema.cells.forEach(cell => {
           if (!cell.bbox) return;
-          const ox=Math.max(0,Math.min(word.x+(word.w||8),cell.bbox.x+cell.bbox.w)-Math.max(word.x,cell.bbox.x));
-          const oy=Math.max(0,Math.min(word.y+(word.h||12),cell.bbox.y+cell.bbox.h)-Math.max(word.y,cell.bbox.y));
-          if (ox*oy>bestScore) { bestScore=ox*oy; bestCell=cell; }
+          const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
+                         cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
+          if (!inCell) return;
+          const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
+          const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
+          const score = Math.max(0,ox)*Math.max(0,oy);
+          if (score > bestScore) { bestScore = score; bestCell = cell; }
         });
       }
+
+      // Pass 3: fallback max overlap (centre outside)
+      if (!bestCell) {
+        schema.cells.forEach(cell => {
+          if (!cell.bbox) return;
+          const ox=Math.max(0,Math.min(wx+ww,cell.bbox.x+cell.bbox.w)-Math.max(wx,cell.bbox.x));
+          const oy=Math.max(0,Math.min(wy+wh,cell.bbox.y+cell.bbox.h)-Math.max(wy,cell.bbox.y));
+          if (ox*oy > bestScore) { bestScore=ox*oy; bestCell=cell; }
+        });
+      }
+
       if (bestCell) buckets[bestCell.id].push(word.text);
     });
+
     schema.cells.forEach(cell => {
       if (buckets[cell.id]?.length) {
-        cell.text = buckets[cell.id].join('\n');
-        if (cell.rowId===schema.rows[0]?.id) {
-          const col = schema.columns.find(c=>c.id===cell.colId);
-          if (col) col.label = cell.text.split('\n')[0];
+        // V2.6.1 §6.3: if assigned text to a black cell is ALL pure numbers → keep original
+        const joined = buckets[cell.id].join('\n');
+        const isBlackCell = blackCellIds.has(cell.id);
+        if (isBlackCell && isPureNumber(joined.replace(/\n/g,' ').trim())) {
+          // Reject: do not overwrite with row number
+          console.warn('[V2.6.1] Rejected pure-number assignment to black cell:', cell.id, joined);
+        } else {
+          cell.text = joined;
+          if (cell.rowId===schema.rows[0]?.id) {
+            const col = schema.columns.find(c=>c.id===cell.colId);
+            if (col) col.label = cell.text.split('\n')[0];
+          }
         }
       }
     });
   } else {
-    // No bbox: sequential sr/sc
+    // No bbox: sequential sr/sc (unchanged from V2.2)
     const nC = schema.columns.length, nR = schema.rows.length;
     words.filter(w=>w.sr===0).forEach(w => {
       const ci = Math.min(w.sc,nC-1);

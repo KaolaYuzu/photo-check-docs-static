@@ -387,13 +387,14 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   font-family:var(--sans);transition:all .15s
 }
 .dp-export-btn:hover{background:var(--gold-lt)}
-.tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto}
-.schema-tbl{border-collapse:collapse;width:100%;font-size:12.5px;min-width:400px}
+.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:clamp(260px,60vh,700px);border:1px solid var(--line);border-radius:var(--r-s);background:#fff}
+.schema-tbl{border-collapse:collapse;width:100%;font-size:12.5px;min-width:400px;table-layout:auto}
 .schema-tbl th{
   background:var(--cream);padding:10px 13px;font-weight:700;
   text-align:left;border-bottom:2px solid var(--line);
   border-right:1px solid var(--line);font-size:11.5px;
-  white-space:nowrap;position:sticky;top:0;z-index:2
+  white-space:nowrap;position:sticky;top:0;z-index:3;
+  box-shadow:0 1px 0 var(--line)
 }
 .schema-tbl th:last-child{border-right:0}
 .schema-tbl td{
@@ -402,13 +403,17 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   padding:0;vertical-align:top
 }
 .schema-tbl td:last-child{border-right:0}
+.schema-tbl td.cell-black{background:#111;border-color:#333}
+.schema-tbl th.cell-black{background:#111;color:#fff;border-color:#333}
 .cell-edit{
   width:100%;border:0;background:transparent;
   padding:8px 13px;font-family:var(--sans);font-size:12.5px;
   color:var(--ink);resize:none;outline:0;line-height:1.55;
   min-height:34px;display:block
 }
+.cell-edit.cell-edit-black{color:#fff;background:transparent;caret-color:#fff}
 .cell-edit:focus{background:#FEFCF8}
+.cell-edit.cell-edit-black:focus{background:#222}
 .tbl-toolbar{
   display:flex;align-items:center;gap:8px;
   padding:11px 18px;border-top:1px solid var(--line);
@@ -1100,10 +1105,50 @@ function setLang(l) {
    USAGE / CREDITS
    =========================================================== */
 const USAGE_KEY = 'pcd_v2_usage';
+const USED_SIGS_KEY = 'pcd_v2_sigs';
 const LIMIT = 5;
 
 function getUsage() { return Number(localStorage.getItem(USAGE_KEY) || 0); }
-function incUsage() { localStorage.setItem(USAGE_KEY, String(getUsage() + 1)); refreshCredits(); }
+
+/** Build a lightweight image signature from file name+size (no hashing needed). */
+function imageSignature(file) {
+  if (!file) return null;
+  return `${file.name}|${file.size}`;
+}
+
+/** Returns true if this image has already been OCR-processed (charged). */
+function isImageAlreadyCharged(file) {
+  const sig = imageSignature(file);
+  if (!sig) return false;
+  try {
+    const sigs = JSON.parse(localStorage.getItem(USED_SIGS_KEY) || '[]');
+    return sigs.includes(sig);
+  } catch { return false; }
+}
+
+/**
+ * Consume 1 credit for a successful OCR call on a new image.
+ * Does NOT charge if this image was already processed.
+ * Returns true if credit was consumed, false if skipped.
+ */
+function consumeCreditForOCR(file) {
+  if (isImageAlreadyCharged(file)) return false; // same image, no charge
+  const newCount = getUsage() + 1;
+  localStorage.setItem(USAGE_KEY, String(newCount));
+  // Record signature
+  try {
+    const sigs = JSON.parse(localStorage.getItem(USED_SIGS_KEY) || '[]');
+    const sig = imageSignature(file);
+    if (sig && !sigs.includes(sig)) {
+      sigs.push(sig);
+      localStorage.setItem(USED_SIGS_KEY, JSON.stringify(sigs.slice(-50))); // keep last 50
+    }
+  } catch {}
+  refreshCredits();
+  return true;
+}
+
+function incUsage() { consumeCreditForOCR(imageFile); } // legacy alias (not used by exports)
 function refreshCredits() {
   const el = document.getElementById('credits-n');
   if (el) el.textContent = Math.max(0, LIMIT - getUsage());
@@ -1408,7 +1453,49 @@ function reconstructGridSchema(grid, ocr, file) {
 
   const words = extractOCRWords(ocr);
   if (words.length) assignWordsToCells(words, schema);
+
+  // V2.3: Detect black-fill cells from canvas pixel sampling
+  detectCellBackgrounds(schema, grid._cvs, grid.scale);
   return schema;
+}
+
+/**
+ * V2.3: Sample each cell's bbox from the canvas to detect dark-fill cells.
+ * If dark pixel ratio >= BLACK_THR, marks cell as black-fill.
+ */
+function detectCellBackgrounds(schema, cvs, scale) {
+  if (!cvs) return;
+  const BLACK_THR = 0.38; // 38% dark pixels → black fill
+  const ctx = cvs.getContext('2d');
+  const cw = cvs.width, ch = cvs.height;
+
+  schema.cells.forEach(cell => {
+    if (!cell.bbox) return;
+    // Scale bbox to canvas coordinates
+    const bx = Math.round(cell.bbox.x * scale);
+    const by = Math.round(cell.bbox.y * scale);
+    const bw = Math.max(1, Math.round(cell.bbox.w * scale));
+    const bh = Math.max(1, Math.round(cell.bbox.h * scale));
+
+    // Clamp to canvas
+    const x0 = Math.max(0, bx + 2), y0 = Math.max(0, by + 2);
+    const x1 = Math.min(cw, bx + bw - 2), y1 = Math.min(ch, by + bh - 2);
+    if (x1 <= x0 || y1 <= y0) return;
+
+    const iData = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
+    const total = (x1-x0) * (y1-y0);
+    let dark = 0;
+    for (let i = 0; i < iData.length; i += 4) {
+      const lum = iData[i]*.299 + iData[i+1]*.587 + iData[i+2]*.114;
+      if (lum < 90) dark++; // strict dark threshold
+    }
+    const ratio = dark / total;
+    if (ratio >= BLACK_THR) {
+      cell.style.fill      = 'black';
+      cell.style.textColor = 'white';
+      cell.style.bold      = true;
+    }
+  });
 }
 
 /** Flatten OCR response into [{text,x?,y?,w?,h?,sr?,sc?}] */
@@ -1835,10 +1922,10 @@ async function startOCR() {
 
     if (json.error) throw new Error(json.error);
 
-    // ★ V2.1: Canvas grid detection → OCR text assignment → tableSchema
+    // ★ V2.3: Only charge credit for new images (not re-runs of same file)
+    consumeCreditForOCR(imageFile);
     tableSchema = mapOCRToSchemaV21(json, imageFile);
 
-    incUsage();
     renderTableFromSchema();
     updateDpMeta();
 
@@ -1876,7 +1963,8 @@ function renderTableFromSchema() {
     html += '<thead><tr>';
     cols.forEach(col => {
       const c = cmap[`${headerRow.id}|${col.id}`];
-      html += `<th>${escH(c ? c.text : col.label)}</th>`;
+      const isBlack = c?.style?.fill === 'black';
+      html += `<th${isBlack?' class="cell-black"':''}>${escH(c ? c.text : col.label)}</th>`;
     });
     html += '</tr></thead>';
   }
@@ -1887,7 +1975,10 @@ function renderTableFromSchema() {
     cols.forEach((col, ci) => {
       const c  = cmap[`${row.id}|${col.id}`];
       const id = c ? c.id : `_${ri}_${ci}`;
-      html += `<td><textarea class="cell-edit" data-cid="${escA(id)}" rows="1"
+      const isBlack = c?.style?.fill === 'black';
+      const tdCls = isBlack ? ' class="cell-black"' : '';
+      const taCls = isBlack ? ' cell-edit-black' : '';
+      html += `<td${tdCls}><textarea class="cell-edit${taCls}" data-cid="${escA(id)}" rows="1"
         oninput="onCellInput(this)">${escH(c ? c.text : '')}</textarea></td>`;
     });
     html += '</tr>';
@@ -1969,10 +2060,9 @@ function buildXLSXFromSchema(schema) {
     if (!isGridMode) return cell.style?.bold ? 2 : 1;
     const s = cell.style || {};
     const isHdr = cell.rowId === headerRow?.id;
-    const isLastRow = ri === nR - 1;
-    const ci = cols.findIndex(c => c.id === cell.colId);
-    const isLastCol = ci === nC - 1;
-    // Pick styleId based on outer-border position
+    const isBlack = s.fill === 'black';
+    if (isBlack && isHdr) return 6;
+    if (isBlack) return 5;
     const outer = (s.borderTop==='thick'||s.borderBottom==='thick'||
                    s.borderLeft==='thick'||s.borderRight==='thick');
     if (isHdr && outer) return 4;
@@ -2012,14 +2102,16 @@ function buildXLSXFromSchema(schema) {
     `<bottom style="${b}"><color rgb="FF1A1A18"/></bottom><diagonal/></border>`;
 
   const styles = `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="2">
+<fonts count="3">
   <font><sz val="11"/><name val="Arial"/></font>
   <font><b/><sz val="11"/><name val="Arial"/></font>
+  <font><b/><sz val="11"/><name val="Arial"/><color rgb="FFFFFFFF"/></font>
 </fonts>
-<fills count="3">
+<fills count="4">
   <fill><patternFill patternType="none"/></fill>
   <fill><patternFill patternType="gray125"/></fill>
   <fill><patternFill patternType="solid"><fgColor rgb="FFF5F0E8"/><bgColor indexed="64"/></patternFill></fill>
+  <fill><patternFill patternType="solid"><fgColor rgb="FF111111"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
 <borders count="5">
   ${mkBorder('none','none','none','none')}
@@ -2029,12 +2121,14 @@ function buildXLSXFromSchema(schema) {
   ${mkBorder('thick','thick','thick','thick')}
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="5">
+<cellXfs count="7">
   <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
   <xf numFmtId="0" fontId="1" fillId="2" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
   <xf numFmtId="0" fontId="0" fillId="0" borderId="3" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
   <xf numFmtId="0" fontId="1" fillId="2" borderId="4" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="2" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="top" horizontal="left"/></xf>
+  <xf numFmtId="0" fontId="2" fillId="3" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment wrapText="1" vertical="center" horizontal="left"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
@@ -2103,6 +2197,10 @@ function buildSVGFromSchema(schema) {
     if (!row||!col) return;
     const x1=tx(col.x), y1=ty(row.y), x2=tx(col.x+col.width), y2=ty(row.y+row.height);
     const s = cell.style||{};
+    // V2.3: Black-fill cell background
+    if (s.fill==='black') {
+      svg+=`<rect x="${x1.toFixed(1)}" y="${y1.toFixed(1)}" width="${(x2-x1).toFixed(1)}" height="${(y2-y1).toFixed(1)}" fill="#111"/>`;
+    }
     const strokeW = st => st==='thick'?2.5:st==='medium'?1.5:0.75;
     const strokeC = st => (st==='thick'||st==='medium')?'#1A1A18':'#C8BCA8';
     const drawLine = (x1,y1,x2,y2,st) => {
@@ -2121,11 +2219,11 @@ function buildSVGFromSchema(schema) {
     const col = cols.find(c=>c.id===cell.colId);
     if (!row||!col||!cell.text) return;
     const isHdr = row.type==='header';
+    const isBlack = cell.style?.fill==='black';
     const cx = tx(col.x), cy = ty(row.y);
-    const fs = isHdr ? 12 : 11;
-    const fw = isHdr ? 'bold' : 'normal';
-    const fill = isHdr ? '#1A1A18' : '#333';
-    const padX = 7, padY = 4;
+    const fs = (isHdr||isBlack) ? 12 : 11;
+    const fw = (isHdr||isBlack) ? 'bold' : 'normal';
+    const fill = isBlack ? '#fff' : (isHdr ? '#1A1A18' : '#333');
     const maxChars = Math.max(4, Math.floor(col.width/7));
     // Multi-line text support
     const lines = cell.text.split('\n');

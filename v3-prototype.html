@@ -555,17 +555,19 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 
 /* ── V2.8 Safety Notice ─────────────────────────────── */
 .safety-notice{
-  background:#F9F7F3;border:1px solid var(--line);border-radius:var(--r-m);
-  padding:10px 16px;margin-top:14px;font-size:11.5px;color:var(--mut);
+  background:#F7F5EF;border:1px solid rgba(200,185,150,.35);border-radius:var(--r-m);
+  padding:11px 18px;margin-top:14px;font-size:11.5px;color:var(--mut);
   display:flex;align-items:flex-start;gap:10px;line-height:1.6
 }
-.safety-notice-icon{font-size:16px;flex-shrink:0;margin-top:1px}
-.safety-notice.high-risk{
-  background:#FFF8ED;border-color:#F6C96A;color:#7A5C1E
+.safety-notice-icon{font-size:15px;flex-shrink:0;margin-top:1px;opacity:.7}
+/* Secure mode notice — warm gold, calm, NOT a warning */
+.safety-notice.secure-mode{
+  background:#FDFAF3;border-color:rgba(200,169,110,.4);color:#6B5529
 }
-.safety-notice.high-risk .safety-icon-label{
-  display:inline-block;background:#F6C96A;color:#5A3E00;
-  font-weight:700;font-size:10px;border-radius:3px;padding:1px 6px;margin-bottom:4px
+.safety-notice.secure-mode .secure-mode-label{
+  display:inline-block;background:rgba(200,169,110,.18);color:#6B5529;
+  font-weight:700;font-size:10px;border-radius:3px;padding:1px 7px;margin-bottom:5px;
+  letter-spacing:.04em
 }
 /* ── V2.8 Architecture meta bar ─────────────────────── */
 .arch-meta-bar{
@@ -588,6 +590,13 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 .block-type-badge{
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
   color:var(--mut);margin-bottom:4px
+}
+
+/* ── V3.0.2 Draft Notice ─────────────────────────────── */
+.draft-notice{
+  font-size:12px;color:var(--mut);padding:7px 20px;
+  background:#FDFAF5;border-bottom:1px solid var(--line);
+  line-height:1.5;
 }
 </style>
 </head>
@@ -1063,7 +1072,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </div>
       </div>
 
-      <!-- V2.8 Safety Notice — always visible -->
+      <!-- V3 Safety Notice — always visible, calm/reassuring -->
       <div class="safety-notice" id="safety-notice-base">
         <span class="safety-notice-icon">🔒</span>
         <span>
@@ -1071,13 +1080,13 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
         </span>
       </div>
-      <!-- V2.8 High-Risk Safety Notice — shown for sensitive docs -->
-      <div class="safety-notice high-risk" id="safety-notice-high-risk" style="display:none">
-        <span class="safety-notice-icon">⚠️</span>
+      <!-- V3 Secure Mode Notice — calm warm gold, shown for formal/sensitive docs -->
+      <div class="safety-notice secure-mode" id="safety-notice-high-risk" style="display:none">
+        <span class="safety-notice-icon">🔒</span>
         <div>
-          <span class="safety-icon-label">安全處理模式 / Secure Mode</span><br>
-          <span class="zh">偵測到此文件可能包含敏感資訊。本系統不會保存圖片、文字或輸出。如需進一步保護，請在私人網路環境下處理。</span>
-          <span class="en">This document may contain sensitive information. No image, text, or output is retained. For maximum security, process in a private network environment.</span>
+          <span class="secure-mode-label">安全處理模式已啟用</span><br>
+          <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
+          <span class="en">Secure mode active. Documents are used for this conversion only. No image, text, or output is retained.</span>
         </div>
       </div>
 
@@ -1133,28 +1142,22 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 
     <!-- Step: Results -->
     <div id="step-results">
-      <!-- V2.8 Architecture Meta Bar -->
+      <!-- V3 Architecture Meta Bar — debug-only, hidden from general users -->
       <div class="arch-meta-bar" id="arch-meta-bar" style="display:none">
+        <div class="arch-meta-item" style="opacity:.55;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700">Debug</div>
         <div class="arch-meta-item">
-          <span class="arch-meta-label">Provider:</span>
-          <span id="meta-provider">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Mode:</span>
-          <span id="meta-mode">—</span>
+          <span class="arch-meta-label">Type:</span><span id="meta-mode">—</span>
         </div>
         <div class="arch-meta-item">
-          <span class="arch-meta-label">Risk:</span>
-          <span id="meta-risk">—</span>
+          <span class="arch-meta-label">Risk:</span><span id="meta-risk">—</span>
         </div>
         <div class="arch-meta-item">
-          <span class="arch-meta-label">Strategy:</span>
-          <span id="meta-strategy">—</span>
+          <span class="arch-meta-label">Strategy:</span><span id="meta-strategy">—</span>
         </div>
-        <div class="arch-meta-item" style="margin-left:auto;color:#aaa">
-          <span class="zh">🔒 不保存 · 本次處理後即刪除</span>
-          <span class="en">🔒 Not retained · Discarded after this session</span>
+        <div class="arch-meta-item">
+          <span class="arch-meta-label">Provider:</span><span id="meta-provider">—</span>
         </div>
+        <div class="arch-meta-item" style="margin-left:auto;color:#ccc;font-size:10px">🔒 _noRetain</div>
       </div>
       <div class="res-tabs">
         <button class="res-tab active" data-tab="data" onclick="showTab('data')">
@@ -1182,6 +1185,11 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <button class="dp-export-btn" onclick="showTab('export')">
               <span class="zh">匯出 →</span><span class="en">Export →</span>
             </button>
+          </div>
+          <!-- V3.0.2 Draft Notice -->
+          <div class="draft-notice" id="draft-notice" style="display:none">
+            <span class="zh">✏️ 這是 AI 轉換草稿，你可以先調整欄寬與內容，再下載成 Excel。</span>
+            <span class="en">✏️ This is an AI draft. Adjust column widths and content before downloading as Excel.</span>
           </div>
           <div class="tbl-wrap">
             <table class="schema-tbl" id="schema-tbl"></table>
@@ -1983,6 +1991,9 @@ function mapOCRToSchemaV21(ocrResponse, file) {
 function toggleDebugOverlay(on) {
   const canvas = document.getElementById('debug-canvas');
   const stats  = document.getElementById('debug-stats');
+  // V3.0.2: also show/hide arch-meta-bar in debug mode
+  const bar = document.getElementById('arch-meta-bar');
+  if (bar && normalizedDoc) bar.style.display = on ? 'flex' : 'none';
   if (!on) { canvas.style.display='none'; stats.style.display='none'; return; }
   if (!lastDetectedGrid || !tableSchema) {
     stats.style.display='block'; canvas.style.display='none';
@@ -2427,6 +2438,7 @@ let docModeOcrRaw  = null;   // raw OCR result stored for Doc Mode
 function resetAllPreviousState() {
   tableSchema        = null;
   normalizedDoc      = null;   // V3: clear normalized document
+  layoutStructure    = null;   // V3.1: clear layout structure
   currentDocMode     = null;
   currentDocMode     = null;
   docModeOcrRaw      = null;
@@ -2459,6 +2471,9 @@ function resetAllPreviousState() {
   // Clear meta
   const dpMeta = document.getElementById('dp-meta');
   if (dpMeta) dpMeta.innerHTML = '';
+  // V3.0.2: hide draft notice on reset
+  const draftNotice = document.getElementById('draft-notice');
+  if (draftNotice) draftNotice.style.display = 'none';
 }
 
 /**
@@ -2634,24 +2649,27 @@ function classifyDocumentType(ocrResult, grid) {
  */
 function showModeGateCard(classification, ocrResult) {
   const gate = document.getElementById('mode-gate');
-  const conf = Math.round(classification.confidence * 100);
   const isForm = classification.mode === 'structured-form';
+  // V3.0.2: Product-friendly copy, no confidence % or technical labels
+  const debugOn = document.getElementById('debug-chk')?.checked;
+  const debugHint = debugOn
+    ? `<div style="margin-top:10px;font-size:10px;color:#bbb;font-family:monospace">${classification.reasons.slice(0,4).map(r=>`• ${r}`).join('<br>')}</div>`
+    : '';
 
-  // Bilingual gate copy
   const titleZh = isForm
-    ? `📋 偵測到表單型文件（信心度 ${conf}%）`
-    : `❓ 文件類型不確定（信心度 ${conf}%）`;
+    ? '偵測到這張圖片比較像「表單型文件」'
+    : '這張圖片的格式需要你選擇輸出方式';
   const titleEn = isForm
-    ? `📋 Structured form detected (confidence ${conf}%)`
-    : `❓ Document type uncertain (confidence ${conf}%)`;
+    ? 'This image looks like a structured form'
+    : 'Please choose an output format for this document';
   const bodyZh = isForm
-    ? '這張圖片可能是表單、維修紀錄或密集印刷表格。<br>若你想保留欄位格線，請選 <b>Excel 模式</b>；若你想保留文字內容，請選<b>文件模式</b>。'
-    : '系統無法確定這是表格還是文件。<br>請選擇最符合你需求的輸出模式。';
+    ? '這類文件通常包含格線、段落與欄位混合內容。你可以依需求選擇輸出方式。'
+    : '這張圖片的內容難以自動判斷最佳輸出格式，請依你的需求選擇。';
   const bodyEn = isForm
-    ? 'This image may be a form, maintenance record, or dense printed table.<br>Choose <b>Excel Mode</b> to preserve grid structure, or <b>Doc Mode</b> to extract text.'
-    : "The system can't confidently determine whether this is a table or document.<br>Please choose the output mode that best fits your needs.";
-
-  const reasonsHtml = classification.reasons.slice(0,5).map(r => `• ${r}`).join('<br>');
+    ? 'This type of document usually contains a mix of grid lines, paragraphs, and form fields. Choose the output format that works best for you.'
+    : "This image's content doesn't clearly match a single output format. Please choose based on your needs.";
+  const hintZh = 'Excel 草稿適合後續整理欄位；文件模式較適合保留閱讀順序。';
+  const hintEn = 'Excel draft is useful for editing columns; Doc mode is better for preserving reading order.';
 
   gate.innerHTML = `
     <div class="mode-gate-card">
@@ -2662,21 +2680,25 @@ function showModeGateCard(classification, ocrResult) {
       <div class="mode-gate-reason">
         <span class="zh">${bodyZh}</span>
         <span class="en">${bodyEn}</span>
-        <div style="margin-top:10px;font-size:11px;color:#aaa">${reasonsHtml}</div>
+        ${debugHint}
       </div>
       <div class="mode-gate-btns">
         <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
-          <span class="zh">📊 使用 Excel 模式</span>
-          <span class="en">📊 Excel Mode</span>
+          <span class="zh">📊 保留格線，轉成 Excel 草稿</span>
+          <span class="en">📊 Keep grid as Excel draft</span>
         </button>
         <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
-          <span class="zh">📄 使用文件模式</span>
-          <span class="en">📄 Doc Mode</span>
+          <span class="zh">📄 保留文字，轉成文件模式</span>
+          <span class="en">📄 Extract text as document</span>
         </button>
         <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
-          <span class="zh">🔤 只看 OCR 文字</span>
-          <span class="en">🔤 OCR text only</span>
+          <span class="zh">🔤 只查看 OCR 文字</span>
+          <span class="en">🔤 View OCR text only</span>
         </button>
+      </div>
+      <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--mut)">
+        <span class="zh">${hintZh}</span>
+        <span class="en">${hintEn}</span>
       </div>
     </div>`;
   gate.style.display = 'block';
@@ -2691,7 +2713,11 @@ function runExcelMode(json, file, grid) {
   renderTableFromSchema();
   updateDpMeta();
 
-  // V2.7 §6.7: mobile dense-column warning
+  // V3.0.2: Show draft notice (gentle expectation management)
+  const draftNotice = document.getElementById('draft-notice');
+  if (draftNotice) draftNotice.style.display = 'block';
+
+  // V3.0.2: mobile dense-column warning
   const nCols = tableSchema?.columns?.length ?? 0;
   const isMobile = window.innerWidth < 700;
   if (isMobile && nCols > 8) {
@@ -2794,7 +2820,408 @@ function docDownloadJson() {
 }
 
 /* ===========================================================
-   V3 DOCUMENT UNDERSTANDING + SECURE EXTRACTION ARCHITECTURE
+   V3.1 LAYOUT ENGINE LAYER
+   layoutEngineAdapter(ocrResult, imageMeta, gridSignals, documentType)
+     → layoutStructure
+   ─────────────────────────────────────────────────────────────
+   This is the new abstraction between raw OCR and output builders.
+   Future providers (Google Layout Parser, Azure Layout, PaddleOCR PP-Structure)
+   implement this interface and return a layoutStructure.
+   =========================================================== */
+
+/**
+ * layoutStructure schema:
+ * {
+ *   pages: [{ width, height, rotation }],
+ *   blocks: [{ id, type, bbox, readingOrder, confidence }],
+ *   lines: [{ id, text, bbox, blockId, readingOrder }],
+ *   tables: [{ id, bbox, rows: [{cells:[{text,bbox,rowSpan,colSpan,isHeader,isDark}]}] }],
+ *   paragraphs: [{ id, text, bbox, blockId }],
+ *   keyValueCandidates: [{ key, value, keyBbox, valueBbox, confidence }],
+ *   detectedColumns: [{ x, width, colIdx }],
+ *   detectedRows: [{ y, height, rowIdx, isHeader }],
+ *   readingOrder: [blockId, ...],
+ *   meta: { provider, processingTime, _noRetain: true }
+ * }
+ */
+
+let layoutStructure = null;  // current V3.1 layout structure
+
+/**
+ * Google Document AI Layout Adapter (V3.1 active provider).
+ * Bridges OCR result + canvas grid signals → layoutStructure.
+ * Future: replace with real Document AI Layout Parser response parsing.
+ * Replaceable with: Azure Layout, AWS Textract, PaddleOCR PP-Structure, local TSR.
+ */
+function layoutEngineAdapter(ocrResult, imageMeta, gridSignals, documentType) {
+  const t0 = Date.now();
+  const words = extractOCRWords(ocrResult);
+
+  // ── Page metadata ─────────────────────────────────────────────────────────
+  const pageW = imageMeta?.width  || gridSignals?.w || 800;
+  const pageH = imageMeta?.height || gridSignals?.h || 600;
+  const pages = [{ width: pageW, height: pageH, rotation: 0 }];
+
+  // ── Lines from OCR words, grouped by sr (row) ─────────────────────────────
+  const byRow = {};
+  words.forEach(w => {
+    const r = w.sr ?? 0;
+    if (!byRow[r]) byRow[r] = [];
+    byRow[r].push(w);
+  });
+  const sortedRows = Object.keys(byRow).map(Number).sort((a,b)=>a-b);
+
+  const lines = sortedRows.map((r, li) => {
+    const rowWords = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0));
+    const text = rowWords.map(w=>w.text).join(' ');
+    const hasBbox = rowWords.some(w=>w.x!=null);
+    const bbox = hasBbox ? {
+      x: Math.min(...rowWords.filter(w=>w.x!=null).map(w=>w.x)),
+      y: Math.min(...rowWords.filter(w=>w.y!=null).map(w=>w.y)),
+      w: rowWords.filter(w=>w.x!=null).reduce((s,w)=>s+(w.w||8),0),
+      h: Math.max(...rowWords.filter(w=>w.h!=null).map(w=>w.h), 14)
+    } : null;
+    return { id:`line_${r}`, text, bbox, blockId: `block_row_${r}`, readingOrder: li,
+             words: rowWords };
+  });
+
+  // ── Column / row boundary refinement using grid signals ───────────────────
+  const detectedColumns = [];
+  const detectedRows    = [];
+
+  if (gridSignals && gridSignals.filteredH && gridSignals.filteredV) {
+    const { filteredH, filteredV, outerBorder, w, h, interiorH, interiorV } = gridSignals;
+    const le = outerBorder?.left   ?? 0, re = outerBorder?.right  ?? w;
+    const te = outerBorder?.top    ?? 0, be = outerBorder?.bottom ?? h;
+
+    // V3.1: refined column boundaries with min-width merging
+    let xs = [...new Set([le, ...interiorV, re])].sort((a,b)=>a-b);
+    let ys = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
+
+    // Merge very narrow columns (< 32px) with neighbor — tighter than V2.5
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let i=0; i<xs.length-1; i++) {
+        if (xs[i+1]-xs[i] < 32) { xs.splice(i+1,1); changed=true; break; }
+      }
+    }
+    // Limit columns to 12 max
+    if (xs.length > 13) xs = xs.slice(0, 13);
+
+    xs.slice(0,-1).forEach((x,i) => {
+      detectedColumns.push({ x, width: xs[i+1]-x, colIdx: i });
+    });
+    ys.slice(0,-1).forEach((y,j) => {
+      detectedRows.push({ y, height: ys[j+1]-y, rowIdx: j, isHeader: j===0 });
+    });
+  }
+
+  // ── Table reconstruction (only for table-like documents) ──────────────────
+  const tables = [];
+  if ((documentType==='simple-table') && detectedColumns.length>=2 && detectedRows.length>=2) {
+    const tableRows = detectedRows.map((drow, ri) => {
+      const cells = detectedColumns.map((dcol, ci) => {
+        // Find words whose bbox center falls in this cell
+        const cellX1=dcol.x, cellX2=dcol.x+dcol.width;
+        const cellY1=drow.y,  cellY2=drow.y+drow.height;
+        const matchedWords = words.filter(w => {
+          if (!w.x || !w.y) return false;
+          const cx=w.x+(w.w||8)/2, cy=w.y+(w.h||12)/2;
+          return cx>=cellX1&&cx<=cellX2&&cy>=cellY1&&cy<=cellY2;
+        });
+        // Fallback: if no bbox words, try sequential assignment
+        const text = matchedWords.length
+          ? matchedWords.map(w=>w.text).join(' ')
+          : '';
+        return {
+          text, colIdx:ci, rowIdx:ri,
+          bbox:{x:dcol.x, y:drow.y, w:dcol.width, h:drow.height},
+          rowSpan:1, colSpan:1,
+          isHeader: ri===0,
+          isDark: false  // set by background detection
+        };
+      });
+      return { cells };
+    });
+    tables.push({
+      id: 'table_0',
+      bbox: detectedColumns.length&&detectedRows.length ? {
+        x:detectedColumns[0].x, y:detectedRows[0].y,
+        w:detectedColumns[detectedColumns.length-1].x+detectedColumns[detectedColumns.length-1].width-detectedColumns[0].x,
+        h:detectedRows[detectedRows.length-1].y+detectedRows[detectedRows.length-1].height-detectedRows[0].y
+      } : null,
+      rows: tableRows
+    });
+  }
+
+  // ── Key-value candidates (for structured forms) ────────────────────────────
+  const keyValueCandidates = [];
+  if (documentType==='structured-form') {
+    sortedRows.forEach(r => {
+      const rowWords = (byRow[r]||[]).sort((a,b)=>(a.sc??0)-(b.sc??0));
+      if (rowWords.length===2) {
+        keyValueCandidates.push({
+          key:   rowWords[0].text,
+          value: rowWords[1].text,
+          keyBbox:   rowWords[0].x!=null ? {x:rowWords[0].x,y:rowWords[0].y,w:rowWords[0].w||8,h:rowWords[0].h||12} : null,
+          valueBbox: rowWords[1].x!=null ? {x:rowWords[1].x,y:rowWords[1].y,w:rowWords[1].w||8,h:rowWords[1].h||12} : null,
+          confidence: 0.75
+        });
+      }
+    });
+  }
+
+  // ── Paragraphs (for document-like) ────────────────────────────────────────
+  const paragraphs = [];
+  if (documentType==='document' || documentType==='uncertain') {
+    // Group consecutive lines with similar x-position into paragraph blocks
+    let paraAccum = [];
+    let paraId = 0;
+    const flushPara = () => {
+      if (!paraAccum.length) return;
+      const text = paraAccum.map(l=>l.text).join(' ');
+      paragraphs.push({
+        id: `para_${paraId++}`,
+        text,
+        bbox: null,
+        blockId: paraAccum[0].blockId
+      });
+      paraAccum = [];
+    };
+    lines.forEach((line, i) => {
+      if (!line.text.trim()) { flushPara(); return; }
+      // New paragraph if gap > ~2x typical line height
+      if (paraAccum.length && line.bbox && paraAccum[paraAccum.length-1].bbox) {
+        const prevY = paraAccum[paraAccum.length-1].bbox.y + (paraAccum[paraAccum.length-1].bbox.h||14);
+        const gap = line.bbox.y - prevY;
+        if (gap > 28) flushPara();
+      }
+      paraAccum.push(line);
+    });
+    flushPara();
+  }
+
+  // ── Reading order ─────────────────────────────────────────────────────────
+  const readingOrder = lines.map(l=>l.id);
+
+  const ls = {
+    pages,
+    blocks: lines.map(l=>({ id:l.blockId, type:'line', bbox:l.bbox, readingOrder:l.readingOrder })),
+    lines,
+    tables,
+    paragraphs,
+    keyValueCandidates,
+    detectedColumns,
+    detectedRows,
+    readingOrder,
+    meta: {
+      provider: 'google-document-ai-layout-v31',
+      processingTime: Date.now()-t0,
+      documentType,
+      _noRetain: true
+    }
+  };
+  return ls;
+}
+
+/* ===========================================================
+   V3.1 STRUCTURED FORM DRAFT BUILDER
+   structuredFormDraftBuilder(normalizedDoc, layoutStructure) → formDraft
+   Used when user selects Excel from Mode Gate for structured-form docs
+   =========================================================== */
+
+/**
+ * Build a form draft from normalized doc + layout structure.
+ * Returns {sections, fields, tables, notes} — a clean, organizable Excel.
+ */
+function structuredFormDraftBuilder(nDoc, ls) {
+  const draft = {
+    sections: [],
+    fields: [],         // [{label, value, order}]
+    tables: [],         // detected table blocks
+    notes: [],          // paragraph-style notes
+    readingOrder: []
+  };
+
+  // Use kv-pairs from layout structure
+  if (ls && ls.keyValueCandidates.length) {
+    ls.keyValueCandidates.forEach((kv, i) => {
+      draft.fields.push({ label: kv.key, value: kv.value, order: i });
+    });
+  }
+
+  // Use kv-pair blocks from normalizedDoc
+  if (nDoc) {
+    nDoc.forms.forEach((b, i) => {
+      if (!draft.fields.find(f=>f.label===b.content.key)) {
+        draft.fields.push({ label: b.content.key||'', value: b.content.value||'', order: i });
+      }
+    });
+    nDoc.paragraphs.forEach(b => {
+      if (b.content.text) draft.notes.push({ text: b.content.text });
+    });
+    nDoc.tables.forEach(b => {
+      draft.tables.push(b);
+    });
+  }
+
+  return draft;
+}
+
+/**
+ * Convert a formDraft to a tableSchema suitable for XLSX export.
+ * Produces a readable 2-column "Label | Value" layout for forms.
+ * Uses a structured 3-section layout: metadata header, fields, notes.
+ */
+function formDraftToTableSchema(draft, imageName) {
+  const schema = createSchema(imageName || 'form-export');
+  schema.meta.reconstructionMode = 'structuredForm-v31';
+
+  // 2-column layout: Label | Value
+  schema.columns = [
+    { id:'col_label', x:0,   width:220, label:'欄位 / Field', locked:false },
+    { id:'col_value', x:220, width:400, label:'內容 / Value', locked:false }
+  ];
+
+  let rowIdx = 0;
+  const addRow = (label, value, type='data', isBold=false) => {
+    const rId = `row_${rowIdx}`;
+    schema.rows.push({ id:rId, y:rowIdx*26, height:26, type });
+    const makeCell = (colId, text, bold) => ({
+      id:`cell_${rowIdx}_${colId}`, rowId:rId, colId,
+      text: String(text||''), rowSpan:1, colSpan:1, confidence:null, bbox:null,
+      style:{ bold: bold||isBold, align:'left',
+              borderTop:'thin', borderBottom:'thin',
+              borderLeft:'thin', borderRight:'thin' }
+    });
+    schema.cells.push(makeCell('col_label', label, isBold));
+    schema.cells.push(makeCell('col_value', value, false));
+    rowIdx++;
+  };
+
+  // Header row
+  const hId = `row_hdr`;
+  schema.rows.push({ id:hId, y:0, height:28, type:'header' });
+  ['col_label','col_value'].forEach((cId,i) => {
+    schema.cells.push({
+      id:`hdr_${cId}`, rowId:hId, colId:cId,
+      text: i===0?'欄位 / Field':'內容 / Value',
+      rowSpan:1, colSpan:1, confidence:null, bbox:null,
+      style:{ bold:true, align:'center', borderBottom:'medium',
+              borderTop:'thick', borderLeft:i===0?'thick':'thin',
+              borderRight:i===1?'thick':'thin' }
+    });
+  });
+  rowIdx++;
+
+  // Fields
+  draft.fields.sort((a,b)=>a.order-b.order).forEach(f => {
+    addRow(f.label, f.value);
+  });
+
+  // Tables embedded in form
+  draft.tables.forEach(tBlock => {
+    if (!tBlock.content?.rows) return;
+    tBlock.content.rows.forEach(row => {
+      const cols = row.cells||[];
+      const label = cols[0]?.text||'';
+      const value = cols.slice(1).map(c=>c.text).join(' | ');
+      addRow(label, value);
+    });
+  });
+
+  // Notes
+  if (draft.notes.length) {
+    addRow('── 備註 / Notes ──', '', 'data', true);
+    draft.notes.forEach(n => addRow('', n.text));
+  }
+
+  return schema;
+}
+
+/* ===========================================================
+   V3.1 DOCUMENT PARAGRAPH BUILDER
+   Better reading-order grouping for document-like files
+   =========================================================== */
+
+/**
+ * Build a clean reading-order text from layoutStructure paragraphs.
+ * Better than V3 which just did word-by-word joining.
+ */
+function buildDocumentTextFromLayout(ls, nDoc) {
+  if (ls && ls.paragraphs.length) {
+    return ls.paragraphs.map(p => p.text.trim()).filter(t=>t).join('\n\n');
+  }
+  // Fallback to normalizedDoc blocks
+  if (nDoc && nDoc.blocks.length) {
+    return buildTxtFromNormalizedDoc(nDoc);
+  }
+  return '';
+}
+
+/* ===========================================================
+   V3.1 XLSX COLUMN WIDTH CALCULATOR
+   Smarter than V2's fixed pixel÷7.2 approach
+   =========================================================== */
+
+/**
+ * V3.1: Calculate Excel column widths with readability priority.
+ * Uses: detected bbox width, max cell text length, minimum readability floor.
+ */
+function calcExcelColWidth(col, cells, cmap, rows) {
+  const MIN_W = 9, MAX_W = 55, PADDING = 2;
+
+  // Text-length based estimate
+  const textLengths = rows.map(row => {
+    const cell = cmap[`${row.id}|${col.id}`];
+    const text = cell?.text || '';
+    // CJK characters count as ~2 units in Excel
+    let len = 0;
+    for (const ch of text) {
+      len += /[\u4e00-\u9fff\u3040-\u30ff]/.test(ch) ? 2 : 1;
+    }
+    return len;
+  }).filter(l=>l>0);
+
+  const maxTextLen = textLengths.length ? Math.max(...textLengths) : 0;
+  const textBasedW = Math.min(MAX_W, maxTextLen + PADDING);
+
+  // Bbox-based estimate (if grid mode)
+  const bboxBasedW = col.width > 0 ? Math.min(MAX_W, Math.max(MIN_W, col.width / 7.0)) : 0;
+
+  // Prefer bbox width if substantial, else use text length
+  const rawW = bboxBasedW > MIN_W ? Math.max(bboxBasedW, textBasedW * 0.8) : textBasedW;
+  return Math.max(MIN_W, Math.min(MAX_W, rawW || MIN_W)).toFixed(1);
+}
+
+/**
+ * V3.1: Calculate Excel row height based on text wrapping needs.
+ */
+function calcExcelRowHeight(row, cols, cmap, isHeader) {
+  const BASE_H = isHeader ? 22 : 18;
+  const LINE_H = 14; // points per line
+  const COL_CHARS = (col) => Math.max(8, col.width / 7.0);
+
+  let maxLines = 1;
+  cols.forEach(col => {
+    const cell = cmap[`${row.id}|${col.id}`];
+    if (!cell?.text) return;
+    const colW = COL_CHARS(col);
+    // CJK-aware length
+    let len = 0;
+    for (const ch of cell.text) len += /[\u4e00-\u9fff]/.test(ch)?2:1;
+    const lines = cell.text.split('\n').length + Math.floor(len / Math.max(1,colW));
+    maxLines = Math.max(maxLines, lines);
+  });
+
+  // Use detected row height if reasonable, else compute
+  const detectedHt = row.height ? Math.min(80, Math.max(BASE_H, row.height * 0.75)) : null;
+  const computedHt = Math.min(80, BASE_H + (maxLines - 1) * LINE_H);
+  return (detectedHt ? Math.max(detectedHt, computedHt * 0.7) : computedHt).toFixed(1);
+}
+
+
    ─────────────────────────────────────────────────────────────
    Pipeline:
      Upload → resetAllPreviousState
@@ -3046,10 +3473,12 @@ function updateSafetyNotice(riskLevel) {
   }
 }
 
-/** Update arch-meta-bar with V3 providerMeta and risk. */
+/** Update arch-meta-bar — debug only. Visible only when debug checkbox is on. */
 function updateArchMetaBar(nDoc) {
   const bar = document.getElementById('arch-meta-bar');
-  if (bar) bar.style.display = 'flex';
+  // V3.0.2: Only show arch bar in debug mode (when debug-chk is checked)
+  const debugOn = document.getElementById('debug-chk')?.checked;
+  if (bar) bar.style.display = debugOn ? 'flex' : 'none';
   const set = (id, val, style) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -3130,6 +3559,12 @@ function runExtractionPipeline(ocrResult, file, grid, classification) {
   // Provider Adapter → normalizedDocumentJSON
   normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
 
+  // V3.1: Layout Engine Layer → layoutStructure (new accuracy layer)
+  const imageMeta = grid ? { width: grid.w, height: grid.h } : null;
+  layoutStructure = layoutEngineAdapter(
+    ocrResult, imageMeta, grid, normalizedDoc.documentType
+  );
+
   // Safety UX
   updateSafetyNotice(normalizedDoc.riskLevel);
   updateArchMetaBar(normalizedDoc);
@@ -3137,11 +3572,11 @@ function runExtractionPipeline(ocrResult, file, grid, classification) {
   const mode = classification.mode;
 
   if (mode === 'simple-table') {
-    // Excel path: legacy V2.5.1 grid pipeline (accurate for menus, price lists)
+    // Excel path: V3.1 enhanced grid pipeline
     runExcelMode(ocrResult, file, grid);
 
   } else if (mode === 'doc-like') {
-    // Document path: reading-order blocks, no table reconstruction
+    // V3.1: Document path via layoutStructure paragraph grouping
     runDocModeV3(ocrResult, normalizedDoc);
 
   } else {
@@ -3151,23 +3586,24 @@ function runExtractionPipeline(ocrResult, file, grid, classification) {
 }
 
 /**
- * V3 Doc Mode — renders normalizedDoc blocks in reading order.
+ * V3.1 Doc Mode — uses layoutStructure paragraph grouping for better reading order.
  * Black cell detection is structurally skipped (currentDocMode guard).
  */
 function runDocModeV3(ocrResult, nDoc) {
   currentDocMode = 'doc';
   docModeOcrRaw  = ocrResult;
 
-  const displayText = (nDoc && nDoc.blocks.length)
-    ? buildTxtFromNormalizedDoc(nDoc)
-    : (() => {
-        const words = extractOCRWords(ocrResult);
-        const byRow = {};
-        words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
-        return Object.keys(byRow).sort((a,b)=>a-b)
-          .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
-          .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
-      })();
+  // V3.1: prefer layoutStructure paragraph grouping
+  let displayText = layoutStructure ? buildDocumentTextFromLayout(layoutStructure, nDoc) : '';
+  if (!displayText && nDoc && nDoc.blocks.length) displayText = buildTxtFromNormalizedDoc(nDoc);
+  if (!displayText) {
+    const words = extractOCRWords(ocrResult);
+    const byRow = {};
+    words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
+    displayText = Object.keys(byRow).sort((a,b)=>a-b)
+      .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+      .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
+  }
 
   document.getElementById('doc-preview-body').textContent = displayText;
   document.getElementById('mode-gate').style.display       = 'none';
@@ -3199,7 +3635,26 @@ function forceExcelModeFromGate() {
   document.getElementById('mode-gate').style.display = 'none';
   if (!docModeOcrRaw) return;
   if (normalizedDoc) { normalizedDoc.extractionStrategy='excel'; updateArchMetaBar(normalizedDoc); }
-  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+
+  // V3.1: For structured-form, use formDraftBuilder for a readable Excel
+  if (normalizedDoc?.documentType === 'structured-form' && layoutStructure) {
+    const draft = structuredFormDraftBuilder(normalizedDoc, layoutStructure);
+    tableSchema = formDraftToTableSchema(draft, imageFile?.name);
+    currentDocMode = 'excel';
+    renderTableFromSchema();
+    updateDpMeta();
+    const draftNotice = document.getElementById('draft-notice');
+    if (draftNotice) draftNotice.style.display = 'block';
+    showTab('data');
+    ['tab-data','tab-visual','tab-export'].forEach(id=>{
+      document.getElementById(id).style.display='';
+    });
+    document.getElementById('doc-mode-panel').style.display = 'none';
+    document.getElementById('step-results').style.display = 'block';
+    document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  } else {
+    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+  }
 }
 
 function forceDocModeFromGate() {
@@ -3364,19 +3819,21 @@ function updateDpMeta() {
   if (!el || !tableSchema) return;
   const nCols = tableSchema.columns.length;
   const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
-  const mode  = tableSchema.meta.reconstructionMode;
   const gaps  = tableSchema.meta._debug?.rowGapWarnings;
+  // V3.0.2: Show only user-friendly info; technical labels hidden
+  // Debug mode (debug-chk checked) shows extra detail
+  const debugOn = document.getElementById('debug-chk')?.checked;
   const gapNote = gaps?.length
-    ? (lang==='zh' ? ` · ⚠ 偵測到 ${gaps.length} 個列間距，已插入空白列` : ` · ⚠ ${gaps.length} row gap(s) filled with placeholders`)
+    ? (lang==='zh' ? ` · ⚠ 部分列可能需要人工確認` : ` · ⚠ Some rows may need review`)
     : '';
-  const modeNote = currentDocMode
-    ? ` · ${currentDocMode === 'excel' ? '📊 Excel Mode' : currentDocMode === 'doc' ? '📄 Doc Mode' : currentDocMode + ' Mode'}`
+  const debugNote = debugOn
+    ? ` [mode:${tableSchema.meta.reconstructionMode}]`
     : '';
   el.innerHTML = (lang === 'zh'
-    ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
-    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`)
-    + modeNote
-    + (gapNote ? `<span style="color:#B03922">${gapNote}</span>` : '');
+    ? `${nCols} 欄 · ${nRows} 列`
+    : `${nCols} cols · ${nRows} rows`)
+    + debugNote
+    + (gapNote ? `<span style="color:#9B6E3A">${gapNote}</span>` : '');
 }
 
 /* ===========================================================
@@ -3461,11 +3918,10 @@ function buildXLSXFromSchema(schema) {
   if (headerRow) allRows.push({ row: headerRow, isH: true });
   dataRows.forEach(r => allRows.push({ row: r, isH: false }));
 
-  // Column widths from detected grid (px → Excel char, readability-first)
+  // V3.1: Column widths — text-length + bbox aware, readability-first
   const colXml = '<cols>' + cols.map((col, i) => {
-    // Use actual pixel width from grid; ensure min 8, max 60 chars
-    const charW = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
-    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1"/>`;
+    const charW = calcExcelColWidth(col, cells, cmap, rows);
+    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1" bestFit="1"/>`;
   }).join('') + '</cols>';
 
   // Determine border style per cell from schema style
@@ -3488,13 +3944,8 @@ function buildXLSXFromSchema(schema) {
 
   const nR = allRows.length, nC = cols.length;
   const sheetData = allRows.map(({ row, isH }, ri) => {
-    const maxL = Math.max(...cols.map(col => {
-      const c = cmap[`${row.id}|${col.id}`];
-      return String(c?.text || '').length;
-    }), 1);
-    // Row height: use detected height if available, else auto
-    const detectedHt = row.height ? Math.min(120, Math.max(14, row.height * 0.75)) : null;
-    const ht = detectedHt ?? (isH ? 22 : Math.min(120, Math.max(18, Math.ceil(maxL/22)*16)));
+    // V3.1: Smart row height (CJK text-wrap aware)
+    const ht = calcExcelRowHeight(row, cols, cmap, isH);
     return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">` +
       cols.map((col, ci) => {
         const c = cmap[`${row.id}|${col.id}`];
@@ -3592,7 +4043,7 @@ function buildSVGFromSchema(schema) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
   svg += `<rect width="100%" height="100%" fill="white"/>`;
   svg += `<text x="${MARGIN}" y="13" font-size="9.5" font-family="Arial,'Noto Sans TC',sans-serif" fill="#AAA">`;
-  svg += `PhotoCheck Docs V2.2 · Grid-Faithful SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
+  svg += `PhotoCheck Docs V3.1 · Layout-Accurate SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
 
   // Zebra stripes (data rows)
   rows.filter(r=>r.type==='data').forEach((row,i) => {

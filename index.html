@@ -1142,31 +1142,14 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       </div>
     </div>
 
-    <!-- Step: Results -->
+    <!-- Step: Mode Gate — independent product selection, NOT inside results -->
+    <div id="step-mode-gate" style="display:none;margin-top:20px">
+      <div id="mode-gate-inner"></div>
+    </div>
+
+        <!-- Step: Results -->
     <div id="step-results">
-      <!-- V2.8 Architecture Meta Bar -->
-      <div class="arch-meta-bar" id="arch-meta-bar" style="display:none">
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Provider:</span>
-          <span id="meta-provider">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Mode:</span>
-          <span id="meta-mode">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Risk:</span>
-          <span id="meta-risk">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Strategy:</span>
-          <span id="meta-strategy">—</span>
-        </div>
-        <div class="arch-meta-item" style="margin-left:auto;color:#aaa">
-          <span class="zh">🔒 不保存 · 本次處理後即刪除</span>
-          <span class="en">🔒 Not retained · Discarded after this session</span>
-        </div>
-      </div>
+      <!-- arch-meta-bar removed RC4: internal data only -->
       <div class="res-tabs">
         <button class="res-tab active" data-tab="data" onclick="showTab('data')">
           <span class="zh">📋 資料預覽</span><span class="en">📋 Data Preview</span>
@@ -1277,8 +1260,6 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
         </div>
       </div>
-      <!-- V2.7 Mode Gate (uncertain classification) -->
-      <div id="mode-gate" style="display:none"></div>
 
       <!-- V2.7 Doc Mode Preview -->
       <div id="doc-mode-panel" style="display:none">
@@ -1292,8 +1273,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
           <div class="doc-preview-body" id="doc-preview-body"></div>
           <div class="doc-mode-warning">
-            <span class="zh">這是文件模式的辨識草稿，適合用於閱讀與匯出文字內容。若需要表格格式，可點擊「切換至 Excel 模式」。</span>
-            <span class="en">This is the Doc Mode draft — best for reading and exporting text content. To get a table layout, click "Switch to Excel Mode" below.</span>
+            <span class="zh">這是 AI 辨識草稿，適合用於閱讀與匯出文字內容。如需表格格式，可返回重新選擇輸出方式。</span>
+            <span class="en">This is an AI recognition draft, best for reading and exporting text content. To get a table layout, go back and re-choose the output format.</span>
           </div>
           <div class="doc-export-bar">
             <button class="doc-exp-btn" onclick="docDownloadTxt()">⬇ TXT</button>
@@ -1301,8 +1282,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <button class="doc-exp-btn" onclick="reshowModeGate()" style="border-color:var(--gold-dim);color:var(--gold)">
               <span class="zh">↩ 重新選擇輸出方式</span><span class="en">↩ Re-choose format</span>
             </button>
-            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="color:var(--mut)">
-              <span class="zh">切換至 Excel 模式</span><span class="en">Switch to Excel Mode</span>
+            <button class="doc-exp-btn" onclick="scrollToUpload()" style="color:var(--mut)">
+              <span class="zh">🔄 更換圖片</span><span class="en">🔄 Change image</span>
             </button>
           </div>
         </div>
@@ -1334,6 +1315,14 @@ function setLang(l) {
   });
   document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
   if (tableSchema) updateDpMeta();
+}
+/** RC4: Apply current language to all .zh/.en elements. */
+function applyLang(l) {
+  document.querySelectorAll('.zh').forEach(el => el.style.display = l === 'zh' ? '' : 'none');
+  document.querySelectorAll('.en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === l);
+  });
 }
 
 /* ===========================================================
@@ -1415,17 +1404,14 @@ function scrollById(id) {
 function scrollToUpload() {
   document.getElementById('step-upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-/** V3.0.2 RC3: Re-show Mode Gate so user can pick a different output format. */
+/** RC4: Re-show Mode Gate — hides results, shows independent mode gate step. */
 function reshowModeGate() {
   if (!docModeOcrRaw || !lastClassification) {
     showMsg(lang==='zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
     return;
   }
-  // Restore tab visibility (hidden in doc mode)
-  document.getElementById('tab-data').style.display   = '';
-  document.getElementById('tab-visual').style.display = '';
-  document.getElementById('tab-export').style.display = '';
-  document.getElementById('doc-mode-panel').style.display = 'none';
+  // Hide results area completely; gate is now a separate step
+  document.getElementById('step-results').style.display = 'none';
   showModeGateCard(lastClassification, docModeOcrRaw);
 }
 
@@ -2481,7 +2467,7 @@ function resetAllPreviousState() {
   lastDetectedGrid   = null;
   // Hide results area and sub-panels
   document.getElementById('step-results').style.display    = 'none';
-  document.getElementById('mode-gate').style.display       = 'none';
+  document.getElementById('step-mode-gate').style.display    = 'none';
   document.getElementById('doc-mode-panel').style.display  = 'none';
   // Hide arch meta bar
   const bar = document.getElementById('arch-meta-bar');
@@ -2681,23 +2667,23 @@ function classifyDocumentType(ocrResult, grid) {
  * Also adds "OCR text only" button.
  */
 function showModeGateCard(classification, ocrResult) {
-  const gate = document.getElementById('mode-gate');
+  const gate = document.getElementById('mode-gate-inner');
+  if (!gate) return;
   const mode = classification ? classification.mode : 'uncertain';
 
-  // V3.0.2 RC3: recommendation based on document type
   const recExcel = (mode === 'simple-table');
   const recDoc   = (mode === 'doc-like');
 
   let bodyZh, bodyEn;
   if (recExcel) {
-    bodyZh = 'AI 已先整理出草稿，版面偵測為表格型文件。建議選擇 <b>Excel 表格模式</b>，確認後再下載。';
-    bodyEn = 'AI has prepared a draft and detected a table layout. We recommend <b>Excel Table Mode</b>. Review before downloading.';
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Excel 表格模式</b>，確認後再下載。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Excel Table Mode</b>. Review before downloading.';
   } else if (recDoc) {
-    bodyZh = 'AI 已先整理出草稿，版面偵測為文字型文件。建議選擇 <b>Word / Doc 文件模式</b>。';
-    bodyEn = 'AI has prepared a draft and detected a text layout. We recommend <b>Word / Doc Mode</b>.';
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Word / Doc 文件模式</b>。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Word / Doc Mode</b>.';
   } else {
-    bodyZh = 'AI 已先整理出草稿，請依照你的用途選擇輸出格式：';
-    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs:';
+    bodyZh = 'AI 已先整理出可轉換的草稿，請依照用途選擇輸出格式。';
+    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs.';
   }
 
   gate.innerHTML = `
@@ -2711,7 +2697,7 @@ function showModeGateCard(classification, ocrResult) {
         <span class="en">${bodyEn}</span>
       </div>
       <div class="mode-gate-btns">
-        <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
+        <button class="mode-gate-btn excel" onclick="pickExcelMode()">
           <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
           <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
           <span class="mode-gate-btn-sub">
@@ -2719,7 +2705,7 @@ function showModeGateCard(classification, ocrResult) {
             <span class="en">Menus, invoices, price lists, tables, checklists</span>
           </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
+        <button class="mode-gate-btn doc" onclick="pickDocMode()">
           <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
           <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
           <span class="mode-gate-btn-sub">
@@ -2727,27 +2713,26 @@ function showModeGateCard(classification, ocrResult) {
             <span class="en">Paragraphs, contracts, letters, reports, documents</span>
           </span>
         </button>
-        <button class="mode-gate-btn doc" style="border-style:dashed" onclick="forceOcrTextMode()">
+        <button class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
           <span class="zh">🔤 只擷取文字 OCR</span>
           <span class="en">🔤 OCR text only</span>
           <span class="mode-gate-btn-sub">
-            <span class="zh">適合只想先拿純文字，不需要表格或文件格式</span>
+            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
             <span class="en">Just want raw text without table or document formatting</span>
           </span>
         </button>
       </div>
     </div>`;
 
-  // Show results area + mode gate; restore tabs hidden by doc mode
-  document.getElementById('step-results').style.display   = 'block';
-  document.getElementById('doc-mode-panel').style.display = 'none';
-  document.getElementById('tab-data').style.display       = '';
-  document.getElementById('tab-visual').style.display     = '';
-  document.getElementById('tab-export').style.display     = '';
-  gate.style.display = 'block';
-  // Scroll Mode Gate into view after layout settles
+  // Show mode-gate step, hide results step
+  document.getElementById('step-mode-gate').style.display  = 'block';
+  document.getElementById('step-results').style.display    = 'none';
+  document.getElementById('step-processing').style.display = 'none';
+  // Apply current language to newly injected elements
+  applyLang(lang);
+  // Scroll gate into view
   setTimeout(() => {
-    gate.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('step-mode-gate').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 80);
 }
 
@@ -2768,13 +2753,13 @@ function runExcelMode(json, file, grid) {
       'err');
   }
 
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display    = 'none';
+  document.getElementById('tab-data').style.display          = '';
+  document.getElementById('tab-visual').style.display        = '';
+  document.getElementById('tab-export').style.display        = '';
+  document.getElementById('step-results').style.display      = 'block';
   showTab('data');
-  document.getElementById('tab-data').style.display = '';
-  document.getElementById('tab-visual').style.display = '';
-  document.getElementById('tab-export').style.display = '';
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
@@ -2801,8 +2786,8 @@ function runDocMode(json) {
   if (!text) text = lang==='zh' ? '（無法提取文字）' : '(No text extracted)';
 
   document.getElementById('doc-preview-body').textContent = text;
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display  = 'block';
   // Hide table-specific tabs
   document.getElementById('tab-data').style.display   = 'none';
   document.getElementById('tab-visual').style.display = 'none';
@@ -2810,41 +2795,11 @@ function runDocMode(json) {
   document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
-    : '📄 Draft ready. Download text content now. For a table layout, click "Switch to Excel Mode".', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「重新選擇輸出方式」。'
+    : '📄 Draft ready. To get table output, go back and re-choose the output format.', 'ok');
 }
 
-function forceExcelModeFromGate() {
-  document.getElementById('mode-gate').style.display = 'none';
-  if (docModeOcrRaw) {
-    // Update normalizedDoc strategy if it exists
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'excel'; updateArchMetaBar(normalizedDoc); }
-    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-  }
-}
-
-function forceDocModeFromGate() {
-  if (docModeOcrRaw) {
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'doc'; updateArchMetaBar(normalizedDoc); }
-    runDocModeV3(docModeOcrRaw, normalizedDoc);
-  }
-}
-
-/** V2.7.1: Show raw OCR text without any reconstruction — ultra-safe fallback. */
-function forceOcrTextMode() {
-  if (docModeOcrRaw) {
-    runDocMode(docModeOcrRaw);
-    // Override the mode label
-    currentDocMode = 'doc';
-    showMsg(lang==='zh'
-      ? '🔤 已切換到 OCR 純文字模式。'
-      : '🔤 Switched to OCR text-only mode.', 'ok');
-  }
-}
-
-function docForceExcelMode() {
-  if (docModeOcrRaw) runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-}
+/* V2.7 gate functions removed in RC4 — see pickExcelMode/pickDocMode/pickOcrMode below */
 
 function docDownloadTxt() {
   const body = document.getElementById('doc-preview-body');
@@ -3115,21 +3070,10 @@ function updateSafetyNotice(riskLevel) {
   }
 }
 
-/** Update arch-meta-bar with V3 providerMeta and risk. */
+/** updateArchMetaBar — RC4: arch-meta-bar removed from HTML.
+ *  This function is a no-op kept for call-site compatibility. */
 function updateArchMetaBar(nDoc) {
-  const bar = document.getElementById('arch-meta-bar');
-  if (bar) bar.style.display = 'flex';
-  const set = (id, val, style) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = val;
-    if (style) Object.assign(el.style, style);
-  };
-  set('meta-provider', nDoc.providerMeta.name);
-  set('meta-mode',     nDoc.documentType);
-  const riskColor = { high:'#B03922', medium:'#7A5C1E', low:'inherit' };
-  set('meta-risk',     nDoc.riskLevel, { color: riskColor[nDoc.riskLevel]||'inherit' });
-  set('meta-strategy', nDoc.extractionStrategy);
+  // Internal data only — no DOM update, arch-meta-bar removed from HTML in RC4.
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3228,12 +3172,12 @@ function runDocModeV3(ocrResult, nDoc) {
       })();
 
   document.getElementById('doc-preview-body').textContent = displayText;
-  document.getElementById('mode-gate').style.display       = 'none';
-  document.getElementById('doc-mode-panel').style.display  = 'block';
-  document.getElementById('tab-data').style.display        = 'none';
-  document.getElementById('tab-visual').style.display      = 'none';
-  document.getElementById('tab-export').style.display      = 'none';
-  document.getElementById('step-results').style.display    = 'block';
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display   = 'block';
+  document.getElementById('tab-data').style.display         = 'none';
+  document.getElementById('tab-visual').style.display       = 'none';
+  document.getElementById('tab-export').style.display       = 'none';
+  document.getElementById('step-results').style.display     = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
     ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
@@ -3252,27 +3196,30 @@ function docDownloadJson() {
   showMsg(lang==='zh'?'✓ JSON 已下載。':'✓ JSON downloaded.','ok');
 }
 
-/** Override handlers — update normalizedDoc strategy before routing. */
-function forceExcelModeFromGate() {
-  document.getElementById('mode-gate').style.display = 'none';
+/** RC4: Mode Gate selection handlers — clean product names, no "force" language. */
+function pickExcelMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='excel'; updateArchMetaBar(normalizedDoc); }
+  document.getElementById('step-mode-gate').style.display = 'none';
   runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
 }
 
-function forceDocModeFromGate() {
+function pickDocMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
+  document.getElementById('step-mode-gate').style.display = 'none';
   runDocModeV3(docModeOcrRaw, normalizedDoc);
 }
 
-/** V3 forceOcrTextMode — ultra-safe: raw OCR text, zero reconstruction. */
-function forceOcrTextMode() {
+function pickOcrMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
-  runDocModeV3(docModeOcrRaw, normalizedDoc);
-  showMsg(lang==='zh'?'🔤 已切換到 OCR 純文字模式。':'🔤 Switched to OCR text-only mode.','ok');
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runDocMode(docModeOcrRaw);
 }
+
+/** Aliases kept for any legacy call sites still using "force" names. */
+function forceExcelModeFromGate() { pickExcelMode(); }
+function forceDocModeFromGate()   { pickDocMode(); }
+function forceOcrTextMode()        { pickOcrMode(); }
+function docForceExcelMode()       { pickExcelMode(); }
 
 
 

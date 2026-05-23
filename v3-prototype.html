@@ -503,19 +503,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 /* ── V2.7 Doc Mode ─────────────────────────────── */
 .mode-gate-card{
   background:#fff;border:1.5px solid var(--gold-dim);border-radius:var(--r-l);
-  padding:24px 28px;margin-top:12px;text-align:center
+  padding:24px 28px;margin-top:12px
 }
 .mode-gate-title{font-weight:700;font-size:15px;margin-bottom:8px;color:var(--ink)}
-.mode-gate-reason{font-size:12.5px;color:var(--mut);margin-bottom:18px;line-height:1.6}
-.mode-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mode-gate-reason{font-size:13px;color:var(--mut);margin-bottom:18px;line-height:1.6}
+.mode-gate-btns{display:flex;flex-direction:column;gap:10px}
 .mode-gate-btn{
-  padding:9px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
-  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid
+  padding:13px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid;
+  text-align:left;width:100%
 }
 .mode-gate-btn.excel{background:var(--ink);color:#fff;border-color:var(--ink)}
 .mode-gate-btn.excel:hover{background:#333}
 .mode-gate-btn.doc{background:#fff;color:var(--ink);border-color:var(--line)}
 .mode-gate-btn.doc:hover{background:var(--cream);border-color:var(--gold-dim)}
+.mode-gate-btn-sub{font-size:11px;font-weight:400;opacity:.72;display:block;margin-top:3px}
 .doc-preview-panel{
   background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
   overflow:visible;display:flex;flex-direction:column
@@ -549,8 +551,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   background:#FFF0ED;border-top:1px solid #FFCCC7;
 }
 @media(max-width:600px){
-  .mode-gate-btns{flex-direction:column}
-  .mode-gate-btn{width:100%}
+  .exp-secondary{grid-template-columns:repeat(2,1fr)}
 }
 
 /* ── V2.8 Safety Notice ─────────────────────────────── */
@@ -1176,7 +1177,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <button class="res-tab" data-tab="export" onclick="showTab('export')">
           <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
         </button>
-        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 16px" onclick="scrollToUpload()">
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="reshowModeGate()">
+          <span class="zh">↩ 重新選擇</span><span class="en">↩ Re-choose</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="scrollToUpload()">
           <span class="zh">🔄 換圖</span><span class="en">🔄 New image</span>
         </button>
       </div>
@@ -1294,7 +1298,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           <div class="doc-export-bar">
             <button class="doc-exp-btn" onclick="docDownloadTxt()">⬇ TXT</button>
             <button class="doc-exp-btn" onclick="docDownloadJson()">⬇ JSON</button>
-            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="border-color:var(--gold-dim);color:var(--gold)">
+            <button class="doc-exp-btn" onclick="reshowModeGate()" style="border-color:var(--gold-dim);color:var(--gold)">
+              <span class="zh">↩ 重新選擇輸出方式</span><span class="en">↩ Re-choose format</span>
+            </button>
+            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="color:var(--mut)">
               <span class="zh">切換至 Excel 模式</span><span class="en">Switch to Excel Mode</span>
             </button>
           </div>
@@ -1407,6 +1414,19 @@ function scrollById(id) {
 /** V3.0.2: Scroll back to upload zone so user can change image. */
 function scrollToUpload() {
   document.getElementById('step-upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+/** V3.0.2 RC3: Re-show Mode Gate so user can pick a different output format. */
+function reshowModeGate() {
+  if (!docModeOcrRaw || !lastClassification) {
+    showMsg(lang==='zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  // Restore tab visibility (hidden in doc mode)
+  document.getElementById('tab-data').style.display   = '';
+  document.getElementById('tab-visual').style.display = '';
+  document.getElementById('tab-export').style.display = '';
+  document.getElementById('doc-mode-panel').style.display = 'none';
+  showModeGateCard(lastClassification, docModeOcrRaw);
 }
 
 /* ===========================================================
@@ -2448,6 +2468,7 @@ async function analyzeLayoutOnly() {
 
 let currentDocMode = null;   // 'excel' | 'doc' | 'uncertain' | null
 let docModeOcrRaw  = null;   // raw OCR result stored for Doc Mode
+let lastClassification = null; // V3.0.2 RC3: stored for reshowModeGate()
 
 /** Full state reset — V3: clears all state on every new image upload. */
 function resetAllPreviousState() {
@@ -2456,6 +2477,7 @@ function resetAllPreviousState() {
   currentDocMode     = null;
   currentDocMode     = null;
   docModeOcrRaw      = null;
+  lastClassification = null;   // V3.0.2 RC3: clear stored classification
   lastDetectedGrid   = null;
   // Hide results area and sub-panels
   document.getElementById('step-results').style.display    = 'none';
@@ -2660,32 +2682,29 @@ function classifyDocumentType(ocrResult, grid) {
  */
 function showModeGateCard(classification, ocrResult) {
   const gate = document.getElementById('mode-gate');
-  const mode = classification.mode;
+  const mode = classification ? classification.mode : 'uncertain';
 
-  // V3.0.2: Recommendation based on document type — no confidence%, no debug bullets
+  // V3.0.2 RC3: recommendation based on document type
   const recExcel = (mode === 'simple-table');
   const recDoc   = (mode === 'doc-like');
 
-  const titleZh = '請選擇輸出方式';
-  const titleEn = 'Choose output format';
-
   let bodyZh, bodyEn;
   if (recExcel) {
-    bodyZh = 'AI 已先整理出可轉換的草稿。建議選擇 <b>Excel 模式</b>，保留表格欄位結構，確認後再下載。';
-    bodyEn = 'AI has prepared a draft. We recommend <b>Excel Mode</b> to keep the table structure. Review before downloading.';
+    bodyZh = 'AI 已先整理出草稿，版面偵測為表格型文件。建議選擇 <b>Excel 表格模式</b>，確認後再下載。';
+    bodyEn = 'AI has prepared a draft and detected a table layout. We recommend <b>Excel Table Mode</b>. Review before downloading.';
   } else if (recDoc) {
-    bodyZh = 'AI 已先整理出可轉換的草稿。建議選擇<b>文件模式</b>，保留閱讀順序與完整文字內容。';
-    bodyEn = 'AI has prepared a draft. We recommend <b>Doc Mode</b> to preserve reading order and full text content.';
+    bodyZh = 'AI 已先整理出草稿，版面偵測為文字型文件。建議選擇 <b>Word / Doc 文件模式</b>。';
+    bodyEn = 'AI has prepared a draft and detected a text layout. We recommend <b>Word / Doc Mode</b>.';
   } else {
-    bodyZh = 'AI 已先整理出可轉換的草稿，請依照你的用途選擇輸出格式。';
-    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs.';
+    bodyZh = 'AI 已先整理出草稿，請依照你的用途選擇輸出格式：';
+    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs:';
   }
 
   gate.innerHTML = `
     <div class="mode-gate-card">
       <div class="mode-gate-title">
-        <span class="zh">${titleZh}</span>
-        <span class="en">${titleEn}</span>
+        <span class="zh">請選擇輸出方式</span>
+        <span class="en">Choose output format</span>
       </div>
       <div class="mode-gate-reason">
         <span class="zh">${bodyZh}</span>
@@ -2693,25 +2712,40 @@ function showModeGateCard(classification, ocrResult) {
       </div>
       <div class="mode-gate-btns">
         <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
-          <span class="zh">📊 使用 Excel 模式${recExcel ? ' ★ 建議' : ''}</span>
-          <span class="en">📊 Excel Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
+            <span class="en">Menus, invoices, price lists, tables, checklists</span>
+          </span>
         </button>
         <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
-          <span class="zh">📄 使用文件模式${recDoc ? ' ★ 建議' : ''}</span>
-          <span class="en">📄 Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
+            <span class="en">Paragraphs, contracts, letters, reports, documents</span>
+          </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
-          <span class="zh">🔤 純文字輸出</span>
-          <span class="en">🔤 Plain text only</span>
+        <button class="mode-gate-btn doc" style="border-style:dashed" onclick="forceOcrTextMode()">
+          <span class="zh">🔤 只擷取文字 OCR</span>
+          <span class="en">🔤 OCR text only</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合只想先拿純文字，不需要表格或文件格式</span>
+            <span class="en">Just want raw text without table or document formatting</span>
+          </span>
         </button>
       </div>
     </div>`;
 
-  // Show results area + mode gate, reset tab state
-  document.getElementById('step-results').style.display  = 'block';
+  // Show results area + mode gate; restore tabs hidden by doc mode
+  document.getElementById('step-results').style.display   = 'block';
   document.getElementById('doc-mode-panel').style.display = 'none';
+  document.getElementById('tab-data').style.display       = '';
+  document.getElementById('tab-visual').style.display     = '';
+  document.getElementById('tab-export').style.display     = '';
   gate.style.display = 'block';
-  // Scroll Mode Gate into view
+  // Scroll Mode Gate into view after layout settles
   setTimeout(() => {
     gate.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 80);
@@ -3303,6 +3337,7 @@ async function startOCR() {
 
     const classification = classifyDocumentType(json, grid);
     docModeOcrRaw = json; // store for override buttons
+    lastClassification = classification; // V3.0.2 RC3: store for reshowModeGate()
 
     // Add to debug meta
     if (!json._v27debug) json._v27debug = {};

@@ -447,7 +447,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 }
 .vis-body{padding:20px;overflow:auto;background:var(--warm)}
 #svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
-.debug-bar{padding:8px 20px;background:#f9f7f3;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.debug-bar{display:none!important} /* V3.0.2: hidden from users */
 .debug-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--mut);user-select:none}
 .debug-toggle-label input{cursor:pointer}
 
@@ -1136,8 +1136,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="en">Recognizing… please wait</span>
       </div>
       <div class="proc-note">
-        <span class="zh">正在呼叫 OCR API（僅此一次）。完成後所有操作在本機進行。</span>
-        <span class="en">Calling OCR API (one time only). All operations are local after this.</span>
+        <span class="zh">AI 正在分析文件，完成後可直接編輯草稿內容。</span>
+        <span class="en">AI is analyzing your document. You can edit the draft directly after this.</span>
       </div>
     </div>
 
@@ -1175,6 +1175,9 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="res-tab" data-tab="export" onclick="showTab('export')">
           <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 16px" onclick="scrollToUpload()">
+          <span class="zh">🔄 換圖</span><span class="en">🔄 New image</span>
         </button>
       </div>
 
@@ -1400,6 +1403,10 @@ function showLanding() {
 }
 function scrollById(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+/** V3.0.2: Scroll back to upload zone so user can change image. */
+function scrollToUpload() {
+  document.getElementById('step-upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ===========================================================
@@ -2422,8 +2429,8 @@ async function analyzeLayoutOnly() {
     showTab('visual'); // default to visual for layout-only
     showMsg(
       lang === 'zh'
-        ? '◈ 版面分析完成。顯示偵測到的格線與結構，不含文字辨識。啟用 Debug 可查看偵測細節。不消耗辨識次數。'
-        : '◈ Layout analysis done. Showing detected grid. No text recognition. Enable Debug to inspect. No credits used.',
+        ? '◈ 版面分析完成。已顯示偵測到的表格結構，不消耗辨識次數。'
+        : '◈ Layout analysis done. Table structure detected. No credits used.',
       'ok'
     );
     document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2653,17 +2660,26 @@ function classifyDocumentType(ocrResult, grid) {
  */
 function showModeGateCard(classification, ocrResult) {
   const gate = document.getElementById('mode-gate');
-  const isForm = classification.mode === 'structured-form';
+  const mode = classification.mode;
 
-  // V3.0.2: Product-friendly copy — no confidence%, no debug bullets
-  const titleZh = '📋 請選擇輸出方式';
-  const titleEn = '📋 Choose output format';
-  const bodyZh = isForm
-    ? '這張圖片包含欄位或表格結構。<br>若想保留格線與欄位，選 <b>Excel 模式</b>；若只需要文字內容，選<b>文件模式</b>。'
-    : '請根據你的需求選擇最適合的輸出格式：';
-  const bodyEn = isForm
-    ? 'This image contains fields or a table structure.<br>Choose <b>Excel Mode</b> to preserve the grid, or <b>Doc Mode</b> to extract the text.'
-    : 'Please choose the output format that best fits your needs:';
+  // V3.0.2: Recommendation based on document type — no confidence%, no debug bullets
+  const recExcel = (mode === 'simple-table');
+  const recDoc   = (mode === 'doc-like');
+
+  const titleZh = '請選擇輸出方式';
+  const titleEn = 'Choose output format';
+
+  let bodyZh, bodyEn;
+  if (recExcel) {
+    bodyZh = 'AI 已先整理出可轉換的草稿。建議選擇 <b>Excel 模式</b>，保留表格欄位結構，確認後再下載。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Excel Mode</b> to keep the table structure. Review before downloading.';
+  } else if (recDoc) {
+    bodyZh = 'AI 已先整理出可轉換的草稿。建議選擇<b>文件模式</b>，保留閱讀順序與完整文字內容。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Doc Mode</b> to preserve reading order and full text content.';
+  } else {
+    bodyZh = 'AI 已先整理出可轉換的草稿，請依照你的用途選擇輸出格式。';
+    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs.';
+  }
 
   gate.innerHTML = `
     <div class="mode-gate-card">
@@ -2677,12 +2693,12 @@ function showModeGateCard(classification, ocrResult) {
       </div>
       <div class="mode-gate-btns">
         <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
-          <span class="zh">📊 使用 Excel 模式</span>
-          <span class="en">📊 Excel Mode</span>
+          <span class="zh">📊 使用 Excel 模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Mode${recExcel ? ' ★ Recommended' : ''}</span>
         </button>
         <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
-          <span class="zh">📄 使用文件模式</span>
-          <span class="en">📄 Doc Mode</span>
+          <span class="zh">📄 使用文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
         </button>
         <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
           <span class="zh">🔤 純文字輸出</span>
@@ -2690,9 +2706,15 @@ function showModeGateCard(classification, ocrResult) {
         </button>
       </div>
     </div>`;
-  gate.style.display = 'block';
-  document.getElementById('step-results').style.display = 'block';
+
+  // Show results area + mode gate, reset tab state
+  document.getElementById('step-results').style.display  = 'block';
   document.getElementById('doc-mode-panel').style.display = 'none';
+  gate.style.display = 'block';
+  // Scroll Mode Gate into view
+  setTimeout(() => {
+    gate.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
 }
 
 /** Run Excel Mode (table reconstruction). Black cell detection allowed. */
@@ -2754,8 +2776,8 @@ function runDocMode(json) {
   document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 偵測為文件類型，已進入文件模式。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Detected as document. Doc Mode active. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
+    : '📄 Draft ready. Download text content now. For a table layout, click "Switch to Excel Mode".', 'ok');
 }
 
 function forceExcelModeFromGate() {
@@ -3043,12 +3065,14 @@ function computeRiskLevel(ocrResult, classification) {
   return 'low';
 }
 
-/** Update safety notice banner based on V3 riskLevel. */
+/** Update safety notice banner based on V3 riskLevel.
+ *  V3.0.2: only HIGH risk triggers Secure Mode panel.
+ *  medium risk (invoices, menus with totals) stays on the calm base notice. */
 function updateSafetyNotice(riskLevel) {
   const base     = document.getElementById('safety-notice-base');
   const highRisk = document.getElementById('safety-notice-high-risk');
   if (!base || !highRisk) return;
-  if (riskLevel === 'high' || riskLevel === 'medium') {
+  if (riskLevel === 'high') {
     base.style.display = 'none';
     highRisk.style.display = 'flex';
   } else {
@@ -3145,20 +3169,9 @@ function runExtractionPipeline(ocrResult, file, grid, classification) {
   updateSafetyNotice(normalizedDoc.riskLevel);
   updateArchMetaBar(normalizedDoc);
 
-  const mode = classification.mode;
-
-  if (mode === 'simple-table') {
-    // Excel path: legacy V2.5.1 grid pipeline (accurate for menus, price lists)
-    runExcelMode(ocrResult, file, grid);
-
-  } else if (mode === 'doc-like') {
-    // Document path: reading-order blocks, no table reconstruction
-    runDocModeV3(ocrResult, normalizedDoc);
-
-  } else {
-    // structured-form / uncertain → Mode Gate (user decides)
-    showModeGateCard(classification, ocrResult);
-  }
+  // V3.0.2: ALL document types go through Mode Gate with a recommendation.
+  // Never auto-route — user always confirms the output format for each new image.
+  showModeGateCard(classification, ocrResult);
 }
 
 /**
@@ -3189,8 +3202,8 @@ function runDocModeV3(ocrResult, nDoc) {
   document.getElementById('step-results').style.display    = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 已進入文件模式，顯示閱讀順序文字。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Document mode: reading-order text displayed. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
+    : '📄 Draft ready. You can download the text content now. For a table layout, click "Switch to Excel Mode".', 'ok');
 }
 
 /** V3 docDownloadJson — uses normalizedDoc when available. */
@@ -3375,19 +3388,10 @@ function updateDpMeta() {
   if (!el || !tableSchema) return;
   const nCols = tableSchema.columns.length;
   const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
-  const mode  = tableSchema.meta.reconstructionMode;
-  const gaps  = tableSchema.meta._debug?.rowGapWarnings;
-  const gapNote = gaps?.length
-    ? (lang==='zh' ? ` · ⚠ 偵測到 ${gaps.length} 個列間距，已插入空白列` : ` · ⚠ ${gaps.length} row gap(s) filled with placeholders`)
-    : '';
-  const modeNote = currentDocMode
-    ? ` · ${currentDocMode === 'excel' ? '📊 Excel Mode' : currentDocMode === 'doc' ? '📄 Doc Mode' : currentDocMode + ' Mode'}`
-    : '';
-  el.innerHTML = (lang === 'zh'
-    ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
-    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`)
-    + modeNote
-    + (gapNote ? `<span style="color:#B03922">${gapNote}</span>` : '');
+  // V3.0.2: user-friendly only — no mode/schema/debug info
+  el.innerHTML = lang === 'zh'
+    ? `AI 辨識草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
+    : `AI draft · ${nCols} cols · ${nRows} rows · editable`;
 }
 
 /* ===========================================================

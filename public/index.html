@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
+<!-- PhotoCheck Docs V3.0.2 RC5 STRICT BUILD -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PhotoCheck Docs V2 — Image-to-Excel Layout Reconstruction Engine</title>
+<title>PhotoCheck Docs V3 — Document Understanding + Secure Extraction</title>
 <meta name="description" content="上傳表格照片，AI 解析成可校對的 Table Schema，一鍵匯出 XLSX。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -448,7 +448,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 }
 .vis-body{padding:20px;overflow:auto;background:var(--warm)}
 #svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
-.debug-bar{padding:8px 20px;background:#f9f7f3;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.debug-bar{display:none!important} /* V3.0.2: hidden from users */
 .debug-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--mut);user-select:none}
 .debug-toggle-label input{cursor:pointer}
 
@@ -504,19 +504,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 /* ── V2.7 Doc Mode ─────────────────────────────── */
 .mode-gate-card{
   background:#fff;border:1.5px solid var(--gold-dim);border-radius:var(--r-l);
-  padding:24px 28px;margin-top:12px;text-align:center
+  padding:24px 28px;margin-top:12px
 }
 .mode-gate-title{font-weight:700;font-size:15px;margin-bottom:8px;color:var(--ink)}
-.mode-gate-reason{font-size:12.5px;color:var(--mut);margin-bottom:18px;line-height:1.6}
-.mode-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mode-gate-reason{font-size:13px;color:var(--mut);margin-bottom:18px;line-height:1.6}
+.mode-gate-btns{display:flex;flex-direction:column;gap:10px}
 .mode-gate-btn{
-  padding:9px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
-  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid
+  padding:13px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid;
+  text-align:left;width:100%
 }
 .mode-gate-btn.excel{background:var(--ink);color:#fff;border-color:var(--ink)}
 .mode-gate-btn.excel:hover{background:#333}
 .mode-gate-btn.doc{background:#fff;color:var(--ink);border-color:var(--line)}
 .mode-gate-btn.doc:hover{background:var(--cream);border-color:var(--gold-dim)}
+.mode-gate-btn-sub{font-size:11px;font-weight:400;opacity:.72;display:block;margin-top:3px}
 .doc-preview-panel{
   background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
   overflow:visible;display:flex;flex-direction:column
@@ -550,8 +552,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   background:#FFF0ED;border-top:1px solid #FFCCC7;
 }
 @media(max-width:600px){
-  .mode-gate-btns{flex-direction:column}
-  .mode-gate-btn{width:100%}
+  .exp-secondary{grid-template-columns:repeat(2,1fr)}
 }
 
 /* ── V2.8 Safety Notice ─────────────────────────────── */
@@ -568,14 +569,24 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   display:inline-block;background:#F6C96A;color:#5A3E00;
   font-weight:700;font-size:10px;border-radius:3px;padding:1px 6px;margin-bottom:4px
 }
-/* ── V2.8 Architecture meta bar ─────────────────────── */
+/* ── V2.8 Architecture meta bar — hidden from front-end users ── */
 .arch-meta-bar{
-  font-size:11px;color:var(--mut);background:#F5F2EC;
-  border-top:1px solid var(--line);padding:6px 20px;
-  display:flex;gap:16px;align-items:center;flex-wrap:wrap
+  display:none!important  /* internal data only, not shown to users */
 }
 .arch-meta-item{display:flex;align-items:center;gap:4px}
 .arch-meta-label{font-weight:600;color:var(--ink)}
+
+/* ── V3.0.2 Draft hint bar ──────────────────────────────────── */
+.draft-hint-bar{
+  width:100%;padding:9px 18px;
+  background:#FFF9F0;border-top:1px solid #F0DFC0;
+  border-radius:0 0 var(--r-m) var(--r-m);
+  font-size:12.5px;color:#7A5C1E;line-height:1.55
+}
+
+/* ── Utility container ──────────────────────────────────────── */
+.container{max-width:1120px;margin:0 auto;padding:0 56px}
+@media(max-width:960px){.container{padding:0 24px}}
 /* ── V2.8 Normalized blocks preview ─────────────────── */
 .blocks-preview{
   font-size:12.5px;line-height:1.7;padding:20px 24px;
@@ -590,6 +601,24 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
   color:var(--mut);margin-bottom:4px
 }
+
+/* =========================================================
+   RC5 STRICT PUBLIC UI GUARD
+   Keep internal diagnostics out of the user-facing interface.
+   ========================================================= */
+#arch-meta-bar,.arch-meta-bar,.debug-bar,#debug-stats,#debug-canvas,
+[data-debug],.debug-toggle-label{display:none!important}
+#step-mode-gate{display:none;margin-top:20px}
+#mode-gate-inner .mode-gate-card{box-shadow:0 14px 38px rgba(26,26,24,.08)}
+.pcd-result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.pcd-muted-action{background:#fff!important;color:var(--mut)!important;border:1px solid var(--line)!important}
+.pcd-muted-action:hover{border-color:var(--gold)!important;color:var(--ink)!important}
+@media(max-width:640px){
+  #rc5-qa-marker{display:none}
+  .res-tabs{flex-wrap:wrap}
+  .res-tab{min-width:33.333%}
+}
+
 </style>
 </head>
 <body>
@@ -603,7 +632,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <nav class="lnav">
   <div class="brand-wrap">
     <div class="brand-name">PhotoCheck Docs</div>
-    <div class="brand-sub">Image-to-Excel Engine · V2</div>
+    <div class="brand-sub">Image-to-Excel Engine · RC5 QA</div>
   </div>
   <div class="lnav-links">
     <button class="lnav-link" onclick="scrollById('features')">
@@ -632,7 +661,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <section class="hero">
   <div>
     <div class="hero-eyebrow">
-      PhotoCheck Docs · V2 Prototype
+      PhotoCheck Docs · V3
     </div>
     <h1 class="serif">
       <span class="zh">照片秒變<br><em>可編輯表格</em></span>
@@ -707,7 +736,100 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
     </div>
   </div>
 </section>
+<!-- ROADMAP -->
+<div id="roadmap" class="road-band">
+  <div class="road-inner">
+    <div class="center">
+      <div class="s-eyebrow" style="color:var(--gold)">Roadmap</div>
+      <h2 class="s-title serif center" style="color:#fff">
+        <span class="zh">版本規劃</span><span class="en">Version Roadmap</span>
+      </h2>
+    </div>
+    <div class="road-items">
+      <div class="road-item">
+        <div class="road-v">V1 · Released</div>
+        <div class="road-title"><span class="zh">OCR 草稿測試</span><span class="en">OCR Draft Testing</span></div>
+        <div class="road-desc">
+          <span class="zh">Google Document AI 辨識，CSV / JSON / XLSX / DOCX 匯出，人工校對流程。</span>
+          <span class="en">Google Document AI recognition, CSV / JSON / XLSX / DOCX export, manual review flow.</span>
+        </div>
+      </div>
+      <div class="road-item active">
+        <div class="road-v">V2 · Archived</div>
+        <div class="road-title"><span class="zh">Schema 引擎 + 版面重建</span><span class="en">Schema Engine + Layout Reconstruction</span></div>
+        <div class="road-desc">
+          <span class="zh">OCR 一次，轉 Local Table Schema，XLSX 主輸出，SVG 向量草稿，PDF Print Beta，雙語 UI。</span>
+          <span class="en">OCR once, local Table Schema, XLSX primary, SVG vector draft, PDF Print Beta, bilingual UI.</span>
+        </div>
+      </div>
+      <div class="road-item active">
+        <div class="road-v">V3 · Prototype ★ Current</div>
+        <div class="road-title"><span class="zh">文件理解 + 安全輸出分流</span><span class="en">Document Understanding + Secure Extraction</span></div>
+        <div class="road-desc">
+          <span class="zh">先判斷文件類型，再分流 Excel / 文件 / JSON。安全處理模式，不保存原始資料。</span>
+          <span class="en">Classify document type first, then route to Excel / Doc / JSON. Secure mode, no data retention.</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <button class="btn btn-gold" onclick="showApp()">
+        <span class="zh">立即試用 V2 Prototype →</span>
+        <span class="en">Try V2 Prototype Now →</span>
+      </button>
+    </div>
+  </div>
+</div>
 
+<!-- V3 Security Section -->
+<div style="background:#0C0E14;padding:60px 0 56px">
+  <div class="container">
+    <div class="s-eyebrow" style="color:var(--gold);text-align:center">Security</div>
+    <h2 style="text-align:center;font-family:var(--serif);font-size:clamp(26px,4vw,38px);color:#fff;margin:10px 0 14px">
+      <span class="zh">安全處理你的文件</span>
+      <span class="en">Your Documents, Handled Safely</span>
+    </h2>
+    <p style="text-align:center;max-width:600px;margin:0 auto 36px;color:#AAA;font-size:15px;line-height:1.7">
+      <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
+      <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
+    </p>
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;max-width:720px;margin:0 auto">
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">🖼️</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存原始圖片</span><span class="en">No image retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">上傳的圖片僅在瀏覽器本次 session 使用，不會傳送到第三方伺服器保存。</span>
+          <span class="en">Uploaded images are used only in your current browser session.</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">🔤</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存辨識文字</span><span class="en">No text retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">AI 辨識結果僅用於本次輸出，關閉頁面後不再保留。</span>
+          <span class="en">AI recognition results are used only for the current export. Cleared on close.</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;background:#161820;border:1px solid #2A2D3A;border-radius:12px;padding:22px 20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">📄</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:6px">
+          <span class="zh">不保存輸出檔案</span><span class="en">No output retention</span>
+        </div>
+        <div style="color:#888;font-size:12.5px;line-height:1.6">
+          <span class="zh">下載的 XLSX、CSV、SVG 僅在你的裝置上，系統不存副本。</span>
+          <span class="en">Downloaded XLSX, CSV, and SVG files remain only on your device.</span>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:28px;font-size:11.5px;color:#555">
+      <span class="zh">高風險文件（含財務、個資、合約）會自動顯示「安全處理模式」提示。</span>
+      <span class="en">High-risk documents (financial, PII, contracts) automatically trigger Secure Mode notice.</span>
+    </p>
+  </div>
+</div>
 <!-- FEATURES -->
 <section id="features" class="section">
   <div class="section-hd center" style="margin-bottom:0">
@@ -907,55 +1029,13 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   </div>
 </section>
 
-<!-- ROADMAP -->
-<div id="roadmap" class="road-band">
-  <div class="road-inner">
-    <div class="center">
-      <div class="s-eyebrow" style="color:var(--gold)">Roadmap</div>
-      <h2 class="s-title serif center" style="color:#fff">
-        <span class="zh">版本規劃</span><span class="en">Version Roadmap</span>
-      </h2>
-    </div>
-    <div class="road-items">
-      <div class="road-item">
-        <div class="road-v">V1 · Released</div>
-        <div class="road-title"><span class="zh">OCR 草稿測試</span><span class="en">OCR Draft Testing</span></div>
-        <div class="road-desc">
-          <span class="zh">Google Document AI 辨識，CSV / JSON / XLSX / DOCX 匯出，人工校對流程。</span>
-          <span class="en">Google Document AI recognition, CSV / JSON / XLSX / DOCX export, manual review flow.</span>
-        </div>
-      </div>
-      <div class="road-item active">
-        <div class="road-v">V2 · Prototype ★ Current</div>
-        <div class="road-title"><span class="zh">Schema 引擎 + 版面重建</span><span class="en">Schema Engine + Layout Reconstruction</span></div>
-        <div class="road-desc">
-          <span class="zh">OCR 一次，轉 Local Table Schema，XLSX 主輸出，SVG 向量草稿，PDF Print Beta，雙語 UI。</span>
-          <span class="en">OCR once, local Table Schema, XLSX primary, SVG vector draft, PDF Print Beta, bilingual UI.</span>
-        </div>
-      </div>
-      <div class="road-item">
-        <div class="road-v">V3 · Planned</div>
-        <div class="road-title"><span class="zh">帳號、訂閱、團隊協作</span><span class="en">Accounts, Subscriptions, Teams</span></div>
-        <div class="road-desc">
-          <span class="zh">線上核對、簽署、ERP 格式、Vision API / open-source OCR routing。</span>
-          <span class="en">Online review, signing, ERP formats, Vision API / open-source OCR routing.</span>
-        </div>
-      </div>
-    </div>
-    <div style="text-align:center;margin-top:40px">
-      <button class="btn btn-gold" onclick="showApp()">
-        <span class="zh">立即試用 V2 Prototype →</span>
-        <span class="en">Try V2 Prototype Now →</span>
-      </button>
-    </div>
-  </div>
-</div>
+
 
 <!-- FOOTER -->
 <footer class="lfoot">
   <div>
     <div class="brand-name" style="font-size:15px">PhotoCheck Docs</div>
-    <div class="lfoot-note" style="margin-top:4px">PhotoCheck Docs · V2 Prototype</div>
+    <div class="lfoot-note" style="margin-top:4px">PhotoCheck Docs · V3</div>
   </div>
   <div class="lfoot-note">
     <span class="zh">AI 產草稿，人類做判斷。未經確認，不自動視為正式資料。</span>
@@ -978,10 +1058,11 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       </button>
       <div>
         <div class="app-brand">PhotoCheck Docs</div>
-        <div class="app-sub-txt">V2 · AI Drafts. You Verify.</div>
+        <div class="app-sub-txt">V3.0.2 RC5 QA · AI Drafts. You Verify.</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
+      <span id="rc5-qa-marker" style="font-size:10px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:999px;padding:5px 10px">V3.0.2 RC5 QA</span>
       <div class="lang-pill" style="background:var(--cream);border-color:var(--line)">
         <button class="lang-btn" data-lang="zh" onclick="setLang('zh')" style="color:var(--ink)">中</button>
         <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="color:var(--ink)">EN</button>
@@ -1013,21 +1094,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </div>
       </div>
 
-      <!-- V2.8 Safety Notice — always visible -->
+      <!-- V3.0.2 Safety Notice — always visible, reassurance tone -->
       <div class="safety-notice" id="safety-notice-base">
-        <span class="safety-notice-icon">🔒</span>
+        <span class="safety-notice-icon">✅</span>
         <span>
-          <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
-          <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
+          <span class="zh">AI 辨識完成後，您可以先確認草稿內容，再決定是否下載。所有處理僅限本次使用，不會保存任何檔案。</span>
+          <span class="en">After AI recognition, you can review the draft before downloading. Everything is processed in this session only — nothing is saved.</span>
         </span>
       </div>
-      <!-- V2.8 High-Risk Safety Notice — shown for sensitive docs -->
+      <!-- V3.0.2 Secure Mode Notice — shown for sensitive docs, calm tone -->
       <div class="safety-notice high-risk" id="safety-notice-high-risk" style="display:none">
-        <span class="safety-notice-icon">⚠️</span>
+        <span class="safety-notice-icon">🔒</span>
         <div>
-          <span class="safety-icon-label">安全處理模式 / Secure Mode</span><br>
-          <span class="zh">偵測到此文件可能包含敏感資訊。本系統不會保存圖片、文字或輸出。如需進一步保護，請在私人網路環境下處理。</span>
-          <span class="en">This document may contain sensitive information. No image, text, or output is retained. For maximum security, process in a private network environment.</span>
+          <span class="safety-icon-label">安全模式已啟用 / Secure Mode</span><br>
+          <span class="zh">AI 草稿已就緒，請確認內容後再下載。本系統不保存圖片或辨識文字，關閉頁面後自動清除。</span>
+          <span class="en">Your AI draft is ready. Please review before downloading. No images or recognized text are stored — all data clears when you close the page.</span>
         </div>
       </div>
 
@@ -1056,8 +1137,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="demo-btn mode-layout" onclick="analyzeLayoutOnly()" id="layout-btn">
           <span>◈</span>
-          <span class="zh">只分析版面（不呼叫 AI）</span>
-          <span class="en">Analyze layout only (no AI)</span>
+          <span class="zh">只分析版面（進階測試）</span>
+          <span class="en">Analyze layout only (advanced test)</span>
         </button>
       </div>
       <div class="demo-note">
@@ -1076,36 +1157,19 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="en">Recognizing… please wait</span>
       </div>
       <div class="proc-note">
-        <span class="zh">正在呼叫 OCR API（僅此一次）。完成後所有操作在本機進行。</span>
-        <span class="en">Calling OCR API (one time only). All operations are local after this.</span>
+        <span class="zh">AI 正在分析文件，完成後可直接編輯草稿內容。</span>
+        <span class="en">AI is analyzing your document. You can edit the draft directly after this.</span>
       </div>
     </div>
 
-    <!-- Step: Results -->
+    <!-- Step: Mode Gate — independent product selection, NOT inside results -->
+    <div id="step-mode-gate" style="display:none;margin-top:20px">
+      <div id="mode-gate-inner"></div>
+    </div>
+
+        <!-- Step: Results -->
     <div id="step-results">
-      <!-- V2.8 Architecture Meta Bar -->
-      <div class="arch-meta-bar" id="arch-meta-bar" style="display:none">
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Provider:</span>
-          <span id="meta-provider">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Mode:</span>
-          <span id="meta-mode">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Risk:</span>
-          <span id="meta-risk">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Strategy:</span>
-          <span id="meta-strategy">—</span>
-        </div>
-        <div class="arch-meta-item" style="margin-left:auto;color:#aaa">
-          <span class="zh">🔒 不保存 · 本次處理後即刪除</span>
-          <span class="en">🔒 Not retained · Discarded after this session</span>
-        </div>
-      </div>
+      <!-- arch-meta-bar removed RC4: internal data only -->
       <div class="res-tabs">
         <button class="res-tab active" data-tab="data" onclick="showTab('data')">
           <span class="zh">📋 資料預覽</span><span class="en">📋 Data Preview</span>
@@ -1115,6 +1179,12 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="res-tab" data-tab="export" onclick="showTab('export')">
           <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="reshowModeGate()">
+          <span class="zh">↩ 重新選擇</span><span class="en">↩ Re-choose</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="scrollToUpload()">
+          <span class="zh">🔄 換圖</span><span class="en">🔄 New image</span>
         </button>
       </div>
 
@@ -1142,6 +1212,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <button class="tbar-btn" onclick="toolAddRow()"><span class="zh">新增列</span><span class="en">Add row</span></button>
             <button class="tbar-btn" onclick="toolEditColLabel()"><span class="zh">編輯欄標題</span><span class="en">Edit col label</span></button>
           </div>
+          <div class="draft-hint-bar">
+            <span class="zh">💡 這是 AI 轉換草稿，您可以先調整欄寬與內容，再下載成 Excel 檔。</span>
+            <span class="en">💡 This is an AI-generated conversion draft. You can review the content and adjust column widths before downloading the Excel file.</span>
+          </div>
         </div>
       </div>
 
@@ -1161,7 +1235,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           <div class="debug-bar">
             <label class="debug-toggle-label">
               <input type="checkbox" id="debug-chk" onchange="toggleDebugOverlay(this.checked)">
-              <span class="zh">Debug 線段偵測</span><span class="en">Debug Line Detection</span>
+              <span class="zh">線段檢查</span><span class="en">Line check</span>
             </label>
           </div>
           <canvas id="debug-canvas" style="display:none;max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;background:#fff"></canvas>
@@ -1206,8 +1280,6 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
         </div>
       </div>
-      <!-- V2.7 Mode Gate (uncertain classification) -->
-      <div id="mode-gate" style="display:none"></div>
 
       <!-- V2.7 Doc Mode Preview -->
       <div id="doc-mode-panel" style="display:none">
@@ -1221,14 +1293,17 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
           <div class="doc-preview-body" id="doc-preview-body"></div>
           <div class="doc-mode-warning">
-            <span class="zh">⚠ 文件模式：未套用表格重建。如需 Excel 匯出，請點擊「強制 Excel 模式」。</span>
-            <span class="en">⚠ Doc Mode: table reconstruction skipped. Click "Force Excel Mode" to override.</span>
+            <span class="zh">這是 AI 辨識草稿，適合用於閱讀與匯出文字內容。如需表格格式，可返回重新選擇輸出方式。</span>
+            <span class="en">This is an AI recognition draft, best for reading and exporting text content. To get a table layout, go back and re-choose the output format.</span>
           </div>
           <div class="doc-export-bar">
             <button class="doc-exp-btn" onclick="docDownloadTxt()">⬇ TXT</button>
             <button class="doc-exp-btn" onclick="docDownloadJson()">⬇ JSON</button>
-            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="border-color:var(--gold-dim);color:var(--gold)">
-              <span class="zh">強制 Excel 模式</span><span class="en">Force Excel Mode</span>
+            <button class="doc-exp-btn" onclick="reshowModeGate()" style="border-color:var(--gold-dim);color:var(--gold)">
+              <span class="zh">↩ 重新選擇輸出方式</span><span class="en">↩ Re-choose format</span>
+            </button>
+            <button class="doc-exp-btn" onclick="scrollToUpload()" style="color:var(--mut)">
+              <span class="zh">🔄 更換圖片</span><span class="en">🔄 Change image</span>
             </button>
           </div>
         </div>
@@ -1260,6 +1335,14 @@ function setLang(l) {
   });
   document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
   if (tableSchema) updateDpMeta();
+}
+/** RC4: Apply current language to all .zh/.en elements. */
+function applyLang(l) {
+  document.querySelectorAll('.zh').forEach(el => el.style.display = l === 'zh' ? '' : 'none');
+  document.querySelectorAll('.en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === l);
+  });
 }
 
 /* ===========================================================
@@ -1322,7 +1405,12 @@ function showApp() {
   document.getElementById('landing').style.display = 'none';
   document.getElementById('app-view').style.display = 'block';
   refreshCredits();
-  window.scrollTo({ top: 0 });
+  // V3.0.2: defer one frame so the browser finishes layout before scrolling.
+  // Fixes mobile case where scrollTo fired before app-view was rendered.
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.getElementById('step-upload')?.scrollIntoView({ block: 'start' });
+  });
 }
 function showLanding() {
   document.getElementById('landing').style.display = '';
@@ -1331,6 +1419,20 @@ function showLanding() {
 }
 function scrollById(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+/** V3.0.2: Scroll back to upload zone so user can change image. */
+function scrollToUpload() {
+  document.getElementById('step-upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+/** RC4: Re-show Mode Gate — hides results, shows independent mode gate step. */
+function reshowModeGate() {
+  if (!docModeOcrRaw || !lastClassification) {
+    showMsg(lang==='zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  // Hide results area completely; gate is now a separate step
+  document.getElementById('step-results').style.display = 'none';
+  showModeGateCard(lastClassification, docModeOcrRaw);
 }
 
 /* ===========================================================
@@ -1980,7 +2082,7 @@ function toggleDebugOverlay(on) {
   const nC=tableSchema?.columns?.length??'–', nR=tableSchema?.rows?.length??'–';
   stats.style.display='block';
   stats.innerHTML=[
-    `<b>Mode:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
+    `<b>Layout:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
     `<b>Raw H:</b> ${rawH.length} | <b>Raw V:</b> ${rawV.length}`,
     `<b>Filtered H:</b> ${filteredH.length} | <b>Filtered V:</b> ${filteredV.length}`,
     `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
@@ -2353,8 +2455,8 @@ async function analyzeLayoutOnly() {
     showTab('visual'); // default to visual for layout-only
     showMsg(
       lang === 'zh'
-        ? '◈ 版面分析完成。顯示偵測到的格線與結構，不含文字辨識。啟用 Debug 可查看偵測細節。不消耗辨識次數。'
-        : '◈ Layout analysis done. Showing detected grid. No text recognition. Enable Debug to inspect. No credits used.',
+        ? '◈ 版面分析完成。已顯示偵測到的表格結構，不消耗辨識次數。'
+        : '◈ Layout analysis done. Table structure detected. No credits used.',
       'ok'
     );
     document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2372,17 +2474,20 @@ async function analyzeLayoutOnly() {
 
 let currentDocMode = null;   // 'excel' | 'doc' | 'uncertain' | null
 let docModeOcrRaw  = null;   // raw OCR result stored for Doc Mode
+let lastClassification = null; // V3.0.2 RC3: stored for reshowModeGate()
 
-/** Full state reset — called on every new image upload. */
+/** Full state reset — V3: clears all state on every new image upload. */
 function resetAllPreviousState() {
   tableSchema        = null;
-  normalizedDoc      = null;   // V2.8: clear normalized doc
+  normalizedDoc      = null;   // V3: clear normalized document
+  currentDocMode     = null;
   currentDocMode     = null;
   docModeOcrRaw      = null;
+  lastClassification = null;   // V3.0.2 RC3: clear stored classification
   lastDetectedGrid   = null;
   // Hide results area and sub-panels
   document.getElementById('step-results').style.display    = 'none';
-  document.getElementById('mode-gate').style.display       = 'none';
+  document.getElementById('step-mode-gate').style.display    = 'none';
   document.getElementById('doc-mode-panel').style.display  = 'none';
   // Hide arch meta bar
   const bar = document.getElementById('arch-meta-bar');
@@ -2582,55 +2687,73 @@ function classifyDocumentType(ocrResult, grid) {
  * Also adds "OCR text only" button.
  */
 function showModeGateCard(classification, ocrResult) {
-  const gate = document.getElementById('mode-gate');
-  const conf = Math.round(classification.confidence * 100);
-  const isForm = classification.mode === 'structured-form';
+  const gate = document.getElementById('mode-gate-inner');
+  if (!gate) return;
+  const mode = classification ? classification.mode : 'uncertain';
 
-  // Bilingual gate copy
-  const titleZh = isForm
-    ? `📋 偵測到表單型文件（信心度 ${conf}%）`
-    : `❓ 文件類型不確定（信心度 ${conf}%）`;
-  const titleEn = isForm
-    ? `📋 Structured form detected (confidence ${conf}%)`
-    : `❓ Document type uncertain (confidence ${conf}%)`;
-  const bodyZh = isForm
-    ? '這張圖片可能是表單、維修紀錄或密集印刷表格。<br>若你想保留欄位格線，請選 <b>Excel 模式</b>；若你想保留文字內容，請選<b>文件模式</b>。'
-    : '系統無法確定這是表格還是文件。<br>請選擇最符合你需求的輸出模式。';
-  const bodyEn = isForm
-    ? 'This image may be a form, maintenance record, or dense printed table.<br>Choose <b>Excel Mode</b> to preserve grid structure, or <b>Doc Mode</b> to extract text.'
-    : "The system can't confidently determine whether this is a table or document.<br>Please choose the output mode that best fits your needs.";
+  const recExcel = (mode === 'simple-table');
+  const recDoc   = (mode === 'doc-like');
 
-  const reasonsHtml = classification.reasons.slice(0,5).map(r => `• ${r}`).join('<br>');
+  let bodyZh, bodyEn;
+  if (recExcel) {
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Excel 表格模式</b>，確認後再下載。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Excel Table Mode</b>. Review before downloading.';
+  } else if (recDoc) {
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Word / Doc 文件模式</b>。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Word / Doc Mode</b>.';
+  } else {
+    bodyZh = 'AI 已先整理出可轉換的草稿，請依照用途選擇輸出格式。';
+    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs.';
+  }
 
   gate.innerHTML = `
     <div class="mode-gate-card">
       <div class="mode-gate-title">
-        <span class="zh">${titleZh}</span>
-        <span class="en">${titleEn}</span>
+        <span class="zh">請選擇輸出方式</span>
+        <span class="en">Choose output format</span>
       </div>
       <div class="mode-gate-reason">
         <span class="zh">${bodyZh}</span>
         <span class="en">${bodyEn}</span>
-        <div style="margin-top:10px;font-size:11px;color:#aaa">${reasonsHtml}</div>
       </div>
       <div class="mode-gate-btns">
-        <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
-          <span class="zh">📊 使用 Excel 模式</span>
-          <span class="en">📊 Excel Mode</span>
+        <button class="mode-gate-btn excel" onclick="pickExcelMode()">
+          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
+            <span class="en">Menus, invoices, price lists, tables, checklists</span>
+          </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
-          <span class="zh">📄 使用文件模式</span>
-          <span class="en">📄 Doc Mode</span>
+        <button class="mode-gate-btn doc" onclick="pickDocMode()">
+          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
+            <span class="en">Paragraphs, contracts, letters, reports, documents</span>
+          </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
-          <span class="zh">🔤 只看 OCR 文字</span>
+        <button class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
+          <span class="zh">🔤 只擷取文字 OCR</span>
           <span class="en">🔤 OCR text only</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
+            <span class="en">Just want raw text without table or document formatting</span>
+          </span>
         </button>
       </div>
     </div>`;
-  gate.style.display = 'block';
-  document.getElementById('step-results').style.display = 'block';
-  document.getElementById('doc-mode-panel').style.display = 'none';
+
+  // Show mode-gate step, hide results step
+  document.getElementById('step-mode-gate').style.display  = 'block';
+  document.getElementById('step-results').style.display    = 'none';
+  document.getElementById('step-processing').style.display = 'none';
+  // Apply current language to newly injected elements
+  applyLang(lang);
+  // Scroll gate into view
+  setTimeout(() => {
+    document.getElementById('step-mode-gate').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
 }
 
 /** Run Excel Mode (table reconstruction). Black cell detection allowed. */
@@ -2650,13 +2773,13 @@ function runExcelMode(json, file, grid) {
       'err');
   }
 
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display    = 'none';
+  document.getElementById('tab-data').style.display          = '';
+  document.getElementById('tab-visual').style.display        = '';
+  document.getElementById('tab-export').style.display        = '';
+  document.getElementById('step-results').style.display      = 'block';
   showTab('data');
-  document.getElementById('tab-data').style.display = '';
-  document.getElementById('tab-visual').style.display = '';
-  document.getElementById('tab-export').style.display = '';
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
@@ -2683,8 +2806,8 @@ function runDocMode(json) {
   if (!text) text = lang==='zh' ? '（無法提取文字）' : '(No text extracted)';
 
   document.getElementById('doc-preview-body').textContent = text;
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display  = 'block';
   // Hide table-specific tabs
   document.getElementById('tab-data').style.display   = 'none';
   document.getElementById('tab-visual').style.display = 'none';
@@ -2692,41 +2815,11 @@ function runDocMode(json) {
   document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 偵測為文件類型，已進入文件模式。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Detected as document. Doc Mode active. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「重新選擇輸出方式」。'
+    : '📄 Draft ready. To get table output, go back and re-choose the output format.', 'ok');
 }
 
-function forceExcelModeFromGate() {
-  document.getElementById('mode-gate').style.display = 'none';
-  if (docModeOcrRaw) {
-    // Update normalizedDoc strategy if it exists
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'excel'; updateArchMetaBar(normalizedDoc); }
-    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-  }
-}
-
-function forceDocModeFromGate() {
-  if (docModeOcrRaw) {
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'doc'; updateArchMetaBar(normalizedDoc); }
-    runDocModeV28(docModeOcrRaw, normalizedDoc);
-  }
-}
-
-/** V2.7.1: Show raw OCR text without any reconstruction — ultra-safe fallback. */
-function forceOcrTextMode() {
-  if (docModeOcrRaw) {
-    runDocMode(docModeOcrRaw);
-    // Override the mode label
-    currentDocMode = 'doc';
-    showMsg(lang==='zh'
-      ? '🔤 已切換到 OCR 純文字模式。'
-      : '🔤 Switched to OCR text-only mode.', 'ok');
-  }
-}
-
-function docForceExcelMode() {
-  if (docModeOcrRaw) runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-}
+/* V2.7 gate functions removed in RC4 — see pickExcelMode/pickDocMode/pickOcrMode below */
 
 function docDownloadTxt() {
   const body = document.getElementById('doc-preview-body');
@@ -2743,119 +2836,141 @@ function docDownloadJson() {
 }
 
 /* ===========================================================
-   V2.8 DOCUMENT UNDERSTANDING + SECURE EXTRACTION ARCHITECTURE
-   Pipeline: Upload → Safety → Understanding → Strategy Router → Output Builder
+   V3 DOCUMENT UNDERSTANDING + SECURE EXTRACTION ARCHITECTURE
+   ─────────────────────────────────────────────────────────────
+   Pipeline:
+     Upload → resetAllPreviousState
+           → Safety Notice (always visible)
+           → [startOCR] → detectGridFromCanvas → classifyDocumentType
+           → runExtractionPipeline
+                 Layer 1: Document Understanding (googleDocumentAIAdapter)
+                 Layer 2: Risk Assessment (computeRiskLevel)
+                 Layer 3: Extraction Strategy Router
+                       simple-table    → runExcelMode (legacy grid)
+                       structured-form → showModeGateCard
+                       document        → runDocModeV3
+                       uncertain       → showModeGateCard
    =========================================================== */
 
-/* ── 1. Normalized Document JSON Schema ─────────────────────────────────────
- *
- *  normalizedDocumentJSON = {
- *    version: "v2.8",
- *    documentType: "simple-table" | "structured-form" | "document" | "unknown",
- *    riskLevel: "standard" | "elevated" | "high",
- *    extractionStrategy: "excel" | "form" | "doc" | "unknown",
- *    confidence: 0–1,
- *    providerMeta: {
- *      name: "google-document-ai" | "legacy-canvas-grid" | "mock",
- *      processingTime: ms,
- *      ocrEngine: string,
- *    },
- *    blocks: [
- *      {
- *        id: string,
- *        blockType: "table" | "kv-pair" | "paragraph" | "heading" | "list" | "unknown",
- *        confidence: 0–1,
- *        bbox: { x, y, w, h } | null,
- *        content: {
- *          text?: string,          // paragraph / heading / list
- *          key?: string,           // kv-pair
- *          value?: string,         // kv-pair
- *          rows?: [{cells:[]}],    // table
- *        },
- *        readingOrder: number,
- *      }
- *    ],
- *    tables: [],    // references to blocks where blockType === "table"
- *    forms: [],     // references to blocks where blockType === "kv-pair"
- *    paragraphs: [], // references to blocks where blockType === "paragraph"|"heading"
- *    meta: {
- *      createdAt: ISO string,
- *      processingNotes: [],
- *      _debug: {},
- *      _noRetain: true,           // flag: never persist this object
- *    }
- *  }
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   LAYER 1 — NORMALIZED DOCUMENT JSON V3 SCHEMA
+   ══════════════════════════════════════════════════════════════
+   normalizedDocumentJSON = {
+     version: "v3",
+     documentType: "simple-table" | "structured-form" | "document" | "uncertain",
+     riskLevel:    "low" | "medium" | "high",
+     extractionStrategy: "excel" | "form" | "doc" | "ask-user",
+     confidence:   0–1,
+     providerMeta: {
+       name: "google-document-ai" | "azure-document-intelligence"
+             | "aws-textract" | "paddleocr" | "legacy-canvas-grid" | "mock",
+       processingTime: ms,
+       ocrEngine: string,
+       replaceable: true,   // adapter interface — can be swapped
+     },
+     blocks: [
+       {
+         id:           string,
+         blockType:    "table" | "kv-pair" | "paragraph" | "heading" | "list" | "unknown",
+         confidence:   0–1,
+         bbox:         { x, y, w, h } | null,
+         readingOrder: integer,
+         content: {
+           text?:  string,          // paragraph / heading / list
+           key?:   string,          // kv-pair key
+           value?: string,          // kv-pair value
+           rows?:  [{ cells: [{ text, bbox? }] }],  // table rows
+         }
+       }
+     ],
+     tables:     [],  // refs to blocks where blockType === "table"
+     forms:      [],  // refs to blocks where blockType === "kv-pair"
+     paragraphs: [],  // refs to blocks where blockType === "paragraph"|"heading"|"list"
+     meta: {
+       createdAt:        ISO string,
+       processingNotes:  [],
+       _debug:           {},
+       _noRetain:        true,  // NEVER persist — discard after session
+     }
+   }
+   ════════════════════════════════════════════════════════════ */
 
-let normalizedDoc = null;  // current V2.8 normalized document
+let normalizedDoc = null;  // current V3 normalized document
 
-/** Create an empty normalizedDocumentJSON shell. */
+/** Create an empty normalizedDocumentJSON shell (V3). */
 function createNormalizedDoc(opts = {}) {
   return {
-    version: 'v2.8',
-    documentType: opts.documentType || 'unknown',
-    riskLevel: opts.riskLevel || 'standard',
-    extractionStrategy: opts.extractionStrategy || 'unknown',
-    confidence: opts.confidence || 0,
+    version: 'v3',
+    documentType:       opts.documentType       || 'uncertain',
+    riskLevel:          opts.riskLevel          || 'low',
+    extractionStrategy: opts.extractionStrategy || 'ask-user',
+    confidence:         opts.confidence         || 0,
     providerMeta: {
-      name: opts.provider || 'legacy-canvas-grid',
+      name:           opts.provider   || 'legacy-canvas-grid',
       processingTime: 0,
-      ocrEngine: opts.ocrEngine || 'google-document-ai',
+      ocrEngine:      opts.ocrEngine  || 'google-document-ai',
+      replaceable:    true,
     },
     blocks: [],
     tables: [],
-    forms: [],
+    forms:  [],
     paragraphs: [],
     meta: {
-      createdAt: new Date().toISOString(),
+      createdAt:       new Date().toISOString(),
       processingNotes: [],
-      _debug: {},
-      _noRetain: true,
+      _debug:          {},
+      _noRetain:       true,
     }
   };
 }
 
-/* ── 2. Provider Adapter Interface ──────────────────────────────────────────
- *  extractDocument(ocrResult, imageFile, grid, classification) → normalizedDocumentJSON
- *  This is the single abstraction point. Future providers (Azure, AWS, local)
- *  implement the same interface and return normalizedDocumentJSON.
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   LAYER 1 — PROVIDER ADAPTER INTERFACE
+   providerAdapter(ocrResult, file, grid, classification) → normalizedDocumentJSON
+   All providers implement this interface. Drop-in replaceable.
+   Supported: google-document-ai (active), azure-document-intelligence (planned),
+              aws-textract (planned), paddleocr (planned), mock
+   ════════════════════════════════════════════════════════════ */
 
 /**
- * Primary adapter: Google Document AI → normalizedDocumentJSON.
- * In V2.8 this bridges from the existing OCR JSON + canvas grid.
+ * Google Document AI Adapter (active provider — V3).
+ * Bridges existing OCR JSON + canvas grid → normalizedDocumentJSON v3.
+ * Future: replace body with real Document AI structured response parsing.
  */
 function googleDocumentAIAdapter(ocrResult, file, grid, classification) {
   const t0 = Date.now();
+  const docType  = mapClassToDocType(classification.mode);
+  const strategy = mapClassToStrategy(classification.mode);
+  const risk     = computeRiskLevel(ocrResult, classification);
+
   const doc = createNormalizedDoc({
-    documentType: mapClassToDocType(classification.mode),
-    riskLevel:    computeRiskLevel(ocrResult, classification),
-    extractionStrategy: mapClassToStrategy(classification.mode),
-    confidence: classification.confidence,
-    provider: 'google-document-ai',
-    ocrEngine: ocrResult?.ocrEngine || 'google-document-ai',
+    documentType:       docType,
+    riskLevel:          risk,
+    extractionStrategy: strategy,
+    confidence:         classification.confidence,
+    provider:           'google-document-ai',
+    ocrEngine:          ocrResult?.ocrEngine || 'google-document-ai',
   });
 
   const words = extractOCRWords(ocrResult);
-  // Group OCR words into blocks by reading order (sr → row, sc → col)
+  // Group OCR words by reading order (sr = row, sc = col)
   const byRow = {};
   words.forEach(w => {
     const r = w.sr ?? 0;
     if (!byRow[r]) byRow[r] = [];
     byRow[r].push(w);
   });
-
   const sortedRows = Object.keys(byRow).map(Number).sort((a,b)=>a-b);
-  let readingOrder = 0;
+  let order = 0;
 
-  if (classification.mode === 'simple-table') {
-    // Build a single table block from the OCR grid
+  if (docType === 'simple-table') {
+    // Single table block — legacy grid handles reconstruction
     const tableBlock = {
       id: 'block_table_0', blockType: 'table',
       confidence: classification.confidence,
       bbox: grid ? { x: grid.outerBorder?.left??0, y: grid.outerBorder?.top??0,
                      w: grid.w, h: grid.h } : null,
-      readingOrder: readingOrder++,
+      readingOrder: order++,
       content: {
         rows: sortedRows.map(r => ({
           cells: byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0))
@@ -2865,104 +2980,108 @@ function googleDocumentAIAdapter(ocrResult, file, grid, classification) {
     };
     doc.blocks.push(tableBlock);
     doc.tables.push(tableBlock);
-  } else if (classification.mode === 'structured-form') {
-    // Extract key-value pairs and table fragments
+
+  } else if (docType === 'structured-form') {
+    // Key-value extraction + table fragments
     sortedRows.forEach(r => {
-      const rowWords = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0));
-      if (rowWords.length === 2) {
-        // Likely a kv-pair
-        const kvBlock = {
-          id: `block_kv_${r}`, blockType: 'kv-pair',
-          confidence: 0.7, bbox: null, readingOrder: readingOrder++,
-          content: { key: rowWords[0].text, value: rowWords[1].text }
-        };
-        doc.blocks.push(kvBlock);
-        doc.forms.push(kvBlock);
+      const rowW = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0));
+      if (rowW.length === 2) {
+        const kv = { id:`block_kv_${r}`, blockType:'kv-pair',
+                     confidence:0.72, bbox:null, readingOrder:order++,
+                     content:{ key:rowW[0].text, value:rowW[1].text } };
+        doc.blocks.push(kv); doc.forms.push(kv);
       } else {
-        // Row with multiple cells → mini table row or paragraph
-        const text = rowWords.map(w=>w.text).join(' ');
-        const paraBlock = {
-          id: `block_para_${r}`, blockType: rowWords.length > 2 ? 'list' : 'paragraph',
-          confidence: 0.75, bbox: null, readingOrder: readingOrder++,
-          content: { text }
-        };
-        doc.blocks.push(paraBlock);
-        doc.paragraphs.push(paraBlock);
+        const text = rowW.map(w=>w.text).join(' ');
+        const para = { id:`block_row_${r}`, blockType: rowW.length>2?'list':'paragraph',
+                       confidence:0.75, bbox:null, readingOrder:order++,
+                       content:{ text } };
+        doc.blocks.push(para); doc.paragraphs.push(para);
       }
     });
+
   } else {
-    // Document mode: reading-order paragraphs
+    // Document / uncertain — reading-order paragraphs
     sortedRows.forEach(r => {
       const text = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join(' ');
       if (!text.trim()) return;
-      const isHeading = text.length < 60 && r === sortedRows[0];
-      const block = {
-        id: `block_${r}`, blockType: isHeading ? 'heading' : 'paragraph',
-        confidence: 0.8, bbox: null, readingOrder: readingOrder++,
-        content: { text }
-      };
-      doc.blocks.push(block);
-      doc.paragraphs.push(block);
+      const isHdr = text.length < 60 && r === sortedRows[0];
+      const blk = { id:`block_${r}`, blockType: isHdr?'heading':'paragraph',
+                    confidence:0.8, bbox:null, readingOrder:order++,
+                    content:{ text } };
+      doc.blocks.push(blk); doc.paragraphs.push(blk);
     });
   }
 
   doc.providerMeta.processingTime = Date.now() - t0;
-  doc.meta._debug = { classification: classification.debug, words: words.length,
-                      blocks: doc.blocks.length, provider: 'google-document-ai' };
+  doc.meta._debug = {
+    classification: classification.debug, words: words.length,
+    blocks: doc.blocks.length, provider: 'google-document-ai'
+  };
+  doc.meta.processingNotes.push(`Processed by google-document-ai adapter in ${doc.providerMeta.processingTime}ms`);
   return doc;
 }
 
-/** Map V2.7.1 classifier mode → normalizedDocumentJSON documentType. */
+/** Map V3 classifier mode → normalizedDocumentJSON documentType. */
 function mapClassToDocType(mode) {
-  return { 'simple-table': 'simple-table', 'structured-form': 'structured-form',
-           'doc-like': 'document', 'uncertain': 'unknown' }[mode] || 'unknown';
+  return { 'simple-table':'simple-table', 'structured-form':'structured-form',
+           'doc-like':'document', 'uncertain':'uncertain' }[mode] || 'uncertain';
 }
 
 /** Map classifier mode → extraction strategy. */
 function mapClassToStrategy(mode) {
-  return { 'simple-table': 'excel', 'structured-form': 'form',
-           'doc-like': 'doc', 'uncertain': 'unknown' }[mode] || 'unknown';
+  return { 'simple-table':'excel', 'structured-form':'ask-user',
+           'doc-like':'doc', 'uncertain':'ask-user' }[mode] || 'ask-user';
 }
 
-/* ── 3. Risk Level Assessment ────────────────────────────────────────────────
- *  Elevated/High risk: documents with financial figures, personal info signals,
- *  official headers, or dense structured data.
- *  This is purely UX guidance — no data is sent anywhere differently.
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   LAYER 2 — RISK ASSESSMENT
+   riskLevel: "low" | "medium" | "high"
+   ════════════════════════════════════════════════════════════ */
 
+/**
+ * Assess document risk level from OCR text signals.
+ * Drives safety notice UX — no data is routed differently.
+ * Audit trail: only records risk level, not the source text.
+ */
 function computeRiskLevel(ocrResult, classification) {
-  const words = extractOCRWords(ocrResult);
-  const allText = words.map(w => w.text||'').join(' ').toLowerCase();
+  const words   = extractOCRWords(ocrResult);
+  const allText = words.map(w=>w.text||'').join(' ');
 
-  // High-risk signals: financial, identity, medical, legal keywords
-  const highRiskPatterns = [
-    /合約|contract|agreement/i, /身分證|passport|id\s?number/i,
-    /診斷|medical|病歷|prescription/i, /股東|shareholder|board/i,
-    /\$[\d,]+|nt\$[\d,]+|usd\s?[\d,]+/i, /機密|confidential|secret/i,
-    /法院|court|訴訟|lawsuit/i, /保險|insurance|理賠/i
+  const HIGH = [
+    /合約|contract|agreement/i,
+    /身分證|national\s?id|passport/i,
+    /診斷|medical\s?record|病歷/i,
+    /股東|shareholder|board\s?meeting/i,
+    /[\$￥€£]\s?[\d,]+/,
+    /nt\$[\d,]+|usd\s?[\d,]+/i,
+    /機密|confidential|classified/i,
+    /法院|court|訴訟|lawsuit/i,
+    /保險|insurance/i,
   ];
-  const elevatedPatterns = [
-    /電話|phone|tel:/i, /地址|address|addr/i,
-    /日期|date:|\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/i,
-    /總計|total|合計|小計|subtotal/i, /發票|invoice|receipt/i
+  const MEDIUM = [
+    /電話|phone|tel[\s:]/i,
+    /地址|address/i,
+    /\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/,
+    /總計|合計|subtotal|total[\s:]/i,
+    /發票|invoice|receipt|收據/i,
+    /報價|quotation|quote/i,
   ];
 
-  const isHigh     = highRiskPatterns.some(r => r.test(allText));
-  const isElevated = elevatedPatterns.some(r => r.test(allText));
-  // structured-form documents are elevated by nature
-  const isFormElevated = classification.mode === 'structured-form';
-
-  if (isHigh) return 'high';
-  if (isElevated || isFormElevated) return 'elevated';
-  return 'standard';
+  if (HIGH.some(r => r.test(allText)))   return 'high';
+  if (MEDIUM.some(r => r.test(allText))) return 'medium';
+  // Structured forms with data are at least medium
+  if (classification.mode === 'structured-form') return 'medium';
+  return 'low';
 }
 
-/** Show/hide high-risk safety notice based on riskLevel. */
+/** Update safety notice banner based on V3 riskLevel.
+ *  V3.0.2: only HIGH risk triggers Secure Mode panel.
+ *  medium risk (invoices, menus with totals) stays on the calm base notice. */
 function updateSafetyNotice(riskLevel) {
-  const base = document.getElementById('safety-notice-base');
+  const base     = document.getElementById('safety-notice-base');
   const highRisk = document.getElementById('safety-notice-high-risk');
   if (!base || !highRisk) return;
-  if (riskLevel === 'high' || riskLevel === 'elevated') {
+  if (riskLevel === 'high') {
     base.style.display = 'none';
     highRisk.style.display = 'flex';
   } else {
@@ -2971,141 +3090,121 @@ function updateSafetyNotice(riskLevel) {
   }
 }
 
-/** Update the arch-meta-bar with V2.8 metadata. */
-function updateArchMetaBar(normalizedDoc) {
-  const bar = document.getElementById('arch-meta-bar');
-  if (bar) bar.style.display = 'flex';
-  const provEl  = document.getElementById('meta-provider');
-  const modeEl  = document.getElementById('meta-mode');
-  const riskEl  = document.getElementById('meta-risk');
-  const stratEl = document.getElementById('meta-strategy');
-  if (provEl)  provEl.textContent  = normalizedDoc.providerMeta.name;
-  if (modeEl)  modeEl.textContent  = normalizedDoc.documentType;
-  if (riskEl) {
-    const r = normalizedDoc.riskLevel;
-    riskEl.textContent = r;
-    riskEl.style.color = r==='high'?'#B03922':r==='elevated'?'#7A5C1E':'inherit';
-  }
-  if (stratEl) stratEl.textContent = normalizedDoc.extractionStrategy;
+/** updateArchMetaBar — RC4: arch-meta-bar removed from HTML.
+ *  This function is a no-op kept for call-site compatibility. */
+function updateArchMetaBar(nDoc) {
+  // Internal data only — no DOM update, arch-meta-bar removed from HTML in RC4.
 }
 
-/* ── 4. Output Builders from normalizedDocumentJSON ─────────────────────────
- *  V2.8 output builders read from normalizedDoc.blocks, not directly from
- *  canvas tableSchema. For simple-table, they fall back to V2.5.1 legacy
- *  XLSX/SVG/CSV builders via tableSchema (which is still populated).
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   LAYER 3 — OUTPUT BUILDERS (from normalizedDocumentJSON)
+   ════════════════════════════════════════════════════════════ */
 
-/** Build plain-text representation from normalizedDoc (for Doc Mode + TXT export). */
+/**
+ * Build plain-text / reading-order output from normalizedDoc.
+ * Used by Doc Mode and TXT export.
+ */
 function buildTxtFromNormalizedDoc(doc) {
   return doc.blocks
-    .sort((a,b)=>a.readingOrder-b.readingOrder)
+    .sort((a,b) => a.readingOrder - b.readingOrder)
     .map(block => {
-      if (block.blockType === 'heading')   return '## ' + block.content.text;
-      if (block.blockType === 'paragraph') return block.content.text;
-      if (block.blockType === 'list')      return '• ' + block.content.text;
-      if (block.blockType === 'kv-pair')   return `${block.content.key}: ${block.content.value}`;
-      if (block.blockType === 'table') {
-        const rows = block.content.rows||[];
-        return rows.map(row => row.cells.map(c=>c.text).join('\t')).join('\n');
+      switch (block.blockType) {
+        case 'heading':   return '## ' + (block.content.text||'');
+        case 'paragraph': return block.content.text||'';
+        case 'list':      return '• '  + (block.content.text||'');
+        case 'kv-pair':   return `${block.content.key||''}: ${block.content.value||''}`;
+        case 'table': {
+          const rows = block.content.rows||[];
+          return rows.map(row => row.cells.map(c=>c.text).join('\t')).join('\n');
+        }
+        default: return block.content.text||'';
       }
-      return block.content.text||'';
     })
-    .filter(t=>t.trim())
+    .filter(t => t.trim())
     .join('\n\n');
 }
 
-/** Build structured JSON export from normalizedDoc. */
+/**
+ * Build structured JSON export from normalizedDoc.
+ * Per §audit: strips _debug and internal fields.
+ * Schema version "v3" — compatible with future ERP / system integration.
+ */
 function buildJsonFromNormalizedDoc(doc) {
-  // Strip internal debug/audit fields before export per §6 audit trail rules
-  const exportDoc = {
-    version: doc.version,
-    documentType: doc.documentType,
-    extractionStrategy: doc.extractionStrategy,
-    confidence: doc.confidence,
-    provider: doc.providerMeta.name,
-    processingTime: doc.providerMeta.processingTime,
+  return JSON.stringify({
+    _schema:             'photocheck-docs-normalized-v3',
+    version:             doc.version,
+    documentType:        doc.documentType,
+    riskLevel:           doc.riskLevel,
+    extractionStrategy:  doc.extractionStrategy,
+    confidence:          doc.confidence,
+    provider:            doc.providerMeta.name,
+    processingTime:      doc.providerMeta.processingTime,
     blocks: doc.blocks.map(b => ({
-      id: b.id, blockType: b.blockType,
-      confidence: b.confidence,
+      id:           b.id,
+      blockType:    b.blockType,
+      confidence:   b.confidence,
       readingOrder: b.readingOrder,
-      content: b.content
+      content:      b.content,
     })),
-    exportedAt: new Date().toISOString(),
-    _noRetain: true,
-  };
-  return JSON.stringify(exportDoc, null, 2);
+    exportedAt:    new Date().toISOString(),
+    _noRetain:     true,
+  }, null, 2);
 }
 
-/* ── 5. V2.8 Extraction Strategy Runners ────────────────────────────────────
- *  Wrap the V2.7 runExcelMode / runDocMode with normalizedDoc awareness.
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   LAYER 3 — EXTRACTION STRATEGY RUNNERS
+   ════════════════════════════════════════════════════════════ */
 
 /**
- * V2.8 main extraction entry point.
+ * V3 Extraction Pipeline — main entry point.
  * Called from startOCR after classification.
  */
 function runExtractionPipeline(ocrResult, file, grid, classification) {
-  // Build normalizedDocumentJSON via provider adapter
+  // Adapter layer → normalizedDocumentJSON
   normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
 
-  // Update safety notice UX
+  // Safety UX
   updateSafetyNotice(normalizedDoc.riskLevel);
   updateArchMetaBar(normalizedDoc);
 
-  const strategy = normalizedDoc.extractionStrategy;
-  const mode     = classification.mode;
-
-  if (mode === 'simple-table') {
-    // Legacy pipeline: build tableSchema from OCR, run Excel Mode
-    runExcelMode(ocrResult, file, grid);
-    return;
-  }
-  if (mode === 'doc-like') {
-    runDocModeV28(ocrResult, normalizedDoc);
-    return;
-  }
-  // structured-form or uncertain → Mode Gate with normalizedDoc context
+  // V3.0.2: ALL document types go through Mode Gate with a recommendation.
+  // Never auto-route — user always confirms the output format for each new image.
   showModeGateCard(classification, ocrResult);
 }
 
 /**
- * V2.8 Doc Mode runner — uses normalizedDoc blocks for richer preview.
- * Falls back gracefully to raw OCR text if blocks are empty.
+ * V3 Doc Mode — renders normalizedDoc blocks in reading order.
+ * Black cell detection is structurally skipped (currentDocMode guard).
  */
-function runDocModeV28(ocrResult, nDoc) {
+function runDocModeV3(ocrResult, nDoc) {
   currentDocMode = 'doc';
   docModeOcrRaw  = ocrResult;
 
-  // Build reading-order text from normalized blocks
-  const blockText = nDoc && nDoc.blocks.length
+  const displayText = (nDoc && nDoc.blocks.length)
     ? buildTxtFromNormalizedDoc(nDoc)
-    : null;
-
-  // Fallback: raw OCR words
-  let displayText = blockText;
-  if (!displayText) {
-    const words = extractOCRWords(ocrResult);
-    const byRow = {};
-    words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
-    displayText = Object.keys(byRow).sort((a,b)=>a-b)
-      .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
-      .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
-  }
+    : (() => {
+        const words = extractOCRWords(ocrResult);
+        const byRow = {};
+        words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
+        return Object.keys(byRow).sort((a,b)=>a-b)
+          .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+          .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
+      })();
 
   document.getElementById('doc-preview-body').textContent = displayText;
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
-  document.getElementById('tab-data').style.display   = 'none';
-  document.getElementById('tab-visual').style.display = 'none';
-  document.getElementById('tab-export').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display   = 'block';
+  document.getElementById('tab-data').style.display         = 'none';
+  document.getElementById('tab-visual').style.display       = 'none';
+  document.getElementById('tab-export').style.display       = 'none';
+  document.getElementById('step-results').style.display     = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 偵測為文件類型，已進入文件模式。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Detected as document. Doc Mode active. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
+    : '📄 Draft ready. You can download the text content now. For a table layout, click "Switch to Excel Mode".', 'ok');
 }
 
-/* Update docDownloadJson to use normalizedDoc when available */
+/** V3 docDownloadJson — uses normalizedDoc when available. */
 function docDownloadJson() {
   if (!normalizedDoc && !docModeOcrRaw) {
     showMsg(lang==='zh'?'無資料。':'No data.','err'); return;
@@ -3113,12 +3212,36 @@ function docDownloadJson() {
   const data = normalizedDoc
     ? buildJsonFromNormalizedDoc(normalizedDoc)
     : JSON.stringify(docModeOcrRaw, null, 2);
-  saveBlob('photocheck-v28-doc.json', new Blob([data], {type:'application/json'}));
+  saveBlob('photocheck-v3-doc.json', new Blob([data], {type:'application/json'}));
   showMsg(lang==='zh'?'✓ JSON 已下載。':'✓ JSON downloaded.','ok');
 }
 
-/* ── 6. V2.8 Reset — extend V2.7 to also clear normalizedDoc ───────────────── */
-// Patched inline below in resetAllPreviousState
+/** RC4: Mode Gate selection handlers — clean product names, no "force" language. */
+function pickExcelMode() {
+  if (!docModeOcrRaw) return;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+}
+
+function pickDocMode() {
+  if (!docModeOcrRaw) return;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runDocModeV3(docModeOcrRaw, normalizedDoc);
+}
+
+function pickOcrMode() {
+  if (!docModeOcrRaw) return;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runDocMode(docModeOcrRaw);
+}
+
+/** Aliases kept for any legacy call sites still using "force" names. */
+function forceExcelModeFromGate() { pickExcelMode(); }
+function forceDocModeFromGate()   { pickDocMode(); }
+function forceOcrTextMode()        { pickOcrMode(); }
+function docForceExcelMode()       { pickExcelMode(); }
+
+
 
 
 async function startOCR() {
@@ -3181,17 +3304,18 @@ async function startOCR() {
 
     const classification = classifyDocumentType(json, grid);
     docModeOcrRaw = json; // store for override buttons
+    lastClassification = classification; // V3.0.2 RC3: store for reshowModeGate()
 
     // Add to debug meta
     if (!json._v27debug) json._v27debug = {};
     json._v27debug.documentType = classification;
 
-    // V2.3: Only charge credit for new images
+    // V3: Only charge credit for successful new-image OCR (same as V2.3 rule)
     consumeCreditForOCR(imageFile);
 
     document.getElementById('step-processing').style.display = 'none';
 
-    // V2.8: Route through extraction pipeline (classifier + provider adapter + output builder)
+    // V3: Route through extraction pipeline (Layer1: Understanding → Layer2: Risk → Layer3: Strategy)
     runExtractionPipeline(json, imageFile, grid, classification);
 
   } catch (err) {
@@ -3266,19 +3390,10 @@ function updateDpMeta() {
   if (!el || !tableSchema) return;
   const nCols = tableSchema.columns.length;
   const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
-  const mode  = tableSchema.meta.reconstructionMode;
-  const gaps  = tableSchema.meta._debug?.rowGapWarnings;
-  const gapNote = gaps?.length
-    ? (lang==='zh' ? ` · ⚠ 偵測到 ${gaps.length} 個列間距，已插入空白列` : ` · ⚠ ${gaps.length} row gap(s) filled with placeholders`)
-    : '';
-  const modeNote = currentDocMode
-    ? ` · ${currentDocMode === 'excel' ? '📊 Excel Mode' : currentDocMode === 'doc' ? '📄 Doc Mode' : currentDocMode}`
-    : '';
-  el.innerHTML = (lang === 'zh'
-    ? `${nCols} 欄 · ${nRows} 列 · 解析模式: ${mode} · Schema v2`
-    : `${nCols} cols · ${nRows} rows · mode: ${mode} · Schema v2`)
-    + modeNote
-    + (gapNote ? `<span style="color:#B03922">${gapNote}</span>` : '');
+  // V3.0.2: user-friendly only — no mode/schema/debug info
+  el.innerHTML = lang === 'zh'
+    ? `AI 辨識草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
+    : `AI draft · ${nCols} cols · ${nRows} rows · editable`;
 }
 
 /* ===========================================================
@@ -3715,6 +3830,330 @@ function zipFiles(files, mime = 'application/zip') {
   w32(ce - cs); w32(cs); w16(0);
   return new Blob([out], { type: mime });
 }
+
+
+/* ===========================================================
+   RC5 CLEAN STATE CONTROLLER
+   Purpose:
+   - one public path after recognition: OCR result → independent Mode Gate
+   - never auto-render Excel / Doc before user chooses
+   - strip all user-facing technical meta
+   =========================================================== */
+const PCD_RC5_BUILD = 'V3.0.2 RC5 STRICT BUILD';
+
+function pcdStrictHideTechnicalUI() {
+  const selectors = [
+    '#arch-meta-bar',
+    '.arch-meta-bar',
+    '.debug-bar',
+    '#debug-stats',
+    '#debug-canvas',
+    '[data-debug]'
+  ];
+  selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => {
+    el.style.display = 'none';
+    if (sel === '#arch-meta-bar' || sel === '.arch-meta-bar') el.remove();
+  }));
+
+  // Remove legacy leaf text that should never appear in public UI.
+  const badLeafText = [
+    new RegExp('Pro' + 'vider\\s*:', 'i'),
+    new RegExp('\\bMo' + 'de\\s*:', 'i'),
+    new RegExp('\\bRi' + 'sk\\s*:', 'i'),
+    new RegExp('\\bStra' + 'tegy\\s*:', 'i'),
+    new RegExp('confi' + 'dence\\s*\\d*', 'i'),
+    new RegExp('信' + '心度'),
+    new RegExp('Struc' + 'tured form detected', 'i'),
+    new RegExp('偵測到' + '表單型文件'),
+    new RegExp('強' + '制\\s*' + 'Excel', 'i'),
+    new RegExp('Fo' + 'rce\\s*Excel', 'i'),
+    new RegExp('De' + 'bug', 'i')
+  ];
+  document.querySelectorAll('body *').forEach(el => {
+    if (el.closest('script,style')) return;
+    if (el.children.length > 0) return;
+    const t = (el.textContent || '').trim();
+    if (!t) return;
+    if (badLeafText.some(rx => rx.test(t))) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  });
+
+  const dpMeta = document.getElementById('dp-meta');
+  if (dpMeta && tableSchema) updateDpMeta();
+
+  const marker = document.getElementById('rc5-qa-marker');
+  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
+}
+
+function pcdResetResultPanelsForGate() {
+  const results = document.getElementById('step-results');
+  const gate = document.getElementById('step-mode-gate');
+  const processing = document.getElementById('step-processing');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (results) results.style.display = 'none';
+  if (gate) gate.style.display = 'block';
+  if (processing) processing.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  ['tab-data','tab-visual','tab-export'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: user-facing meta only. */
+function updateDpMeta() {
+  const el = document.getElementById('dp-meta');
+  if (!el || !tableSchema) return;
+  const nCols = tableSchema.columns?.length || 0;
+  const nRows = (tableSchema.rows || []).filter(r => r.type === 'data').length;
+  el.innerHTML = lang === 'zh'
+    ? `AI 轉換草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
+    : `AI conversion draft · ${nCols} cols · ${nRows} rows · editable`;
+}
+
+/** RC5 override: no public architecture/meta bar. */
+function updateArchMetaBar() {
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: independent Mode Gate is the only public post-recognition entry. */
+function showModeGateCard(classification, ocrResult) {
+  docModeOcrRaw = ocrResult || docModeOcrRaw;
+  lastClassification = classification || lastClassification || { mode: 'uncertain' };
+
+  const gateWrap = document.getElementById('step-mode-gate');
+  const gate = document.getElementById('mode-gate-inner');
+  if (!gateWrap || !gate) return;
+
+  const mode = lastClassification?.mode || 'uncertain';
+  const recExcel = mode === 'simple-table' || mode === 'structured-form';
+  const recDoc = mode === 'doc-like';
+
+  gate.innerHTML = `
+    <div class="mode-gate-card">
+      <div class="mode-gate-title">
+        <span class="zh">請選擇輸出方式</span>
+        <span class="en">Choose output format</span>
+      </div>
+      <div class="mode-gate-reason">
+        <span class="zh">AI 已整理出可轉換的草稿。請依照你的用途選擇輸出格式，選錯也可以返回重新選擇。</span>
+        <span class="en">AI has prepared a reviewable draft. Choose the output format you need; you can come back and change it anytime.</span>
+      </div>
+      <div class="mode-gate-btns">
+        <button type="button" class="mode-gate-btn excel" onclick="pickExcelMode()">
+          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
+            <span class="en">Best for menus, invoices, price lists, tables, and checklists</span>
+          </span>
+        </button>
+        <button type="button" class="mode-gate-btn doc" onclick="pickDocMode()">
+          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
+            <span class="en">Best for paragraphs, contracts, letters, reports, and documents</span>
+          </span>
+        </button>
+        <button type="button" class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
+          <span class="zh">🔤 只擷取文字 OCR</span>
+          <span class="en">🔤 OCR text only</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
+            <span class="en">Best when you only need raw text without table or document formatting</span>
+          </span>
+        </button>
+      </div>
+    </div>`;
+
+  pcdResetResultPanelsForGate();
+  applyLang(lang);
+  setTimeout(() => gateWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
+
+/** RC5 override: every recognized document type enters Mode Gate first. */
+function runExtractionPipeline(ocrResult, file, grid, classification) {
+  normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
+  docModeOcrRaw = ocrResult;
+  lastDetectedGrid = grid || lastDetectedGrid || null;
+  lastClassification = classification || { mode: normalizedDoc?.documentType || 'uncertain' };
+  updateSafetyNotice(normalizedDoc?.riskLevel || 'low');
+  updateArchMetaBar(normalizedDoc);
+  showModeGateCard(lastClassification, ocrResult);
+}
+
+/** RC5 override: Excel is rendered only after user selection. */
+function pickExcelMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  currentDocMode = 'excel';
+  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: Word/Doc is rendered only after user selection. */
+function pickDocMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  runDocModeV3(docModeOcrRaw, normalizedDoc);
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: OCR text only uses the same recognized result, no new credit. */
+function pickOcrMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  runDocMode(docModeOcrRaw);
+  pcdStrictHideTechnicalUI();
+}
+
+// Legacy names remain as compatibility aliases only.
+function forceExcelModeFromGate() { pickExcelMode(); }
+function forceDocModeFromGate() { pickDocMode(); }
+function forceOcrTextMode() { pickOcrMode(); }
+function docForceExcelMode() { pickExcelMode(); }
+
+/** RC5 override: re-choose uses same OCR result and does not consume credits. */
+function reshowModeGate() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const results = document.getElementById('step-results');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (results) results.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  showModeGateCard(lastClassification || { mode: 'uncertain' }, docModeOcrRaw);
+}
+
+/** RC5 override: Change image means start a clean new-image flow. */
+function scrollToUpload() {
+  resetAllPreviousState();
+  imageData = null;
+  imageFile = null;
+  const input = document.getElementById('file-input');
+  const prev = document.getElementById('upload-prev');
+  const drop = document.getElementById('drop-zone');
+  if (input) input.value = '';
+  if (prev) prev.style.display = 'none';
+  if (drop) drop.style.display = 'block';
+  showMsg('', '');
+  document.getElementById('step-upload')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/** RC5 override: document preview without table-pressure wording. */
+function runDocModeV3(ocrResult, nDoc) {
+  currentDocMode = 'doc';
+  docModeOcrRaw = ocrResult;
+
+  const displayText = (nDoc && nDoc.blocks && nDoc.blocks.length)
+    ? buildTxtFromNormalizedDoc(nDoc)
+    : (() => {
+        const words = extractOCRWords(ocrResult);
+        const byRow = {};
+        words.forEach(w => {
+          const r = w.sr ?? 0;
+          if (!byRow[r]) byRow[r] = [];
+          byRow[r].push(w);
+        });
+        return Object.keys(byRow).sort((a,b)=>a-b)
+          .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+          .join('\n') || (lang === 'zh' ? '（無法提取文字）' : '(No text extracted)');
+      })();
+
+  document.getElementById('doc-preview-body').textContent = displayText;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('tab-data').style.display = 'none';
+  document.getElementById('tab-visual').style.display = 'none';
+  document.getElementById('tab-export').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(
+    lang === 'zh'
+      ? '📄 文件草稿已就緒。你可以下載文字內容，或返回重新選擇其他輸出方式。'
+      : '📄 Document draft ready. You can download the text content or go back and choose another output format.',
+    'ok'
+  );
+}
+
+/** RC5 override: text-only preview with clean product wording. */
+function runDocMode(ocrResult) {
+  currentDocMode = 'ocr';
+  docModeOcrRaw = ocrResult;
+  const words = extractOCRWords(ocrResult);
+  let text = '';
+  if (words.length) {
+    const byRow = {};
+    words.forEach(w => {
+      const r = w.sr ?? 0;
+      if (!byRow[r]) byRow[r] = [];
+      byRow[r].push(w);
+    });
+    text = Object.keys(byRow).sort((a,b)=>a-b)
+      .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+      .join('\n');
+  } else if (ocrResult && typeof ocrResult === 'object') {
+    text = JSON.stringify(ocrResult, null, 2);
+  }
+  if (!text) text = lang === 'zh' ? '（無法提取文字）' : '(No text extracted)';
+
+  document.getElementById('doc-preview-body').textContent = text;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('tab-data').style.display = 'none';
+  document.getElementById('tab-visual').style.display = 'none';
+  document.getElementById('tab-export').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(
+    lang === 'zh'
+      ? '🔤 純文字草稿已就緒。你可以下載 TXT 或 JSON，也可以返回重新選擇輸出方式。'
+      : '🔤 Text draft ready. You can download TXT or JSON, or go back and choose another output format.',
+    'ok'
+  );
+}
+
+/** RC5 override: reset must clear both output and gate state. */
+const pcdOriginalResetAllPreviousState = resetAllPreviousState;
+resetAllPreviousState = function() {
+  pcdOriginalResetAllPreviousState();
+  const gate = document.getElementById('step-mode-gate');
+  const gateInner = document.getElementById('mode-gate-inner');
+  const results = document.getElementById('step-results');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (gate) gate.style.display = 'none';
+  if (gateInner) gateInner.innerHTML = '';
+  if (results) results.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  currentDocMode = null;
+  docModeOcrRaw = null;
+  lastClassification = null;
+  pcdStrictHideTechnicalUI();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  pcdStrictHideTechnicalUI();
+  const marker = document.getElementById('rc5-qa-marker');
+  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
+});
+
 
 /* ===========================================================
    INIT

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- PhotoCheck Docs V3.0.2 RC5 STRICT BUILD -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -447,7 +448,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 }
 .vis-body{padding:20px;overflow:auto;background:var(--warm)}
 #svg-preview img{max-width:100%;border:1px solid var(--line);border-radius:var(--r-s)}
-.debug-bar{padding:8px 20px;background:#f9f7f3;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.debug-bar{display:none!important} /* V3.0.2: hidden from users */
 .debug-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--mut);user-select:none}
 .debug-toggle-label input{cursor:pointer}
 
@@ -503,19 +504,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 /* ── V2.7 Doc Mode ─────────────────────────────── */
 .mode-gate-card{
   background:#fff;border:1.5px solid var(--gold-dim);border-radius:var(--r-l);
-  padding:24px 28px;margin-top:12px;text-align:center
+  padding:24px 28px;margin-top:12px
 }
 .mode-gate-title{font-weight:700;font-size:15px;margin-bottom:8px;color:var(--ink)}
-.mode-gate-reason{font-size:12.5px;color:var(--mut);margin-bottom:18px;line-height:1.6}
-.mode-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mode-gate-reason{font-size:13px;color:var(--mut);margin-bottom:18px;line-height:1.6}
+.mode-gate-btns{display:flex;flex-direction:column;gap:10px}
 .mode-gate-btn{
-  padding:9px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
-  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid
+  padding:13px 20px;border-radius:var(--r-m);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);transition:all .15s;border:1.5px solid;
+  text-align:left;width:100%
 }
 .mode-gate-btn.excel{background:var(--ink);color:#fff;border-color:var(--ink)}
 .mode-gate-btn.excel:hover{background:#333}
 .mode-gate-btn.doc{background:#fff;color:var(--ink);border-color:var(--line)}
 .mode-gate-btn.doc:hover{background:var(--cream);border-color:var(--gold-dim)}
+.mode-gate-btn-sub{font-size:11px;font-weight:400;opacity:.72;display:block;margin-top:3px}
 .doc-preview-panel{
   background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
   overflow:visible;display:flex;flex-direction:column
@@ -549,34 +552,41 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   background:#FFF0ED;border-top:1px solid #FFCCC7;
 }
 @media(max-width:600px){
-  .mode-gate-btns{flex-direction:column}
-  .mode-gate-btn{width:100%}
+  .exp-secondary{grid-template-columns:repeat(2,1fr)}
 }
 
 /* ── V2.8 Safety Notice ─────────────────────────────── */
 .safety-notice{
-  background:#F7F5EF;border:1px solid rgba(200,185,150,.35);border-radius:var(--r-m);
-  padding:11px 18px;margin-top:14px;font-size:11.5px;color:var(--mut);
+  background:#F9F7F3;border:1px solid var(--line);border-radius:var(--r-m);
+  padding:10px 16px;margin-top:14px;font-size:11.5px;color:var(--mut);
   display:flex;align-items:flex-start;gap:10px;line-height:1.6
 }
-.safety-notice-icon{font-size:15px;flex-shrink:0;margin-top:1px;opacity:.7}
-/* Secure mode notice — warm gold, calm, NOT a warning */
-.safety-notice.secure-mode{
-  background:#FDFAF3;border-color:rgba(200,169,110,.4);color:#6B5529
+.safety-notice-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.safety-notice.high-risk{
+  background:#FFF8ED;border-color:#F6C96A;color:#7A5C1E
 }
-.safety-notice.secure-mode .secure-mode-label{
-  display:inline-block;background:rgba(200,169,110,.18);color:#6B5529;
-  font-weight:700;font-size:10px;border-radius:3px;padding:1px 7px;margin-bottom:5px;
-  letter-spacing:.04em
+.safety-notice.high-risk .safety-icon-label{
+  display:inline-block;background:#F6C96A;color:#5A3E00;
+  font-weight:700;font-size:10px;border-radius:3px;padding:1px 6px;margin-bottom:4px
 }
-/* ── V2.8 Architecture meta bar ─────────────────────── */
+/* ── V2.8 Architecture meta bar — hidden from front-end users ── */
 .arch-meta-bar{
-  font-size:11px;color:var(--mut);background:#F5F2EC;
-  border-top:1px solid var(--line);padding:6px 20px;
-  display:flex;gap:16px;align-items:center;flex-wrap:wrap
+  display:none!important  /* internal data only, not shown to users */
 }
 .arch-meta-item{display:flex;align-items:center;gap:4px}
 .arch-meta-label{font-weight:600;color:var(--ink)}
+
+/* ── V3.0.2 Draft hint bar ──────────────────────────────────── */
+.draft-hint-bar{
+  width:100%;padding:9px 18px;
+  background:#FFF9F0;border-top:1px solid #F0DFC0;
+  border-radius:0 0 var(--r-m) var(--r-m);
+  font-size:12.5px;color:#7A5C1E;line-height:1.55
+}
+
+/* ── Utility container ──────────────────────────────────────── */
+.container{max-width:1120px;margin:0 auto;padding:0 56px}
+@media(max-width:960px){.container{padding:0 24px}}
 /* ── V2.8 Normalized blocks preview ─────────────────── */
 .blocks-preview{
   font-size:12.5px;line-height:1.7;padding:20px 24px;
@@ -592,12 +602,23 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   color:var(--mut);margin-bottom:4px
 }
 
-/* ── V3.0.2 Draft Notice ─────────────────────────────── */
-.draft-notice{
-  font-size:12px;color:var(--mut);padding:7px 20px;
-  background:#FDFAF5;border-bottom:1px solid var(--line);
-  line-height:1.5;
+/* =========================================================
+   RC5 STRICT PUBLIC UI GUARD
+   Keep internal diagnostics out of the user-facing interface.
+   ========================================================= */
+#arch-meta-bar,.arch-meta-bar,.debug-bar,#debug-stats,#debug-canvas,
+[data-debug],.debug-toggle-label{display:none!important}
+#step-mode-gate{display:none;margin-top:20px}
+#mode-gate-inner .mode-gate-card{box-shadow:0 14px 38px rgba(26,26,24,.08)}
+.pcd-result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.pcd-muted-action{background:#fff!important;color:var(--mut)!important;border:1px solid var(--line)!important}
+.pcd-muted-action:hover{border-color:var(--gold)!important;color:var(--ink)!important}
+@media(max-width:640px){
+  #rc5-qa-marker{display:none}
+  .res-tabs{flex-wrap:wrap}
+  .res-tab{min-width:33.333%}
 }
+
 </style>
 </head>
 <body>
@@ -611,7 +632,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <nav class="lnav">
   <div class="brand-wrap">
     <div class="brand-name">PhotoCheck Docs</div>
-    <div class="brand-sub">Image-to-Excel Engine · V2</div>
+    <div class="brand-sub">Image-to-Excel Engine · RC5 QA</div>
   </div>
   <div class="lnav-links">
     <button class="lnav-link" onclick="scrollById('features')">
@@ -1037,10 +1058,11 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       </button>
       <div>
         <div class="app-brand">PhotoCheck Docs</div>
-        <div class="app-sub-txt">V2 · AI Drafts. You Verify.</div>
+        <div class="app-sub-txt">V3.0.2 RC5 QA · AI Drafts. You Verify.</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
+      <span id="rc5-qa-marker" style="font-size:10px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:999px;padding:5px 10px">V3.0.2 RC5 QA</span>
       <div class="lang-pill" style="background:var(--cream);border-color:var(--line)">
         <button class="lang-btn" data-lang="zh" onclick="setLang('zh')" style="color:var(--ink)">中</button>
         <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="color:var(--ink)">EN</button>
@@ -1072,21 +1094,21 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </div>
       </div>
 
-      <!-- V3 Safety Notice — always visible, calm/reassuring -->
+      <!-- V3.0.2 Safety Notice — always visible, reassurance tone -->
       <div class="safety-notice" id="safety-notice-base">
-        <span class="safety-notice-icon">🔒</span>
+        <span class="safety-notice-icon">✅</span>
         <span>
-          <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
-          <span class="en">Documents are used for this conversion only. This system does not retain your original image, recognized text, or output files.</span>
+          <span class="zh">AI 辨識完成後，您可以先確認草稿內容，再決定是否下載。所有處理僅限本次使用，不會保存任何檔案。</span>
+          <span class="en">After AI recognition, you can review the draft before downloading. Everything is processed in this session only — nothing is saved.</span>
         </span>
       </div>
-      <!-- V3 Secure Mode Notice — calm warm gold, shown for formal/sensitive docs -->
-      <div class="safety-notice secure-mode" id="safety-notice-high-risk" style="display:none">
+      <!-- V3.0.2 Secure Mode Notice — shown for sensitive docs, calm tone -->
+      <div class="safety-notice high-risk" id="safety-notice-high-risk" style="display:none">
         <span class="safety-notice-icon">🔒</span>
         <div>
-          <span class="secure-mode-label">安全處理模式已啟用</span><br>
-          <span class="zh">文件僅用於本次轉換。本系統不會保存你的原始圖片、辨識文字或輸出檔案。</span>
-          <span class="en">Secure mode active. Documents are used for this conversion only. No image, text, or output is retained.</span>
+          <span class="safety-icon-label">安全模式已啟用 / Secure Mode</span><br>
+          <span class="zh">AI 草稿已就緒，請確認內容後再下載。本系統不保存圖片或辨識文字，關閉頁面後自動清除。</span>
+          <span class="en">Your AI draft is ready. Please review before downloading. No images or recognized text are stored — all data clears when you close the page.</span>
         </div>
       </div>
 
@@ -1115,8 +1137,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="demo-btn mode-layout" onclick="analyzeLayoutOnly()" id="layout-btn">
           <span>◈</span>
-          <span class="zh">只分析版面（不呼叫 AI）</span>
-          <span class="en">Analyze layout only (no AI)</span>
+          <span class="zh">只分析版面（進階測試）</span>
+          <span class="en">Analyze layout only (advanced test)</span>
         </button>
       </div>
       <div class="demo-note">
@@ -1135,30 +1157,19 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="en">Recognizing… please wait</span>
       </div>
       <div class="proc-note">
-        <span class="zh">正在呼叫 OCR API（僅此一次）。完成後所有操作在本機進行。</span>
-        <span class="en">Calling OCR API (one time only). All operations are local after this.</span>
+        <span class="zh">AI 正在分析文件，完成後可直接編輯草稿內容。</span>
+        <span class="en">AI is analyzing your document. You can edit the draft directly after this.</span>
       </div>
     </div>
 
-    <!-- Step: Results -->
+    <!-- Step: Mode Gate — independent product selection, NOT inside results -->
+    <div id="step-mode-gate" style="display:none;margin-top:20px">
+      <div id="mode-gate-inner"></div>
+    </div>
+
+        <!-- Step: Results -->
     <div id="step-results">
-      <!-- V3 Architecture Meta Bar — debug-only, hidden from general users -->
-      <div class="arch-meta-bar" id="arch-meta-bar" style="display:none">
-        <div class="arch-meta-item" style="opacity:.55;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700">Debug</div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Type:</span><span id="meta-mode">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Risk:</span><span id="meta-risk">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Strategy:</span><span id="meta-strategy">—</span>
-        </div>
-        <div class="arch-meta-item">
-          <span class="arch-meta-label">Provider:</span><span id="meta-provider">—</span>
-        </div>
-        <div class="arch-meta-item" style="margin-left:auto;color:#ccc;font-size:10px">🔒 _noRetain</div>
-      </div>
+      <!-- arch-meta-bar removed RC4: internal data only -->
       <div class="res-tabs">
         <button class="res-tab active" data-tab="data" onclick="showTab('data')">
           <span class="zh">📋 資料預覽</span><span class="en">📋 Data Preview</span>
@@ -1168,6 +1179,12 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="res-tab" data-tab="export" onclick="showTab('export')">
           <span class="zh">⬇ 下載匯出</span><span class="en">⬇ Download</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="reshowModeGate()">
+          <span class="zh">↩ 重新選擇</span><span class="en">↩ Re-choose</span>
+        </button>
+        <button class="res-tab" style="color:var(--mut);flex:0 0 auto;padding:13px 14px;font-size:12px" onclick="scrollToUpload()">
+          <span class="zh">🔄 換圖</span><span class="en">🔄 New image</span>
         </button>
       </div>
 
@@ -1186,11 +1203,6 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
               <span class="zh">匯出 →</span><span class="en">Export →</span>
             </button>
           </div>
-          <!-- V3.0.2 Draft Notice -->
-          <div class="draft-notice" id="draft-notice" style="display:none">
-            <span class="zh">✏️ 這是 AI 轉換草稿，你可以先調整欄寬與內容，再下載成 Excel。</span>
-            <span class="en">✏️ This is an AI draft. Adjust column widths and content before downloading as Excel.</span>
-          </div>
           <div class="tbl-wrap">
             <table class="schema-tbl" id="schema-tbl"></table>
           </div>
@@ -1199,6 +1211,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <button class="tbar-btn" onclick="toolAdjustWidth()"><span class="zh">調整欄寬</span><span class="en">Adjust col width</span></button>
             <button class="tbar-btn" onclick="toolAddRow()"><span class="zh">新增列</span><span class="en">Add row</span></button>
             <button class="tbar-btn" onclick="toolEditColLabel()"><span class="zh">編輯欄標題</span><span class="en">Edit col label</span></button>
+          </div>
+          <div class="draft-hint-bar">
+            <span class="zh">💡 這是 AI 轉換草稿，您可以先調整欄寬與內容，再下載成 Excel 檔。</span>
+            <span class="en">💡 This is an AI-generated conversion draft. You can review the content and adjust column widths before downloading the Excel file.</span>
           </div>
         </div>
       </div>
@@ -1219,7 +1235,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           <div class="debug-bar">
             <label class="debug-toggle-label">
               <input type="checkbox" id="debug-chk" onchange="toggleDebugOverlay(this.checked)">
-              <span class="zh">Debug 線段偵測</span><span class="en">Debug Line Detection</span>
+              <span class="zh">線段檢查</span><span class="en">Line check</span>
             </label>
           </div>
           <canvas id="debug-canvas" style="display:none;max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;background:#fff"></canvas>
@@ -1264,8 +1280,6 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
         </div>
       </div>
-      <!-- V2.7 Mode Gate (uncertain classification) -->
-      <div id="mode-gate" style="display:none"></div>
 
       <!-- V2.7 Doc Mode Preview -->
       <div id="doc-mode-panel" style="display:none">
@@ -1279,14 +1293,17 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           </div>
           <div class="doc-preview-body" id="doc-preview-body"></div>
           <div class="doc-mode-warning">
-            <span class="zh">⚠ 文件模式：未套用表格重建。如需 Excel 匯出，請點擊「強制 Excel 模式」。</span>
-            <span class="en">⚠ Doc Mode: table reconstruction skipped. Click "Force Excel Mode" to override.</span>
+            <span class="zh">這是 AI 辨識草稿，適合用於閱讀與匯出文字內容。如需表格格式，可返回重新選擇輸出方式。</span>
+            <span class="en">This is an AI recognition draft, best for reading and exporting text content. To get a table layout, go back and re-choose the output format.</span>
           </div>
           <div class="doc-export-bar">
             <button class="doc-exp-btn" onclick="docDownloadTxt()">⬇ TXT</button>
             <button class="doc-exp-btn" onclick="docDownloadJson()">⬇ JSON</button>
-            <button class="doc-exp-btn" onclick="docForceExcelMode()" style="border-color:var(--gold-dim);color:var(--gold)">
-              <span class="zh">強制 Excel 模式</span><span class="en">Force Excel Mode</span>
+            <button class="doc-exp-btn" onclick="reshowModeGate()" style="border-color:var(--gold-dim);color:var(--gold)">
+              <span class="zh">↩ 重新選擇輸出方式</span><span class="en">↩ Re-choose format</span>
+            </button>
+            <button class="doc-exp-btn" onclick="scrollToUpload()" style="color:var(--mut)">
+              <span class="zh">🔄 更換圖片</span><span class="en">🔄 Change image</span>
             </button>
           </div>
         </div>
@@ -1318,6 +1335,14 @@ function setLang(l) {
   });
   document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
   if (tableSchema) updateDpMeta();
+}
+/** RC4: Apply current language to all .zh/.en elements. */
+function applyLang(l) {
+  document.querySelectorAll('.zh').forEach(el => el.style.display = l === 'zh' ? '' : 'none');
+  document.querySelectorAll('.en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === l);
+  });
 }
 
 /* ===========================================================
@@ -1380,7 +1405,12 @@ function showApp() {
   document.getElementById('landing').style.display = 'none';
   document.getElementById('app-view').style.display = 'block';
   refreshCredits();
-  window.scrollTo({ top: 0 });
+  // V3.0.2: defer one frame so the browser finishes layout before scrolling.
+  // Fixes mobile case where scrollTo fired before app-view was rendered.
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.getElementById('step-upload')?.scrollIntoView({ block: 'start' });
+  });
 }
 function showLanding() {
   document.getElementById('landing').style.display = '';
@@ -1389,6 +1419,20 @@ function showLanding() {
 }
 function scrollById(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+/** V3.0.2: Scroll back to upload zone so user can change image. */
+function scrollToUpload() {
+  document.getElementById('step-upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+/** RC4: Re-show Mode Gate — hides results, shows independent mode gate step. */
+function reshowModeGate() {
+  if (!docModeOcrRaw || !lastClassification) {
+    showMsg(lang==='zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  // Hide results area completely; gate is now a separate step
+  document.getElementById('step-results').style.display = 'none';
+  showModeGateCard(lastClassification, docModeOcrRaw);
 }
 
 /* ===========================================================
@@ -1991,9 +2035,6 @@ function mapOCRToSchemaV21(ocrResponse, file) {
 function toggleDebugOverlay(on) {
   const canvas = document.getElementById('debug-canvas');
   const stats  = document.getElementById('debug-stats');
-  // V3.0.2: also show/hide arch-meta-bar in debug mode
-  const bar = document.getElementById('arch-meta-bar');
-  if (bar && normalizedDoc) bar.style.display = on ? 'flex' : 'none';
   if (!on) { canvas.style.display='none'; stats.style.display='none'; return; }
   if (!lastDetectedGrid || !tableSchema) {
     stats.style.display='block'; canvas.style.display='none';
@@ -2041,7 +2082,7 @@ function toggleDebugOverlay(on) {
   const nC=tableSchema?.columns?.length??'–', nR=tableSchema?.rows?.length??'–';
   stats.style.display='block';
   stats.innerHTML=[
-    `<b>Mode:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
+    `<b>Layout:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
     `<b>Raw H:</b> ${rawH.length} | <b>Raw V:</b> ${rawV.length}`,
     `<b>Filtered H:</b> ${filteredH.length} | <b>Filtered V:</b> ${filteredV.length}`,
     `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
@@ -2414,8 +2455,8 @@ async function analyzeLayoutOnly() {
     showTab('visual'); // default to visual for layout-only
     showMsg(
       lang === 'zh'
-        ? '◈ 版面分析完成。顯示偵測到的格線與結構，不含文字辨識。啟用 Debug 可查看偵測細節。不消耗辨識次數。'
-        : '◈ Layout analysis done. Showing detected grid. No text recognition. Enable Debug to inspect. No credits used.',
+        ? '◈ 版面分析完成。已顯示偵測到的表格結構，不消耗辨識次數。'
+        : '◈ Layout analysis done. Table structure detected. No credits used.',
       'ok'
     );
     document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2433,19 +2474,20 @@ async function analyzeLayoutOnly() {
 
 let currentDocMode = null;   // 'excel' | 'doc' | 'uncertain' | null
 let docModeOcrRaw  = null;   // raw OCR result stored for Doc Mode
+let lastClassification = null; // V3.0.2 RC3: stored for reshowModeGate()
 
 /** Full state reset — V3: clears all state on every new image upload. */
 function resetAllPreviousState() {
   tableSchema        = null;
   normalizedDoc      = null;   // V3: clear normalized document
-  layoutStructure    = null;   // V3.1: clear layout structure
   currentDocMode     = null;
   currentDocMode     = null;
   docModeOcrRaw      = null;
+  lastClassification = null;   // V3.0.2 RC3: clear stored classification
   lastDetectedGrid   = null;
   // Hide results area and sub-panels
   document.getElementById('step-results').style.display    = 'none';
-  document.getElementById('mode-gate').style.display       = 'none';
+  document.getElementById('step-mode-gate').style.display    = 'none';
   document.getElementById('doc-mode-panel').style.display  = 'none';
   // Hide arch meta bar
   const bar = document.getElementById('arch-meta-bar');
@@ -2471,9 +2513,6 @@ function resetAllPreviousState() {
   // Clear meta
   const dpMeta = document.getElementById('dp-meta');
   if (dpMeta) dpMeta.innerHTML = '';
-  // V3.0.2: hide draft notice on reset
-  const draftNotice = document.getElementById('draft-notice');
-  if (draftNotice) draftNotice.style.display = 'none';
 }
 
 /**
@@ -2648,62 +2687,73 @@ function classifyDocumentType(ocrResult, grid) {
  * Also adds "OCR text only" button.
  */
 function showModeGateCard(classification, ocrResult) {
-  const gate = document.getElementById('mode-gate');
-  const isForm = classification.mode === 'structured-form';
-  // V3.0.2: Product-friendly copy, no confidence % or technical labels
-  const debugOn = document.getElementById('debug-chk')?.checked;
-  const debugHint = debugOn
-    ? `<div style="margin-top:10px;font-size:10px;color:#bbb;font-family:monospace">${classification.reasons.slice(0,4).map(r=>`• ${r}`).join('<br>')}</div>`
-    : '';
+  const gate = document.getElementById('mode-gate-inner');
+  if (!gate) return;
+  const mode = classification ? classification.mode : 'uncertain';
 
-  const titleZh = isForm
-    ? '偵測到這張圖片比較像「表單型文件」'
-    : '這張圖片的格式需要你選擇輸出方式';
-  const titleEn = isForm
-    ? 'This image looks like a structured form'
-    : 'Please choose an output format for this document';
-  const bodyZh = isForm
-    ? '這類文件通常包含格線、段落與欄位混合內容。你可以依需求選擇輸出方式。'
-    : '這張圖片的內容難以自動判斷最佳輸出格式，請依你的需求選擇。';
-  const bodyEn = isForm
-    ? 'This type of document usually contains a mix of grid lines, paragraphs, and form fields. Choose the output format that works best for you.'
-    : "This image's content doesn't clearly match a single output format. Please choose based on your needs.";
-  const hintZh = 'Excel 草稿適合後續整理欄位；文件模式較適合保留閱讀順序。';
-  const hintEn = 'Excel draft is useful for editing columns; Doc mode is better for preserving reading order.';
+  const recExcel = (mode === 'simple-table');
+  const recDoc   = (mode === 'doc-like');
+
+  let bodyZh, bodyEn;
+  if (recExcel) {
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Excel 表格模式</b>，確認後再下載。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Excel Table Mode</b>. Review before downloading.';
+  } else if (recDoc) {
+    bodyZh = 'AI 已先整理出草稿。建議選擇 <b>Word / Doc 文件模式</b>。';
+    bodyEn = 'AI has prepared a draft. We recommend <b>Word / Doc Mode</b>.';
+  } else {
+    bodyZh = 'AI 已先整理出可轉換的草稿，請依照用途選擇輸出格式。';
+    bodyEn = 'AI has prepared a draft. Please choose the output format that best fits your needs.';
+  }
 
   gate.innerHTML = `
     <div class="mode-gate-card">
       <div class="mode-gate-title">
-        <span class="zh">${titleZh}</span>
-        <span class="en">${titleEn}</span>
+        <span class="zh">請選擇輸出方式</span>
+        <span class="en">Choose output format</span>
       </div>
       <div class="mode-gate-reason">
         <span class="zh">${bodyZh}</span>
         <span class="en">${bodyEn}</span>
-        ${debugHint}
       </div>
       <div class="mode-gate-btns">
-        <button class="mode-gate-btn excel" onclick="forceExcelModeFromGate()">
-          <span class="zh">📊 保留格線，轉成 Excel 草稿</span>
-          <span class="en">📊 Keep grid as Excel draft</span>
+        <button class="mode-gate-btn excel" onclick="pickExcelMode()">
+          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
+            <span class="en">Menus, invoices, price lists, tables, checklists</span>
+          </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceDocModeFromGate()">
-          <span class="zh">📄 保留文字，轉成文件模式</span>
-          <span class="en">📄 Extract text as document</span>
+        <button class="mode-gate-btn doc" onclick="pickDocMode()">
+          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
+            <span class="en">Paragraphs, contracts, letters, reports, documents</span>
+          </span>
         </button>
-        <button class="mode-gate-btn doc" onclick="forceOcrTextMode()" style="border-style:dashed">
-          <span class="zh">🔤 只查看 OCR 文字</span>
-          <span class="en">🔤 View OCR text only</span>
+        <button class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
+          <span class="zh">🔤 只擷取文字 OCR</span>
+          <span class="en">🔤 OCR text only</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
+            <span class="en">Just want raw text without table or document formatting</span>
+          </span>
         </button>
-      </div>
-      <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--mut)">
-        <span class="zh">${hintZh}</span>
-        <span class="en">${hintEn}</span>
       </div>
     </div>`;
-  gate.style.display = 'block';
-  document.getElementById('step-results').style.display = 'block';
-  document.getElementById('doc-mode-panel').style.display = 'none';
+
+  // Show mode-gate step, hide results step
+  document.getElementById('step-mode-gate').style.display  = 'block';
+  document.getElementById('step-results').style.display    = 'none';
+  document.getElementById('step-processing').style.display = 'none';
+  // Apply current language to newly injected elements
+  applyLang(lang);
+  // Scroll gate into view
+  setTimeout(() => {
+    document.getElementById('step-mode-gate').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
 }
 
 /** Run Excel Mode (table reconstruction). Black cell detection allowed. */
@@ -2713,11 +2763,7 @@ function runExcelMode(json, file, grid) {
   renderTableFromSchema();
   updateDpMeta();
 
-  // V3.0.2: Show draft notice (gentle expectation management)
-  const draftNotice = document.getElementById('draft-notice');
-  if (draftNotice) draftNotice.style.display = 'block';
-
-  // V3.0.2: mobile dense-column warning
+  // V2.7 §6.7: mobile dense-column warning
   const nCols = tableSchema?.columns?.length ?? 0;
   const isMobile = window.innerWidth < 700;
   if (isMobile && nCols > 8) {
@@ -2727,13 +2773,13 @@ function runExcelMode(json, file, grid) {
       'err');
   }
 
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display    = 'none';
+  document.getElementById('tab-data').style.display          = '';
+  document.getElementById('tab-visual').style.display        = '';
+  document.getElementById('tab-export').style.display        = '';
+  document.getElementById('step-results').style.display      = 'block';
   showTab('data');
-  document.getElementById('tab-data').style.display = '';
-  document.getElementById('tab-visual').style.display = '';
-  document.getElementById('tab-export').style.display = '';
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
@@ -2760,8 +2806,8 @@ function runDocMode(json) {
   if (!text) text = lang==='zh' ? '（無法提取文字）' : '(No text extracted)';
 
   document.getElementById('doc-preview-body').textContent = text;
-  document.getElementById('mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display  = 'block';
   // Hide table-specific tabs
   document.getElementById('tab-data').style.display   = 'none';
   document.getElementById('tab-visual').style.display = 'none';
@@ -2769,41 +2815,11 @@ function runDocMode(json) {
   document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 偵測為文件類型，已進入文件模式。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Detected as document. Doc Mode active. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「重新選擇輸出方式」。'
+    : '📄 Draft ready. To get table output, go back and re-choose the output format.', 'ok');
 }
 
-function forceExcelModeFromGate() {
-  document.getElementById('mode-gate').style.display = 'none';
-  if (docModeOcrRaw) {
-    // Update normalizedDoc strategy if it exists
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'excel'; updateArchMetaBar(normalizedDoc); }
-    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-  }
-}
-
-function forceDocModeFromGate() {
-  if (docModeOcrRaw) {
-    if (normalizedDoc) { normalizedDoc.extractionStrategy = 'doc'; updateArchMetaBar(normalizedDoc); }
-    runDocModeV3(docModeOcrRaw, normalizedDoc);
-  }
-}
-
-/** V2.7.1: Show raw OCR text without any reconstruction — ultra-safe fallback. */
-function forceOcrTextMode() {
-  if (docModeOcrRaw) {
-    runDocMode(docModeOcrRaw);
-    // Override the mode label
-    currentDocMode = 'doc';
-    showMsg(lang==='zh'
-      ? '🔤 已切換到 OCR 純文字模式。'
-      : '🔤 Switched to OCR text-only mode.', 'ok');
-  }
-}
-
-function docForceExcelMode() {
-  if (docModeOcrRaw) runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-}
+/* V2.7 gate functions removed in RC4 — see pickExcelMode/pickDocMode/pickOcrMode below */
 
 function docDownloadTxt() {
   const body = document.getElementById('doc-preview-body');
@@ -2820,408 +2836,7 @@ function docDownloadJson() {
 }
 
 /* ===========================================================
-   V3.1 LAYOUT ENGINE LAYER
-   layoutEngineAdapter(ocrResult, imageMeta, gridSignals, documentType)
-     → layoutStructure
-   ─────────────────────────────────────────────────────────────
-   This is the new abstraction between raw OCR and output builders.
-   Future providers (Google Layout Parser, Azure Layout, PaddleOCR PP-Structure)
-   implement this interface and return a layoutStructure.
-   =========================================================== */
-
-/**
- * layoutStructure schema:
- * {
- *   pages: [{ width, height, rotation }],
- *   blocks: [{ id, type, bbox, readingOrder, confidence }],
- *   lines: [{ id, text, bbox, blockId, readingOrder }],
- *   tables: [{ id, bbox, rows: [{cells:[{text,bbox,rowSpan,colSpan,isHeader,isDark}]}] }],
- *   paragraphs: [{ id, text, bbox, blockId }],
- *   keyValueCandidates: [{ key, value, keyBbox, valueBbox, confidence }],
- *   detectedColumns: [{ x, width, colIdx }],
- *   detectedRows: [{ y, height, rowIdx, isHeader }],
- *   readingOrder: [blockId, ...],
- *   meta: { provider, processingTime, _noRetain: true }
- * }
- */
-
-let layoutStructure = null;  // current V3.1 layout structure
-
-/**
- * Google Document AI Layout Adapter (V3.1 active provider).
- * Bridges OCR result + canvas grid signals → layoutStructure.
- * Future: replace with real Document AI Layout Parser response parsing.
- * Replaceable with: Azure Layout, AWS Textract, PaddleOCR PP-Structure, local TSR.
- */
-function layoutEngineAdapter(ocrResult, imageMeta, gridSignals, documentType) {
-  const t0 = Date.now();
-  const words = extractOCRWords(ocrResult);
-
-  // ── Page metadata ─────────────────────────────────────────────────────────
-  const pageW = imageMeta?.width  || gridSignals?.w || 800;
-  const pageH = imageMeta?.height || gridSignals?.h || 600;
-  const pages = [{ width: pageW, height: pageH, rotation: 0 }];
-
-  // ── Lines from OCR words, grouped by sr (row) ─────────────────────────────
-  const byRow = {};
-  words.forEach(w => {
-    const r = w.sr ?? 0;
-    if (!byRow[r]) byRow[r] = [];
-    byRow[r].push(w);
-  });
-  const sortedRows = Object.keys(byRow).map(Number).sort((a,b)=>a-b);
-
-  const lines = sortedRows.map((r, li) => {
-    const rowWords = byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0));
-    const text = rowWords.map(w=>w.text).join(' ');
-    const hasBbox = rowWords.some(w=>w.x!=null);
-    const bbox = hasBbox ? {
-      x: Math.min(...rowWords.filter(w=>w.x!=null).map(w=>w.x)),
-      y: Math.min(...rowWords.filter(w=>w.y!=null).map(w=>w.y)),
-      w: rowWords.filter(w=>w.x!=null).reduce((s,w)=>s+(w.w||8),0),
-      h: Math.max(...rowWords.filter(w=>w.h!=null).map(w=>w.h), 14)
-    } : null;
-    return { id:`line_${r}`, text, bbox, blockId: `block_row_${r}`, readingOrder: li,
-             words: rowWords };
-  });
-
-  // ── Column / row boundary refinement using grid signals ───────────────────
-  const detectedColumns = [];
-  const detectedRows    = [];
-
-  if (gridSignals && gridSignals.filteredH && gridSignals.filteredV) {
-    const { filteredH, filteredV, outerBorder, w, h, interiorH, interiorV } = gridSignals;
-    const le = outerBorder?.left   ?? 0, re = outerBorder?.right  ?? w;
-    const te = outerBorder?.top    ?? 0, be = outerBorder?.bottom ?? h;
-
-    // V3.1: refined column boundaries with min-width merging
-    let xs = [...new Set([le, ...interiorV, re])].sort((a,b)=>a-b);
-    let ys = [...new Set([te, ...interiorH, be])].sort((a,b)=>a-b);
-
-    // Merge very narrow columns (< 32px) with neighbor — tighter than V2.5
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (let i=0; i<xs.length-1; i++) {
-        if (xs[i+1]-xs[i] < 32) { xs.splice(i+1,1); changed=true; break; }
-      }
-    }
-    // Limit columns to 12 max
-    if (xs.length > 13) xs = xs.slice(0, 13);
-
-    xs.slice(0,-1).forEach((x,i) => {
-      detectedColumns.push({ x, width: xs[i+1]-x, colIdx: i });
-    });
-    ys.slice(0,-1).forEach((y,j) => {
-      detectedRows.push({ y, height: ys[j+1]-y, rowIdx: j, isHeader: j===0 });
-    });
-  }
-
-  // ── Table reconstruction (only for table-like documents) ──────────────────
-  const tables = [];
-  if ((documentType==='simple-table') && detectedColumns.length>=2 && detectedRows.length>=2) {
-    const tableRows = detectedRows.map((drow, ri) => {
-      const cells = detectedColumns.map((dcol, ci) => {
-        // Find words whose bbox center falls in this cell
-        const cellX1=dcol.x, cellX2=dcol.x+dcol.width;
-        const cellY1=drow.y,  cellY2=drow.y+drow.height;
-        const matchedWords = words.filter(w => {
-          if (!w.x || !w.y) return false;
-          const cx=w.x+(w.w||8)/2, cy=w.y+(w.h||12)/2;
-          return cx>=cellX1&&cx<=cellX2&&cy>=cellY1&&cy<=cellY2;
-        });
-        // Fallback: if no bbox words, try sequential assignment
-        const text = matchedWords.length
-          ? matchedWords.map(w=>w.text).join(' ')
-          : '';
-        return {
-          text, colIdx:ci, rowIdx:ri,
-          bbox:{x:dcol.x, y:drow.y, w:dcol.width, h:drow.height},
-          rowSpan:1, colSpan:1,
-          isHeader: ri===0,
-          isDark: false  // set by background detection
-        };
-      });
-      return { cells };
-    });
-    tables.push({
-      id: 'table_0',
-      bbox: detectedColumns.length&&detectedRows.length ? {
-        x:detectedColumns[0].x, y:detectedRows[0].y,
-        w:detectedColumns[detectedColumns.length-1].x+detectedColumns[detectedColumns.length-1].width-detectedColumns[0].x,
-        h:detectedRows[detectedRows.length-1].y+detectedRows[detectedRows.length-1].height-detectedRows[0].y
-      } : null,
-      rows: tableRows
-    });
-  }
-
-  // ── Key-value candidates (for structured forms) ────────────────────────────
-  const keyValueCandidates = [];
-  if (documentType==='structured-form') {
-    sortedRows.forEach(r => {
-      const rowWords = (byRow[r]||[]).sort((a,b)=>(a.sc??0)-(b.sc??0));
-      if (rowWords.length===2) {
-        keyValueCandidates.push({
-          key:   rowWords[0].text,
-          value: rowWords[1].text,
-          keyBbox:   rowWords[0].x!=null ? {x:rowWords[0].x,y:rowWords[0].y,w:rowWords[0].w||8,h:rowWords[0].h||12} : null,
-          valueBbox: rowWords[1].x!=null ? {x:rowWords[1].x,y:rowWords[1].y,w:rowWords[1].w||8,h:rowWords[1].h||12} : null,
-          confidence: 0.75
-        });
-      }
-    });
-  }
-
-  // ── Paragraphs (for document-like) ────────────────────────────────────────
-  const paragraphs = [];
-  if (documentType==='document' || documentType==='uncertain') {
-    // Group consecutive lines with similar x-position into paragraph blocks
-    let paraAccum = [];
-    let paraId = 0;
-    const flushPara = () => {
-      if (!paraAccum.length) return;
-      const text = paraAccum.map(l=>l.text).join(' ');
-      paragraphs.push({
-        id: `para_${paraId++}`,
-        text,
-        bbox: null,
-        blockId: paraAccum[0].blockId
-      });
-      paraAccum = [];
-    };
-    lines.forEach((line, i) => {
-      if (!line.text.trim()) { flushPara(); return; }
-      // New paragraph if gap > ~2x typical line height
-      if (paraAccum.length && line.bbox && paraAccum[paraAccum.length-1].bbox) {
-        const prevY = paraAccum[paraAccum.length-1].bbox.y + (paraAccum[paraAccum.length-1].bbox.h||14);
-        const gap = line.bbox.y - prevY;
-        if (gap > 28) flushPara();
-      }
-      paraAccum.push(line);
-    });
-    flushPara();
-  }
-
-  // ── Reading order ─────────────────────────────────────────────────────────
-  const readingOrder = lines.map(l=>l.id);
-
-  const ls = {
-    pages,
-    blocks: lines.map(l=>({ id:l.blockId, type:'line', bbox:l.bbox, readingOrder:l.readingOrder })),
-    lines,
-    tables,
-    paragraphs,
-    keyValueCandidates,
-    detectedColumns,
-    detectedRows,
-    readingOrder,
-    meta: {
-      provider: 'google-document-ai-layout-v31',
-      processingTime: Date.now()-t0,
-      documentType,
-      _noRetain: true
-    }
-  };
-  return ls;
-}
-
-/* ===========================================================
-   V3.1 STRUCTURED FORM DRAFT BUILDER
-   structuredFormDraftBuilder(normalizedDoc, layoutStructure) → formDraft
-   Used when user selects Excel from Mode Gate for structured-form docs
-   =========================================================== */
-
-/**
- * Build a form draft from normalized doc + layout structure.
- * Returns {sections, fields, tables, notes} — a clean, organizable Excel.
- */
-function structuredFormDraftBuilder(nDoc, ls) {
-  const draft = {
-    sections: [],
-    fields: [],         // [{label, value, order}]
-    tables: [],         // detected table blocks
-    notes: [],          // paragraph-style notes
-    readingOrder: []
-  };
-
-  // Use kv-pairs from layout structure
-  if (ls && ls.keyValueCandidates.length) {
-    ls.keyValueCandidates.forEach((kv, i) => {
-      draft.fields.push({ label: kv.key, value: kv.value, order: i });
-    });
-  }
-
-  // Use kv-pair blocks from normalizedDoc
-  if (nDoc) {
-    nDoc.forms.forEach((b, i) => {
-      if (!draft.fields.find(f=>f.label===b.content.key)) {
-        draft.fields.push({ label: b.content.key||'', value: b.content.value||'', order: i });
-      }
-    });
-    nDoc.paragraphs.forEach(b => {
-      if (b.content.text) draft.notes.push({ text: b.content.text });
-    });
-    nDoc.tables.forEach(b => {
-      draft.tables.push(b);
-    });
-  }
-
-  return draft;
-}
-
-/**
- * Convert a formDraft to a tableSchema suitable for XLSX export.
- * Produces a readable 2-column "Label | Value" layout for forms.
- * Uses a structured 3-section layout: metadata header, fields, notes.
- */
-function formDraftToTableSchema(draft, imageName) {
-  const schema = createSchema(imageName || 'form-export');
-  schema.meta.reconstructionMode = 'structuredForm-v31';
-
-  // 2-column layout: Label | Value
-  schema.columns = [
-    { id:'col_label', x:0,   width:220, label:'欄位 / Field', locked:false },
-    { id:'col_value', x:220, width:400, label:'內容 / Value', locked:false }
-  ];
-
-  let rowIdx = 0;
-  const addRow = (label, value, type='data', isBold=false) => {
-    const rId = `row_${rowIdx}`;
-    schema.rows.push({ id:rId, y:rowIdx*26, height:26, type });
-    const makeCell = (colId, text, bold) => ({
-      id:`cell_${rowIdx}_${colId}`, rowId:rId, colId,
-      text: String(text||''), rowSpan:1, colSpan:1, confidence:null, bbox:null,
-      style:{ bold: bold||isBold, align:'left',
-              borderTop:'thin', borderBottom:'thin',
-              borderLeft:'thin', borderRight:'thin' }
-    });
-    schema.cells.push(makeCell('col_label', label, isBold));
-    schema.cells.push(makeCell('col_value', value, false));
-    rowIdx++;
-  };
-
-  // Header row
-  const hId = `row_hdr`;
-  schema.rows.push({ id:hId, y:0, height:28, type:'header' });
-  ['col_label','col_value'].forEach((cId,i) => {
-    schema.cells.push({
-      id:`hdr_${cId}`, rowId:hId, colId:cId,
-      text: i===0?'欄位 / Field':'內容 / Value',
-      rowSpan:1, colSpan:1, confidence:null, bbox:null,
-      style:{ bold:true, align:'center', borderBottom:'medium',
-              borderTop:'thick', borderLeft:i===0?'thick':'thin',
-              borderRight:i===1?'thick':'thin' }
-    });
-  });
-  rowIdx++;
-
-  // Fields
-  draft.fields.sort((a,b)=>a.order-b.order).forEach(f => {
-    addRow(f.label, f.value);
-  });
-
-  // Tables embedded in form
-  draft.tables.forEach(tBlock => {
-    if (!tBlock.content?.rows) return;
-    tBlock.content.rows.forEach(row => {
-      const cols = row.cells||[];
-      const label = cols[0]?.text||'';
-      const value = cols.slice(1).map(c=>c.text).join(' | ');
-      addRow(label, value);
-    });
-  });
-
-  // Notes
-  if (draft.notes.length) {
-    addRow('── 備註 / Notes ──', '', 'data', true);
-    draft.notes.forEach(n => addRow('', n.text));
-  }
-
-  return schema;
-}
-
-/* ===========================================================
-   V3.1 DOCUMENT PARAGRAPH BUILDER
-   Better reading-order grouping for document-like files
-   =========================================================== */
-
-/**
- * Build a clean reading-order text from layoutStructure paragraphs.
- * Better than V3 which just did word-by-word joining.
- */
-function buildDocumentTextFromLayout(ls, nDoc) {
-  if (ls && ls.paragraphs.length) {
-    return ls.paragraphs.map(p => p.text.trim()).filter(t=>t).join('\n\n');
-  }
-  // Fallback to normalizedDoc blocks
-  if (nDoc && nDoc.blocks.length) {
-    return buildTxtFromNormalizedDoc(nDoc);
-  }
-  return '';
-}
-
-/* ===========================================================
-   V3.1 XLSX COLUMN WIDTH CALCULATOR
-   Smarter than V2's fixed pixel÷7.2 approach
-   =========================================================== */
-
-/**
- * V3.1: Calculate Excel column widths with readability priority.
- * Uses: detected bbox width, max cell text length, minimum readability floor.
- */
-function calcExcelColWidth(col, cells, cmap, rows) {
-  const MIN_W = 9, MAX_W = 55, PADDING = 2;
-
-  // Text-length based estimate
-  const textLengths = rows.map(row => {
-    const cell = cmap[`${row.id}|${col.id}`];
-    const text = cell?.text || '';
-    // CJK characters count as ~2 units in Excel
-    let len = 0;
-    for (const ch of text) {
-      len += /[\u4e00-\u9fff\u3040-\u30ff]/.test(ch) ? 2 : 1;
-    }
-    return len;
-  }).filter(l=>l>0);
-
-  const maxTextLen = textLengths.length ? Math.max(...textLengths) : 0;
-  const textBasedW = Math.min(MAX_W, maxTextLen + PADDING);
-
-  // Bbox-based estimate (if grid mode)
-  const bboxBasedW = col.width > 0 ? Math.min(MAX_W, Math.max(MIN_W, col.width / 7.0)) : 0;
-
-  // Prefer bbox width if substantial, else use text length
-  const rawW = bboxBasedW > MIN_W ? Math.max(bboxBasedW, textBasedW * 0.8) : textBasedW;
-  return Math.max(MIN_W, Math.min(MAX_W, rawW || MIN_W)).toFixed(1);
-}
-
-/**
- * V3.1: Calculate Excel row height based on text wrapping needs.
- */
-function calcExcelRowHeight(row, cols, cmap, isHeader) {
-  const BASE_H = isHeader ? 22 : 18;
-  const LINE_H = 14; // points per line
-  const COL_CHARS = (col) => Math.max(8, col.width / 7.0);
-
-  let maxLines = 1;
-  cols.forEach(col => {
-    const cell = cmap[`${row.id}|${col.id}`];
-    if (!cell?.text) return;
-    const colW = COL_CHARS(col);
-    // CJK-aware length
-    let len = 0;
-    for (const ch of cell.text) len += /[\u4e00-\u9fff]/.test(ch)?2:1;
-    const lines = cell.text.split('\n').length + Math.floor(len / Math.max(1,colW));
-    maxLines = Math.max(maxLines, lines);
-  });
-
-  // Use detected row height if reasonable, else compute
-  const detectedHt = row.height ? Math.min(80, Math.max(BASE_H, row.height * 0.75)) : null;
-  const computedHt = Math.min(80, BASE_H + (maxLines - 1) * LINE_H);
-  return (detectedHt ? Math.max(detectedHt, computedHt * 0.7) : computedHt).toFixed(1);
-}
-
-
+   V3 DOCUMENT UNDERSTANDING + SECURE EXTRACTION ARCHITECTURE
    ─────────────────────────────────────────────────────────────
    Pipeline:
      Upload → resetAllPreviousState
@@ -3459,12 +3074,14 @@ function computeRiskLevel(ocrResult, classification) {
   return 'low';
 }
 
-/** Update safety notice banner based on V3 riskLevel. */
+/** Update safety notice banner based on V3 riskLevel.
+ *  V3.0.2: only HIGH risk triggers Secure Mode panel.
+ *  medium risk (invoices, menus with totals) stays on the calm base notice. */
 function updateSafetyNotice(riskLevel) {
   const base     = document.getElementById('safety-notice-base');
   const highRisk = document.getElementById('safety-notice-high-risk');
   if (!base || !highRisk) return;
-  if (riskLevel === 'high' || riskLevel === 'medium') {
+  if (riskLevel === 'high') {
     base.style.display = 'none';
     highRisk.style.display = 'flex';
   } else {
@@ -3473,23 +3090,10 @@ function updateSafetyNotice(riskLevel) {
   }
 }
 
-/** Update arch-meta-bar — debug only. Visible only when debug checkbox is on. */
+/** updateArchMetaBar — RC4: arch-meta-bar removed from HTML.
+ *  This function is a no-op kept for call-site compatibility. */
 function updateArchMetaBar(nDoc) {
-  const bar = document.getElementById('arch-meta-bar');
-  // V3.0.2: Only show arch bar in debug mode (when debug-chk is checked)
-  const debugOn = document.getElementById('debug-chk')?.checked;
-  if (bar) bar.style.display = debugOn ? 'flex' : 'none';
-  const set = (id, val, style) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = val;
-    if (style) Object.assign(el.style, style);
-  };
-  set('meta-provider', nDoc.providerMeta.name);
-  set('meta-mode',     nDoc.documentType);
-  const riskColor = { high:'#B03922', medium:'#7A5C1E', low:'inherit' };
-  set('meta-risk',     nDoc.riskLevel, { color: riskColor[nDoc.riskLevel]||'inherit' });
-  set('meta-strategy', nDoc.extractionStrategy);
+  // Internal data only — no DOM update, arch-meta-bar removed from HTML in RC4.
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3556,66 +3160,48 @@ function buildJsonFromNormalizedDoc(doc) {
  * Called from startOCR after classification.
  */
 function runExtractionPipeline(ocrResult, file, grid, classification) {
-  // Provider Adapter → normalizedDocumentJSON
+  // Adapter layer → normalizedDocumentJSON
   normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
-
-  // V3.1: Layout Engine Layer → layoutStructure (new accuracy layer)
-  const imageMeta = grid ? { width: grid.w, height: grid.h } : null;
-  layoutStructure = layoutEngineAdapter(
-    ocrResult, imageMeta, grid, normalizedDoc.documentType
-  );
 
   // Safety UX
   updateSafetyNotice(normalizedDoc.riskLevel);
   updateArchMetaBar(normalizedDoc);
 
-  const mode = classification.mode;
-
-  if (mode === 'simple-table') {
-    // Excel path: V3.1 enhanced grid pipeline
-    runExcelMode(ocrResult, file, grid);
-
-  } else if (mode === 'doc-like') {
-    // V3.1: Document path via layoutStructure paragraph grouping
-    runDocModeV3(ocrResult, normalizedDoc);
-
-  } else {
-    // structured-form / uncertain → Mode Gate (user decides)
-    showModeGateCard(classification, ocrResult);
-  }
+  // V3.0.2: ALL document types go through Mode Gate with a recommendation.
+  // Never auto-route — user always confirms the output format for each new image.
+  showModeGateCard(classification, ocrResult);
 }
 
 /**
- * V3.1 Doc Mode — uses layoutStructure paragraph grouping for better reading order.
+ * V3 Doc Mode — renders normalizedDoc blocks in reading order.
  * Black cell detection is structurally skipped (currentDocMode guard).
  */
 function runDocModeV3(ocrResult, nDoc) {
   currentDocMode = 'doc';
   docModeOcrRaw  = ocrResult;
 
-  // V3.1: prefer layoutStructure paragraph grouping
-  let displayText = layoutStructure ? buildDocumentTextFromLayout(layoutStructure, nDoc) : '';
-  if (!displayText && nDoc && nDoc.blocks.length) displayText = buildTxtFromNormalizedDoc(nDoc);
-  if (!displayText) {
-    const words = extractOCRWords(ocrResult);
-    const byRow = {};
-    words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
-    displayText = Object.keys(byRow).sort((a,b)=>a-b)
-      .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
-      .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
-  }
+  const displayText = (nDoc && nDoc.blocks.length)
+    ? buildTxtFromNormalizedDoc(nDoc)
+    : (() => {
+        const words = extractOCRWords(ocrResult);
+        const byRow = {};
+        words.forEach(w=>{ const r=w.sr??0; if(!byRow[r])byRow[r]=[]; byRow[r].push(w); });
+        return Object.keys(byRow).sort((a,b)=>a-b)
+          .map(r=>byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+          .join('\n') || (lang==='zh'?'（無法提取文字）':'(No text extracted)');
+      })();
 
   document.getElementById('doc-preview-body').textContent = displayText;
-  document.getElementById('mode-gate').style.display       = 'none';
-  document.getElementById('doc-mode-panel').style.display  = 'block';
-  document.getElementById('tab-data').style.display        = 'none';
-  document.getElementById('tab-visual').style.display      = 'none';
-  document.getElementById('tab-export').style.display      = 'none';
-  document.getElementById('step-results').style.display    = 'block';
+  document.getElementById('step-mode-gate').style.display   = 'none';
+  document.getElementById('doc-mode-panel').style.display   = 'block';
+  document.getElementById('tab-data').style.display         = 'none';
+  document.getElementById('tab-visual').style.display       = 'none';
+  document.getElementById('tab-export').style.display       = 'none';
+  document.getElementById('step-results').style.display     = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
   showMsg(lang==='zh'
-    ? '📄 已進入文件模式，顯示閱讀順序文字。如需表格輸出請點「強制 Excel 模式」。'
-    : '📄 Document mode: reading-order text displayed. Click "Force Excel Mode" to override.', 'ok');
+    ? '📄 草稿已就緒，可直接下載文字內容。如需表格格式，點擊「切換至 Excel 模式」。'
+    : '📄 Draft ready. You can download the text content now. For a table layout, click "Switch to Excel Mode".', 'ok');
 }
 
 /** V3 docDownloadJson — uses normalizedDoc when available. */
@@ -3630,46 +3216,30 @@ function docDownloadJson() {
   showMsg(lang==='zh'?'✓ JSON 已下載。':'✓ JSON downloaded.','ok');
 }
 
-/** Override handlers — update normalizedDoc strategy before routing. */
-function forceExcelModeFromGate() {
-  document.getElementById('mode-gate').style.display = 'none';
+/** RC4: Mode Gate selection handlers — clean product names, no "force" language. */
+function pickExcelMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='excel'; updateArchMetaBar(normalizedDoc); }
-
-  // V3.1: For structured-form, use formDraftBuilder for a readable Excel
-  if (normalizedDoc?.documentType === 'structured-form' && layoutStructure) {
-    const draft = structuredFormDraftBuilder(normalizedDoc, layoutStructure);
-    tableSchema = formDraftToTableSchema(draft, imageFile?.name);
-    currentDocMode = 'excel';
-    renderTableFromSchema();
-    updateDpMeta();
-    const draftNotice = document.getElementById('draft-notice');
-    if (draftNotice) draftNotice.style.display = 'block';
-    showTab('data');
-    ['tab-data','tab-visual','tab-export'].forEach(id=>{
-      document.getElementById(id).style.display='';
-    });
-    document.getElementById('doc-mode-panel').style.display = 'none';
-    document.getElementById('step-results').style.display = 'block';
-    document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
-  } else {
-    runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-  }
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
 }
 
-function forceDocModeFromGate() {
+function pickDocMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
+  document.getElementById('step-mode-gate').style.display = 'none';
   runDocModeV3(docModeOcrRaw, normalizedDoc);
 }
 
-/** V3 forceOcrTextMode — ultra-safe: raw OCR text, zero reconstruction. */
-function forceOcrTextMode() {
+function pickOcrMode() {
   if (!docModeOcrRaw) return;
-  if (normalizedDoc) { normalizedDoc.extractionStrategy='doc'; updateArchMetaBar(normalizedDoc); }
-  runDocModeV3(docModeOcrRaw, normalizedDoc);
-  showMsg(lang==='zh'?'🔤 已切換到 OCR 純文字模式。':'🔤 Switched to OCR text-only mode.','ok');
+  document.getElementById('step-mode-gate').style.display = 'none';
+  runDocMode(docModeOcrRaw);
 }
+
+/** Aliases kept for any legacy call sites still using "force" names. */
+function forceExcelModeFromGate() { pickExcelMode(); }
+function forceDocModeFromGate()   { pickDocMode(); }
+function forceOcrTextMode()        { pickOcrMode(); }
+function docForceExcelMode()       { pickExcelMode(); }
 
 
 
@@ -3734,6 +3304,7 @@ async function startOCR() {
 
     const classification = classifyDocumentType(json, grid);
     docModeOcrRaw = json; // store for override buttons
+    lastClassification = classification; // V3.0.2 RC3: store for reshowModeGate()
 
     // Add to debug meta
     if (!json._v27debug) json._v27debug = {};
@@ -3819,21 +3390,10 @@ function updateDpMeta() {
   if (!el || !tableSchema) return;
   const nCols = tableSchema.columns.length;
   const nRows = tableSchema.rows.filter(r => r.type === 'data').length;
-  const gaps  = tableSchema.meta._debug?.rowGapWarnings;
-  // V3.0.2: Show only user-friendly info; technical labels hidden
-  // Debug mode (debug-chk checked) shows extra detail
-  const debugOn = document.getElementById('debug-chk')?.checked;
-  const gapNote = gaps?.length
-    ? (lang==='zh' ? ` · ⚠ 部分列可能需要人工確認` : ` · ⚠ Some rows may need review`)
-    : '';
-  const debugNote = debugOn
-    ? ` [mode:${tableSchema.meta.reconstructionMode}]`
-    : '';
-  el.innerHTML = (lang === 'zh'
-    ? `${nCols} 欄 · ${nRows} 列`
-    : `${nCols} cols · ${nRows} rows`)
-    + debugNote
-    + (gapNote ? `<span style="color:#9B6E3A">${gapNote}</span>` : '');
+  // V3.0.2: user-friendly only — no mode/schema/debug info
+  el.innerHTML = lang === 'zh'
+    ? `AI 辨識草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
+    : `AI draft · ${nCols} cols · ${nRows} rows · editable`;
 }
 
 /* ===========================================================
@@ -3918,10 +3478,11 @@ function buildXLSXFromSchema(schema) {
   if (headerRow) allRows.push({ row: headerRow, isH: true });
   dataRows.forEach(r => allRows.push({ row: r, isH: false }));
 
-  // V3.1: Column widths — text-length + bbox aware, readability-first
+  // Column widths from detected grid (px → Excel char, readability-first)
   const colXml = '<cols>' + cols.map((col, i) => {
-    const charW = calcExcelColWidth(col, cells, cmap, rows);
-    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1" bestFit="1"/>`;
+    // Use actual pixel width from grid; ensure min 8, max 60 chars
+    const charW = Math.min(60, Math.max(8, col.width / 7.2)).toFixed(1);
+    return `<col min="${i+1}" max="${i+1}" width="${charW}" customWidth="1"/>`;
   }).join('') + '</cols>';
 
   // Determine border style per cell from schema style
@@ -3944,8 +3505,13 @@ function buildXLSXFromSchema(schema) {
 
   const nR = allRows.length, nC = cols.length;
   const sheetData = allRows.map(({ row, isH }, ri) => {
-    // V3.1: Smart row height (CJK text-wrap aware)
-    const ht = calcExcelRowHeight(row, cols, cmap, isH);
+    const maxL = Math.max(...cols.map(col => {
+      const c = cmap[`${row.id}|${col.id}`];
+      return String(c?.text || '').length;
+    }), 1);
+    // Row height: use detected height if available, else auto
+    const detectedHt = row.height ? Math.min(120, Math.max(14, row.height * 0.75)) : null;
+    const ht = detectedHt ?? (isH ? 22 : Math.min(120, Math.max(18, Math.ceil(maxL/22)*16)));
     return `<row r="${ri+1}" ht="${ht.toFixed(1)}" customHeight="1">` +
       cols.map((col, ci) => {
         const c = cmap[`${row.id}|${col.id}`];
@@ -4043,7 +3609,7 @@ function buildSVGFromSchema(schema) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
   svg += `<rect width="100%" height="100%" fill="white"/>`;
   svg += `<text x="${MARGIN}" y="13" font-size="9.5" font-family="Arial,'Noto Sans TC',sans-serif" fill="#AAA">`;
-  svg += `PhotoCheck Docs V3.1 · Layout-Accurate SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
+  svg += `PhotoCheck Docs V2.2 · Grid-Faithful SVG · ${isGridMode?'Canvas Grid':'OCR'} reconstruction</text>`;
 
   // Zebra stripes (data rows)
   rows.filter(r=>r.type==='data').forEach((row,i) => {
@@ -4264,6 +3830,330 @@ function zipFiles(files, mime = 'application/zip') {
   w32(ce - cs); w32(cs); w16(0);
   return new Blob([out], { type: mime });
 }
+
+
+/* ===========================================================
+   RC5 CLEAN STATE CONTROLLER
+   Purpose:
+   - one public path after recognition: OCR result → independent Mode Gate
+   - never auto-render Excel / Doc before user chooses
+   - strip all user-facing technical meta
+   =========================================================== */
+const PCD_RC5_BUILD = 'V3.0.2 RC5 STRICT BUILD';
+
+function pcdStrictHideTechnicalUI() {
+  const selectors = [
+    '#arch-meta-bar',
+    '.arch-meta-bar',
+    '.debug-bar',
+    '#debug-stats',
+    '#debug-canvas',
+    '[data-debug]'
+  ];
+  selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => {
+    el.style.display = 'none';
+    if (sel === '#arch-meta-bar' || sel === '.arch-meta-bar') el.remove();
+  }));
+
+  // Remove legacy leaf text that should never appear in public UI.
+  const badLeafText = [
+    new RegExp('Pro' + 'vider\\s*:', 'i'),
+    new RegExp('\\bMo' + 'de\\s*:', 'i'),
+    new RegExp('\\bRi' + 'sk\\s*:', 'i'),
+    new RegExp('\\bStra' + 'tegy\\s*:', 'i'),
+    new RegExp('confi' + 'dence\\s*\\d*', 'i'),
+    new RegExp('信' + '心度'),
+    new RegExp('Struc' + 'tured form detected', 'i'),
+    new RegExp('偵測到' + '表單型文件'),
+    new RegExp('強' + '制\\s*' + 'Excel', 'i'),
+    new RegExp('Fo' + 'rce\\s*Excel', 'i'),
+    new RegExp('De' + 'bug', 'i')
+  ];
+  document.querySelectorAll('body *').forEach(el => {
+    if (el.closest('script,style')) return;
+    if (el.children.length > 0) return;
+    const t = (el.textContent || '').trim();
+    if (!t) return;
+    if (badLeafText.some(rx => rx.test(t))) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  });
+
+  const dpMeta = document.getElementById('dp-meta');
+  if (dpMeta && tableSchema) updateDpMeta();
+
+  const marker = document.getElementById('rc5-qa-marker');
+  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
+}
+
+function pcdResetResultPanelsForGate() {
+  const results = document.getElementById('step-results');
+  const gate = document.getElementById('step-mode-gate');
+  const processing = document.getElementById('step-processing');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (results) results.style.display = 'none';
+  if (gate) gate.style.display = 'block';
+  if (processing) processing.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  ['tab-data','tab-visual','tab-export'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: user-facing meta only. */
+function updateDpMeta() {
+  const el = document.getElementById('dp-meta');
+  if (!el || !tableSchema) return;
+  const nCols = tableSchema.columns?.length || 0;
+  const nRows = (tableSchema.rows || []).filter(r => r.type === 'data').length;
+  el.innerHTML = lang === 'zh'
+    ? `AI 轉換草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
+    : `AI conversion draft · ${nCols} cols · ${nRows} rows · editable`;
+}
+
+/** RC5 override: no public architecture/meta bar. */
+function updateArchMetaBar() {
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: independent Mode Gate is the only public post-recognition entry. */
+function showModeGateCard(classification, ocrResult) {
+  docModeOcrRaw = ocrResult || docModeOcrRaw;
+  lastClassification = classification || lastClassification || { mode: 'uncertain' };
+
+  const gateWrap = document.getElementById('step-mode-gate');
+  const gate = document.getElementById('mode-gate-inner');
+  if (!gateWrap || !gate) return;
+
+  const mode = lastClassification?.mode || 'uncertain';
+  const recExcel = mode === 'simple-table' || mode === 'structured-form';
+  const recDoc = mode === 'doc-like';
+
+  gate.innerHTML = `
+    <div class="mode-gate-card">
+      <div class="mode-gate-title">
+        <span class="zh">請選擇輸出方式</span>
+        <span class="en">Choose output format</span>
+      </div>
+      <div class="mode-gate-reason">
+        <span class="zh">AI 已整理出可轉換的草稿。請依照你的用途選擇輸出格式，選錯也可以返回重新選擇。</span>
+        <span class="en">AI has prepared a reviewable draft. Choose the output format you need; you can come back and change it anytime.</span>
+      </div>
+      <div class="mode-gate-btns">
+        <button type="button" class="mode-gate-btn excel" onclick="pickExcelMode()">
+          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
+          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
+            <span class="en">Best for menus, invoices, price lists, tables, and checklists</span>
+          </span>
+        </button>
+        <button type="button" class="mode-gate-btn doc" onclick="pickDocMode()">
+          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
+          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
+            <span class="en">Best for paragraphs, contracts, letters, reports, and documents</span>
+          </span>
+        </button>
+        <button type="button" class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
+          <span class="zh">🔤 只擷取文字 OCR</span>
+          <span class="en">🔤 OCR text only</span>
+          <span class="mode-gate-btn-sub">
+            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
+            <span class="en">Best when you only need raw text without table or document formatting</span>
+          </span>
+        </button>
+      </div>
+    </div>`;
+
+  pcdResetResultPanelsForGate();
+  applyLang(lang);
+  setTimeout(() => gateWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
+
+/** RC5 override: every recognized document type enters Mode Gate first. */
+function runExtractionPipeline(ocrResult, file, grid, classification) {
+  normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
+  docModeOcrRaw = ocrResult;
+  lastDetectedGrid = grid || lastDetectedGrid || null;
+  lastClassification = classification || { mode: normalizedDoc?.documentType || 'uncertain' };
+  updateSafetyNotice(normalizedDoc?.riskLevel || 'low');
+  updateArchMetaBar(normalizedDoc);
+  showModeGateCard(lastClassification, ocrResult);
+}
+
+/** RC5 override: Excel is rendered only after user selection. */
+function pickExcelMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  currentDocMode = 'excel';
+  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: Word/Doc is rendered only after user selection. */
+function pickDocMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  runDocModeV3(docModeOcrRaw, normalizedDoc);
+  pcdStrictHideTechnicalUI();
+}
+
+/** RC5 override: OCR text only uses the same recognized result, no new credit. */
+function pickOcrMode() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const gate = document.getElementById('step-mode-gate');
+  if (gate) gate.style.display = 'none';
+  runDocMode(docModeOcrRaw);
+  pcdStrictHideTechnicalUI();
+}
+
+// Legacy names remain as compatibility aliases only.
+function forceExcelModeFromGate() { pickExcelMode(); }
+function forceDocModeFromGate() { pickDocMode(); }
+function forceOcrTextMode() { pickOcrMode(); }
+function docForceExcelMode() { pickExcelMode(); }
+
+/** RC5 override: re-choose uses same OCR result and does not consume credits. */
+function reshowModeGate() {
+  if (!docModeOcrRaw) {
+    showMsg(lang === 'zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
+    return;
+  }
+  const results = document.getElementById('step-results');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (results) results.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  showModeGateCard(lastClassification || { mode: 'uncertain' }, docModeOcrRaw);
+}
+
+/** RC5 override: Change image means start a clean new-image flow. */
+function scrollToUpload() {
+  resetAllPreviousState();
+  imageData = null;
+  imageFile = null;
+  const input = document.getElementById('file-input');
+  const prev = document.getElementById('upload-prev');
+  const drop = document.getElementById('drop-zone');
+  if (input) input.value = '';
+  if (prev) prev.style.display = 'none';
+  if (drop) drop.style.display = 'block';
+  showMsg('', '');
+  document.getElementById('step-upload')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/** RC5 override: document preview without table-pressure wording. */
+function runDocModeV3(ocrResult, nDoc) {
+  currentDocMode = 'doc';
+  docModeOcrRaw = ocrResult;
+
+  const displayText = (nDoc && nDoc.blocks && nDoc.blocks.length)
+    ? buildTxtFromNormalizedDoc(nDoc)
+    : (() => {
+        const words = extractOCRWords(ocrResult);
+        const byRow = {};
+        words.forEach(w => {
+          const r = w.sr ?? 0;
+          if (!byRow[r]) byRow[r] = [];
+          byRow[r].push(w);
+        });
+        return Object.keys(byRow).sort((a,b)=>a-b)
+          .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+          .join('\n') || (lang === 'zh' ? '（無法提取文字）' : '(No text extracted)');
+      })();
+
+  document.getElementById('doc-preview-body').textContent = displayText;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('tab-data').style.display = 'none';
+  document.getElementById('tab-visual').style.display = 'none';
+  document.getElementById('tab-export').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(
+    lang === 'zh'
+      ? '📄 文件草稿已就緒。你可以下載文字內容，或返回重新選擇其他輸出方式。'
+      : '📄 Document draft ready. You can download the text content or go back and choose another output format.',
+    'ok'
+  );
+}
+
+/** RC5 override: text-only preview with clean product wording. */
+function runDocMode(ocrResult) {
+  currentDocMode = 'ocr';
+  docModeOcrRaw = ocrResult;
+  const words = extractOCRWords(ocrResult);
+  let text = '';
+  if (words.length) {
+    const byRow = {};
+    words.forEach(w => {
+      const r = w.sr ?? 0;
+      if (!byRow[r]) byRow[r] = [];
+      byRow[r].push(w);
+    });
+    text = Object.keys(byRow).sort((a,b)=>a-b)
+      .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
+      .join('\n');
+  } else if (ocrResult && typeof ocrResult === 'object') {
+    text = JSON.stringify(ocrResult, null, 2);
+  }
+  if (!text) text = lang === 'zh' ? '（無法提取文字）' : '(No text extracted)';
+
+  document.getElementById('doc-preview-body').textContent = text;
+  document.getElementById('step-mode-gate').style.display = 'none';
+  document.getElementById('doc-mode-panel').style.display = 'block';
+  document.getElementById('tab-data').style.display = 'none';
+  document.getElementById('tab-visual').style.display = 'none';
+  document.getElementById('tab-export').style.display = 'none';
+  document.getElementById('step-results').style.display = 'block';
+  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
+  showMsg(
+    lang === 'zh'
+      ? '🔤 純文字草稿已就緒。你可以下載 TXT 或 JSON，也可以返回重新選擇輸出方式。'
+      : '🔤 Text draft ready. You can download TXT or JSON, or go back and choose another output format.',
+    'ok'
+  );
+}
+
+/** RC5 override: reset must clear both output and gate state. */
+const pcdOriginalResetAllPreviousState = resetAllPreviousState;
+resetAllPreviousState = function() {
+  pcdOriginalResetAllPreviousState();
+  const gate = document.getElementById('step-mode-gate');
+  const gateInner = document.getElementById('mode-gate-inner');
+  const results = document.getElementById('step-results');
+  const docPanel = document.getElementById('doc-mode-panel');
+  if (gate) gate.style.display = 'none';
+  if (gateInner) gateInner.innerHTML = '';
+  if (results) results.style.display = 'none';
+  if (docPanel) docPanel.style.display = 'none';
+  currentDocMode = null;
+  docModeOcrRaw = null;
+  lastClassification = null;
+  pcdStrictHideTechnicalUI();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  pcdStrictHideTechnicalUI();
+  const marker = document.getElementById('rc5-qa-marker');
+  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
+});
+
 
 /* ===========================================================
    INIT

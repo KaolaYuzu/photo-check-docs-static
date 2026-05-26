@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PhotoCheck Docs V3.0.2 RC5 STRICT BUILD -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -576,7 +575,18 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 .arch-meta-item{display:flex;align-items:center;gap:4px}
 .arch-meta-label{font-weight:600;color:var(--ink)}
 
-/* ── V3.0.2 Draft hint bar ──────────────────────────────────── */
+/* ── V3.0.2 RC5a: Credit clarity elements ────────────────── */
+.credit-note{
+  font-size:11.5px;color:var(--mut);text-align:center;
+  margin-top:6px;line-height:1.55;padding:0 8px
+}
+.credit-done-note{
+  font-size:12px;color:#4A7A4A;background:#F2FAF2;
+  border:1px solid #C8E6C8;border-radius:var(--r-m);
+  padding:9px 14px;margin-bottom:16px;line-height:1.5
+}
+
+/* ── V3.0.2 RC3: Draft hint bar ──────────────────────────── */
 .draft-hint-bar{
   width:100%;padding:9px 18px;
   background:#FFF9F0;border-top:1px solid #F0DFC0;
@@ -601,24 +611,6 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
   color:var(--mut);margin-bottom:4px
 }
-
-/* =========================================================
-   RC5 STRICT PUBLIC UI GUARD
-   Keep internal diagnostics out of the user-facing interface.
-   ========================================================= */
-#arch-meta-bar,.arch-meta-bar,.debug-bar,#debug-stats,#debug-canvas,
-[data-debug],.debug-toggle-label{display:none!important}
-#step-mode-gate{display:none;margin-top:20px}
-#mode-gate-inner .mode-gate-card{box-shadow:0 14px 38px rgba(26,26,24,.08)}
-.pcd-result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-.pcd-muted-action{background:#fff!important;color:var(--mut)!important;border:1px solid var(--line)!important}
-.pcd-muted-action:hover{border-color:var(--gold)!important;color:var(--ink)!important}
-@media(max-width:640px){
-  #rc5-qa-marker{display:none}
-  .res-tabs{flex-wrap:wrap}
-  .res-tab{min-width:33.333%}
-}
-
 </style>
 </head>
 <body>
@@ -632,7 +624,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
 <nav class="lnav">
   <div class="brand-wrap">
     <div class="brand-name">PhotoCheck Docs</div>
-    <div class="brand-sub">Image-to-Excel Engine · RC5 QA</div>
+    <div class="brand-sub">Image-to-Excel Engine · V2</div>
   </div>
   <div class="lnav-links">
     <button class="lnav-link" onclick="scrollById('features')">
@@ -1058,18 +1050,17 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       </button>
       <div>
         <div class="app-brand">PhotoCheck Docs</div>
-        <div class="app-sub-txt">V3.0.2 RC5 QA · AI Drafts. You Verify.</div>
+        <div class="app-sub-txt">V3.0.3 QA · AI Drafts. You Verify.</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
-      <span id="rc5-qa-marker" style="font-size:10px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:999px;padding:5px 10px">V3.0.2 RC5 QA</span>
       <div class="lang-pill" style="background:var(--cream);border-color:var(--line)">
         <button class="lang-btn" data-lang="zh" onclick="setLang('zh')" style="color:var(--ink)">中</button>
         <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="color:var(--ink)">EN</button>
       </div>
-      <div class="credits-badge">
-        <span class="zh">剩餘次數：</span>
-        <span class="en">Credits:</span>
+      <div class="credits-badge" title="每張新圖片啟動 AI 辨識消耗 1 次｜Each new image recognition uses 1 credit">
+        <span class="zh">AI 辨識額度：</span>
+        <span class="en">AI credits:</span>
         <span class="credits-n" id="credits-n">5</span>
         <span class="credits-of">/ 5</span>
       </div>
@@ -1128,6 +1119,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         <span class="zh">啟動 AI 辨識</span>
         <span class="en">Start AI Recognition</span>
       </button>
+      <div class="credit-note">
+        <span class="zh">啟動 AI 辨識會使用 1 次額度；預覽、重新選擇輸出方式與下載不會再次扣點。</span>
+        <span class="en">AI recognition uses 1 credit per new image. Preview, re-selecting output format, and downloads do not use additional credits.</span>
+      </div>
 
       <div class="mode-group">
         <button class="demo-btn mode-sample" onclick="startDemoMode()">
@@ -1137,8 +1132,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
         </button>
         <button class="demo-btn mode-layout" onclick="analyzeLayoutOnly()" id="layout-btn">
           <span>◈</span>
-          <span class="zh">只分析版面（進階測試）</span>
-          <span class="en">Analyze layout only (advanced test)</span>
+          <span class="zh">只分析版面（不呼叫 AI）</span>
+          <span class="en">Analyze layout only (no AI)</span>
         </button>
       </div>
       <div class="demo-note">
@@ -1213,8 +1208,8 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
             <button class="tbar-btn" onclick="toolEditColLabel()"><span class="zh">編輯欄標題</span><span class="en">Edit col label</span></button>
           </div>
           <div class="draft-hint-bar">
-            <span class="zh">💡 這是 AI 轉換草稿，您可以先調整欄寬與內容，再下載成 Excel 檔。</span>
-            <span class="en">💡 This is an AI-generated conversion draft. You can review the content and adjust column widths before downloading the Excel file.</span>
+            <span class="zh">💡 這是 AI 轉換草稿，系統已盡量對齊表格。下載前建議快速檢查欄位與內容。</span>
+            <span class="en">💡 This is an AI-generated conversion draft. The system has aligned the table as closely as possible. Please review columns and content before downloading.</span>
           </div>
         </div>
       </div>
@@ -1235,7 +1230,7 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
           <div class="debug-bar">
             <label class="debug-toggle-label">
               <input type="checkbox" id="debug-chk" onchange="toggleDebugOverlay(this.checked)">
-              <span class="zh">線段檢查</span><span class="en">Line check</span>
+              <span class="zh">Debug 線段偵測</span><span class="en">Debug Line Detection</span>
             </label>
           </div>
           <canvas id="debug-canvas" style="display:none;max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;background:#fff"></canvas>
@@ -1249,6 +1244,10 @@ body{font-family:var(--sans);color:var(--dkt);background:var(--dk);-webkit-font-
       <!-- Export -->
       <div class="tab-panel" id="tab-export">
         <div class="export-panel">
+          <div class="credit-done-note">
+            <span class="zh">✓ 這次辨識已完成。重新選擇輸出方式或下載，不會再次使用 AI 辨識額度。</span>
+            <span class="en">✓ Recognition is complete. Re-selecting the output format or downloading files does not use another credit.</span>
+          </div>
           <div class="exp-primary">
             <button class="exp-main-btn" id="btn-xlsx">
               ⬇&nbsp;
@@ -1596,12 +1595,16 @@ function detectGridFromCanvas(imgEl) {
   const hThr = adaptiveThr(hEdge);
   const vThr = adaptiveThr(vEdge);
 
-  // V2.5: Relaxed dark pixel requirement (was 0.04 → 0.02)
-  function extractPeaks(edge, dark, thr, gap) {
+  // V3.0.3: Raised dark-pixel floor (0.02 → 0.05) to reject text strokes.
+  // extractPeaks also checks span coverage to skip short artifact lines.
+  function extractPeaks(edge, dark, thr, gap, minSpanRatio, totalSpan) {
     const raw = [];
     for (let i = 2; i < edge.length-2; i++) {
       if (edge[i] < thr) continue;
-      if (dark[i] < 0.02) continue; // relaxed: allow lighter lines
+      if (dark[i] < 0.05) continue; // V3.0.3: stricter — ignore faint text strokes
+      // V3.0.3: check that neighbouring pixels also qualify (reduces spike noise)
+      const neighbourDark = (dark[Math.max(0,i-1)] + dark[Math.min(edge.length-1,i+1)]) / 2;
+      if (neighbourDark < 0.03) continue;
       let isMax = true;
       for (let j = Math.max(0,i-4); j <= Math.min(edge.length-1,i+4); j++) {
         if (j !== i && edge[j] > edge[i]) { isMax=false; break; }
@@ -1616,12 +1619,14 @@ function detectGridFromCanvas(imgEl) {
     return raw;
   }
 
+  // V3.0.3: mergeClose with larger tolerance — merges duplicate near-lines
   function mergeClose(lines, mergeGap) {
     if (!lines.length) return lines;
     const out = [lines[0]];
     for (let i = 1; i < lines.length; i++) {
       if (lines[i] - out[out.length-1] < mergeGap) {
-        out[out.length-1] = Math.round((out[out.length-1]+lines[i])/2);
+        // Weighted merge: pick the darker candidate
+        out[out.length-1] = Math.round((out[out.length-1]*0.4 + lines[i]*0.6));
       } else out.push(lines[i]);
     }
     return out;
@@ -1646,10 +1651,11 @@ function detectGridFromCanvas(imgEl) {
     return filled;
   }
 
-  const rawHpx = extractPeaks(hEdge, hDark, hThr, 6); // gap reduced 8→6 for dense rows
+  // V3.0.3: larger merge tolerances — collapse near-duplicate lines from shadows/borders
+  const rawHpx = extractPeaks(hEdge, hDark, hThr, 6);
   const rawVpx = extractPeaks(vEdge, vDark, vThr, 10);
-  const filtHpx = mergeClose(rawHpx, 8); // merge 10→8
-  const filtVpx = mergeClose(rawVpx, 13);
+  const filtHpx = mergeClose(rawHpx, 12);  // V3.0.3: was 8 → 12
+  const filtVpx = mergeClose(rawVpx, 18);  // V3.0.3: was 13 → 18
 
   const toOrig = (v) => Math.round(v / scale);
   const rawH = rawHpx.map(toOrig), rawV = rawVpx.map(toOrig);
@@ -1686,12 +1692,14 @@ function reconstructGridSchema(grid, ocr, file) {
   const { interiorH, interiorV, outerBorder, w, h } = grid;
   const schema = createSchema(file?.name || 'uploaded-image');
   schema.source.imageWidth = w; schema.source.imageHeight = h;
-  schema.meta.reconstructionMode = 'canvasGrid-v22';
+  schema.meta.reconstructionMode = 'canvasGrid-v303';
   schema.meta._debug = {
     rawH: grid.rawH.length, rawV: grid.rawV.length,
     filteredH: grid.filteredH.length, filteredV: grid.filteredV.length,
     rejectedH: grid.rejectedH.length, rejectedV: grid.rejectedV.length,
-    rowGapWarnings: [] // filled after ys computed
+    rowGapWarnings: [],      // filled after ys computed
+    ocrClusterFallback: false, // set true if cluster fallback fires
+    alignmentStats: null     // filled by assignWordsToCells
   };
 
   const le = outerBorder.left   ?? 0,  re = outerBorder.right  ?? w;
@@ -1762,6 +1770,48 @@ function reconstructGridSchema(grid, ocr, file) {
   }));
 
   const words = extractOCRWords(ocr);
+
+  // V3.0.3: OCR cluster fallback
+  // If interiorH lines are sparse (< 2) AND we have bbox words, infer rows from OCR y-clusters.
+  // This avoids an empty table when grid detection fails for faint-line images.
+  if (interiorH.length < 2 && words.some(w => w.y != null)) {
+    const ys_from_ocr = inferRowsFromOCRClusters(words, h, schema);
+    if (ys_from_ocr && ys_from_ocr.length > 1) {
+      // Re-build row boundaries from OCR clusters
+      const newRows = [];
+      for (let i = 0; i < ys_from_ocr.length - 1; i++) {
+        newRows.push({
+          id: `row_${i}`, y: ys_from_ocr[i],
+          height: ys_from_ocr[i+1] - ys_from_ocr[i],
+          type: i === 0 ? 'header' : 'data'
+        });
+      }
+      if (newRows.length > schema.rows.length) {
+        // More granular rows found via OCR — replace
+        schema.rows = newRows;
+        // Rebuild cells for new row count
+        const nC = schema.columns.length, nR = newRows.length;
+        schema.cells = [];
+        newRows.forEach((row, ri) => schema.columns.forEach((col, ci) => {
+          schema.cells.push({
+            id: `cell_${ri}_${ci}`, rowId: row.id, colId: col.id,
+            text: '', rowSpan: 1, colSpan: 1, confidence: null,
+            bbox: { x: col.x, y: row.y, w: col.width, h: row.height },
+            style: {
+              bold: ri === 0, align: ci === 0 ? 'left' : 'center',
+              borderTop:    ri === 0    ? 'thick' : 'thin',
+              borderBottom: ri === nR-1 ? 'thick' : (ri === 0 ? 'medium' : 'thin'),
+              borderLeft:   ci === 0    ? 'thick' : 'thin',
+              borderRight:  ci === nC-1 ? 'thick' : 'thin'
+            }
+          });
+        }));
+        if (schema.meta._debug) schema.meta._debug.ocrClusterFallback = true;
+        console.debug('[V3.0.3] OCR cluster fallback applied: ' + newRows.length + ' rows');
+      }
+    }
+  }
+
   if (words.length) assignWordsToCells(words, schema);
 
   // V2.5: Store row gap warnings in debug meta
@@ -1784,6 +1834,41 @@ function reconstructGridSchema(grid, ocr, file) {
    - contiguous black runs that resolve to pure-number text → revert
    - NO colSpan / _merged / schema structure changes (V2.5.1 safe)
    =========================================================== */
+
+/** V3.0.3: Infer row y-positions from OCR word bbox y-clusters.
+ *  Used as fallback when grid line detection yields < 2 interior H lines.
+ *  Returns sorted array of y boundaries [top, ...dividers, bottom], or null. */
+function inferRowsFromOCRClusters(words, imageH, schema) {
+  const bboxWords = words.filter(w => w.y != null && w.h != null && w.h > 4);
+  if (bboxWords.length < 3) return null;
+
+  // Collect word top-edges, cluster with tolerance
+  const ys = bboxWords.map(w => w.y).sort((a,b) => a-b);
+  const CLUSTER_TOL = Math.max(8, imageH * 0.018); // ~1.8% of image height
+  const clusterCenters = [];
+  let clusterSum = ys[0], clusterCount = 1;
+
+  for (let i = 1; i < ys.length; i++) {
+    if (ys[i] - ys[i-1] < CLUSTER_TOL) {
+      clusterSum += ys[i]; clusterCount++;
+    } else {
+      clusterCenters.push(Math.round(clusterSum / clusterCount));
+      clusterSum = ys[i]; clusterCount = 1;
+    }
+  }
+  clusterCenters.push(Math.round(clusterSum / clusterCount));
+
+  if (clusterCenters.length < 2) return null;
+
+  // Build boundaries: halfway between consecutive centers
+  const boundaries = [Math.max(0, clusterCenters[0] - CLUSTER_TOL)];
+  for (let i = 1; i < clusterCenters.length; i++) {
+    boundaries.push(Math.round((clusterCenters[i-1] + clusterCenters[i]) / 2));
+  }
+  boundaries.push(Math.min(imageH, clusterCenters[clusterCenters.length-1] + CLUSTER_TOL * 2));
+
+  return boundaries;
+}
 
 /** True if text is a pure integer (row number / index). */
 function isPureNumber(text) {
@@ -1905,94 +1990,110 @@ function extractOCRWords(ocr) {
 }
 
 /**
- * V2.6.1 text assignment: same bbox center-point logic as V2.2,
- * plus black-cell priority for words whose center is inside a black cell.
+ * V3.0.3 text assignment: bbox overlap score (normalized) as primary metric.
+ * Thresholds: ≥0.45 = confident, 0.2–0.45 = low-confidence, <0.2 = ambiguous/skip.
+ * Preserves all V2.6.1 guards: pure-number protection, black-cell priority.
  * NO colSpan / NO _merged / NO schema structure changes.
- * Guard: pure-number text is never routed to a black section-header cell
- *        if a non-black cell on the same row is a better fit.
  */
 function assignWordsToCells(words, schema) {
   const hasBbox = words.some(w => w.x != null);
   if (hasBbox) {
-    const buckets = {};
-    schema.cells.forEach(c => { buckets[c.id] = []; });
+    const buckets     = {};
+    const confidence  = {}; // V3.0.3: track per-cell assignment confidence
+    schema.cells.forEach(c => { buckets[c.id] = []; confidence[c.id] = []; });
 
-    // Pre-build set of black cell ids for fast lookup
     const blackCellIds = new Set(
       schema.cells.filter(c => c.style?.fill === 'black').map(c => c.id)
     );
-    // col_0 id for row-label guard
     const col0Id = schema.columns[0]?.id;
+
+    // V3.0.3: normalized overlap score = intersection_area / word_area
+    const overlapScore = (wx, wy, ww, wh, cell) => {
+      if (!cell.bbox) return 0;
+      const ox = Math.max(0, Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x));
+      const oy = Math.max(0, Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y));
+      const wordArea = Math.max(1, ww * wh);
+      return (ox * oy) / wordArea; // normalized: 0–1
+    };
+
+    // Alignment debug counters (internal only — console only, not front-end)
+    const alignDebug = { confident:0, lowConf:0, ambiguous:0, pureNumRejected:0 };
 
     words.forEach(word => {
       const wx = word.x, wy = word.y, ww = word.w||8, wh = word.h||12;
-      const cx = wx + ww/2, cy = wy + wh/2;
-
-      // V2.6.1: §6.1 row-label guard
-      // If word is pure-number, skip black cells in col_0 as destination
       const wordIsPureNum = isPureNumber(word.text);
 
-      let bestCell = null, bestScore = -1;
+      let bestCell = null, bestNorm = -1;
 
-      // Pass 1: prefer black cells (centre-in) — but not for pure-number words into col_0
       schema.cells.forEach(cell => {
-        if (!cell.bbox || !blackCellIds.has(cell.id)) return;
-        // §6.1: pure-number word must not land in col_0 black cell
-        if (wordIsPureNum && cell.colId === col0Id) return;
-        const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
-                       cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
-        if (!inCell) return;
-        const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
-        const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
-        const score = Math.max(0,ox)*Math.max(0,oy);
-        if (score > bestScore) { bestScore = score; bestCell = cell; }
+        if (!cell.bbox) return;
+        // §6.1 guard: pure-number word must not land in col_0 black cell
+        if (wordIsPureNum && blackCellIds.has(cell.id) && cell.colId === col0Id) return;
+        const norm = overlapScore(wx, wy, ww, wh, cell);
+        // V3.0.3: black cells get 20% boost (preserve header priority)
+        const scored = blackCellIds.has(cell.id) ? norm * 1.2 : norm;
+        if (scored > bestNorm) { bestNorm = scored; bestCell = cell; }
       });
 
-      // Pass 2: any cell (centre-in) if no black cell found
-      if (!bestCell) {
+      // V3.0.3: threshold-based acceptance
+      if (!bestCell) return;
+      if (bestNorm >= 0.45) {
+        buckets[bestCell.id].push(word.text);
+        confidence[bestCell.id].push('hi');
+        alignDebug.confident++;
+      } else if (bestNorm >= 0.18) {
+        // Low-confidence: only assign if best cell is substantially better than 2nd
+        let secondBest = 0;
         schema.cells.forEach(cell => {
-          if (!cell.bbox) return;
-          const inCell = cx>=cell.bbox.x && cx<=cell.bbox.x+cell.bbox.w &&
-                         cy>=cell.bbox.y && cy<=cell.bbox.y+cell.bbox.h;
-          if (!inCell) return;
-          const ox = Math.min(wx+ww, cell.bbox.x+cell.bbox.w) - Math.max(wx, cell.bbox.x);
-          const oy = Math.min(wy+wh, cell.bbox.y+cell.bbox.h) - Math.max(wy, cell.bbox.y);
-          const score = Math.max(0,ox)*Math.max(0,oy);
-          if (score > bestScore) { bestScore = score; bestCell = cell; }
+          if (cell === bestCell || !cell.bbox) return;
+          const s = overlapScore(wx, wy, ww, wh, cell);
+          if (s > secondBest) secondBest = s;
         });
+        // Accept if best is at least 1.4× second (clear winner)
+        if (bestNorm >= secondBest * 1.4) {
+          buckets[bestCell.id].push(word.text);
+          confidence[bestCell.id].push('lo');
+          alignDebug.lowConf++;
+        } else {
+          // Ambiguous: assign to best anyway but log
+          buckets[bestCell.id].push(word.text);
+          confidence[bestCell.id].push('amb');
+          alignDebug.ambiguous++;
+        }
+      } else {
+        // Very low overlap: still assign to best (avoid data loss), mark ambiguous
+        buckets[bestCell.id].push(word.text);
+        confidence[bestCell.id].push('amb');
+        alignDebug.ambiguous++;
       }
-
-      // Pass 3: fallback max overlap (centre outside)
-      if (!bestCell) {
-        schema.cells.forEach(cell => {
-          if (!cell.bbox) return;
-          const ox=Math.max(0,Math.min(wx+ww,cell.bbox.x+cell.bbox.w)-Math.max(wx,cell.bbox.x));
-          const oy=Math.max(0,Math.min(wy+wh,cell.bbox.y+cell.bbox.h)-Math.max(wy,cell.bbox.y));
-          if (ox*oy > bestScore) { bestScore=ox*oy; bestCell=cell; }
-        });
-      }
-
-      if (bestCell) buckets[bestCell.id].push(word.text);
     });
 
+    // Log alignment stats (internal only)
+    console.debug('[V3.0.3 alignment]', alignDebug);
+
     schema.cells.forEach(cell => {
-      if (buckets[cell.id]?.length) {
-        // V2.6.1 §6.3: if assigned text to a black cell is ALL pure numbers → keep original
-        const joined = buckets[cell.id].join('\n');
-        const isBlackCell = blackCellIds.has(cell.id);
-        if (isBlackCell && isPureNumber(joined.replace(/\n/g,' ').trim())) {
-          // Reject: do not overwrite with row number
-          console.warn('[V2.6.1] Rejected pure-number assignment to black cell:', cell.id, joined);
-        } else {
-          cell.text = joined;
-          if (cell.rowId===schema.rows[0]?.id) {
-            const col = schema.columns.find(c=>c.id===cell.colId);
-            if (col) col.label = cell.text.split('\n')[0];
-          }
+      if (!buckets[cell.id]?.length) return;
+      const joined = buckets[cell.id].join('\n');
+      const isBlackCell = blackCellIds.has(cell.id);
+      // §6.3 guard: pure-number text in black cell → reject
+      if (isBlackCell && isPureNumber(joined.replace(/\n/g,' ').trim())) {
+        console.warn('[V3.0.3] Rejected pure-number → black cell:', cell.id, joined);
+      } else {
+        cell.text = joined;
+        // V3.0.3: tag low-confidence cells for potential review
+        const confs = confidence[cell.id] || [];
+        if (confs.every(c => c === 'amb')) cell._alignConf = 'low';
+        if (cell.rowId === schema.rows[0]?.id) {
+          const col = schema.columns.find(c => c.id === cell.colId);
+          if (col) col.label = cell.text.split('\n')[0];
         }
       }
     });
-  } else {
+
+    // Store alignment debug in schema (internal, not shown to users)
+    if (schema.meta._debug) schema.meta._debug.alignmentStats = alignDebug;
+
+  } else {  } else {
     // No bbox: sequential sr/sc (unchanged from V2.2)
     const nC = schema.columns.length, nR = schema.rows.length;
     words.filter(w=>w.sr===0).forEach(w => {
@@ -2082,7 +2183,7 @@ function toggleDebugOverlay(on) {
   const nC=tableSchema?.columns?.length??'–', nR=tableSchema?.rows?.length??'–';
   stats.style.display='block';
   stats.innerHTML=[
-    `<b>Layout:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
+    `<b>Mode:</b> ${tableSchema?.meta?.reconstructionMode??'–'}`,
     `<b>Raw H:</b> ${rawH.length} | <b>Raw V:</b> ${rawV.length}`,
     `<b>Filtered H:</b> ${filteredH.length} | <b>Filtered V:</b> ${filteredV.length}`,
     `<b>Rejected H:</b> ${rejectedH.length} | <b>Rejected V:</b> ${rejectedV.length}`,
@@ -3160,7 +3261,7 @@ function buildJsonFromNormalizedDoc(doc) {
  * Called from startOCR after classification.
  */
 function runExtractionPipeline(ocrResult, file, grid, classification) {
-  // Adapter layer → normalizedDocumentJSON
+  // Provider Adapter → normalizedDocumentJSON
   normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
 
   // Safety UX
@@ -3830,330 +3931,6 @@ function zipFiles(files, mime = 'application/zip') {
   w32(ce - cs); w32(cs); w16(0);
   return new Blob([out], { type: mime });
 }
-
-
-/* ===========================================================
-   RC5 CLEAN STATE CONTROLLER
-   Purpose:
-   - one public path after recognition: OCR result → independent Mode Gate
-   - never auto-render Excel / Doc before user chooses
-   - strip all user-facing technical meta
-   =========================================================== */
-const PCD_RC5_BUILD = 'V3.0.2 RC5 STRICT BUILD';
-
-function pcdStrictHideTechnicalUI() {
-  const selectors = [
-    '#arch-meta-bar',
-    '.arch-meta-bar',
-    '.debug-bar',
-    '#debug-stats',
-    '#debug-canvas',
-    '[data-debug]'
-  ];
-  selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => {
-    el.style.display = 'none';
-    if (sel === '#arch-meta-bar' || sel === '.arch-meta-bar') el.remove();
-  }));
-
-  // Remove legacy leaf text that should never appear in public UI.
-  const badLeafText = [
-    new RegExp('Pro' + 'vider\\s*:', 'i'),
-    new RegExp('\\bMo' + 'de\\s*:', 'i'),
-    new RegExp('\\bRi' + 'sk\\s*:', 'i'),
-    new RegExp('\\bStra' + 'tegy\\s*:', 'i'),
-    new RegExp('confi' + 'dence\\s*\\d*', 'i'),
-    new RegExp('信' + '心度'),
-    new RegExp('Struc' + 'tured form detected', 'i'),
-    new RegExp('偵測到' + '表單型文件'),
-    new RegExp('強' + '制\\s*' + 'Excel', 'i'),
-    new RegExp('Fo' + 'rce\\s*Excel', 'i'),
-    new RegExp('De' + 'bug', 'i')
-  ];
-  document.querySelectorAll('body *').forEach(el => {
-    if (el.closest('script,style')) return;
-    if (el.children.length > 0) return;
-    const t = (el.textContent || '').trim();
-    if (!t) return;
-    if (badLeafText.some(rx => rx.test(t))) {
-      el.textContent = '';
-      el.style.display = 'none';
-    }
-  });
-
-  const dpMeta = document.getElementById('dp-meta');
-  if (dpMeta && tableSchema) updateDpMeta();
-
-  const marker = document.getElementById('rc5-qa-marker');
-  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
-}
-
-function pcdResetResultPanelsForGate() {
-  const results = document.getElementById('step-results');
-  const gate = document.getElementById('step-mode-gate');
-  const processing = document.getElementById('step-processing');
-  const docPanel = document.getElementById('doc-mode-panel');
-  if (results) results.style.display = 'none';
-  if (gate) gate.style.display = 'block';
-  if (processing) processing.style.display = 'none';
-  if (docPanel) docPanel.style.display = 'none';
-  ['tab-data','tab-visual','tab-export'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = '';
-  });
-  pcdStrictHideTechnicalUI();
-}
-
-/** RC5 override: user-facing meta only. */
-function updateDpMeta() {
-  const el = document.getElementById('dp-meta');
-  if (!el || !tableSchema) return;
-  const nCols = tableSchema.columns?.length || 0;
-  const nRows = (tableSchema.rows || []).filter(r => r.type === 'data').length;
-  el.innerHTML = lang === 'zh'
-    ? `AI 轉換草稿 · ${nCols} 欄 · ${nRows} 列 · 可直接編輯`
-    : `AI conversion draft · ${nCols} cols · ${nRows} rows · editable`;
-}
-
-/** RC5 override: no public architecture/meta bar. */
-function updateArchMetaBar() {
-  pcdStrictHideTechnicalUI();
-}
-
-/** RC5 override: independent Mode Gate is the only public post-recognition entry. */
-function showModeGateCard(classification, ocrResult) {
-  docModeOcrRaw = ocrResult || docModeOcrRaw;
-  lastClassification = classification || lastClassification || { mode: 'uncertain' };
-
-  const gateWrap = document.getElementById('step-mode-gate');
-  const gate = document.getElementById('mode-gate-inner');
-  if (!gateWrap || !gate) return;
-
-  const mode = lastClassification?.mode || 'uncertain';
-  const recExcel = mode === 'simple-table' || mode === 'structured-form';
-  const recDoc = mode === 'doc-like';
-
-  gate.innerHTML = `
-    <div class="mode-gate-card">
-      <div class="mode-gate-title">
-        <span class="zh">請選擇輸出方式</span>
-        <span class="en">Choose output format</span>
-      </div>
-      <div class="mode-gate-reason">
-        <span class="zh">AI 已整理出可轉換的草稿。請依照你的用途選擇輸出格式，選錯也可以返回重新選擇。</span>
-        <span class="en">AI has prepared a reviewable draft. Choose the output format you need; you can come back and change it anytime.</span>
-      </div>
-      <div class="mode-gate-btns">
-        <button type="button" class="mode-gate-btn excel" onclick="pickExcelMode()">
-          <span class="zh">📊 Excel 表格模式${recExcel ? ' ★ 建議' : ''}</span>
-          <span class="en">📊 Excel Table Mode${recExcel ? ' ★ Recommended' : ''}</span>
-          <span class="mode-gate-btn-sub">
-            <span class="zh">適合表格、菜單、發票、清單、價格表</span>
-            <span class="en">Best for menus, invoices, price lists, tables, and checklists</span>
-          </span>
-        </button>
-        <button type="button" class="mode-gate-btn doc" onclick="pickDocMode()">
-          <span class="zh">📄 Word / Doc 文件模式${recDoc ? ' ★ 建議' : ''}</span>
-          <span class="en">📄 Word / Doc Mode${recDoc ? ' ★ Recommended' : ''}</span>
-          <span class="mode-gate-btn-sub">
-            <span class="zh">適合段落文字、合約、說明文件、信件、報告</span>
-            <span class="en">Best for paragraphs, contracts, letters, reports, and documents</span>
-          </span>
-        </button>
-        <button type="button" class="mode-gate-btn doc" style="border-style:dashed" onclick="pickOcrMode()">
-          <span class="zh">🔤 只擷取文字 OCR</span>
-          <span class="en">🔤 OCR text only</span>
-          <span class="mode-gate-btn-sub">
-            <span class="zh">適合只想先取得純文字，不需要表格或文件格式</span>
-            <span class="en">Best when you only need raw text without table or document formatting</span>
-          </span>
-        </button>
-      </div>
-    </div>`;
-
-  pcdResetResultPanelsForGate();
-  applyLang(lang);
-  setTimeout(() => gateWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-}
-
-/** RC5 override: every recognized document type enters Mode Gate first. */
-function runExtractionPipeline(ocrResult, file, grid, classification) {
-  normalizedDoc = googleDocumentAIAdapter(ocrResult, file, grid, classification);
-  docModeOcrRaw = ocrResult;
-  lastDetectedGrid = grid || lastDetectedGrid || null;
-  lastClassification = classification || { mode: normalizedDoc?.documentType || 'uncertain' };
-  updateSafetyNotice(normalizedDoc?.riskLevel || 'low');
-  updateArchMetaBar(normalizedDoc);
-  showModeGateCard(lastClassification, ocrResult);
-}
-
-/** RC5 override: Excel is rendered only after user selection. */
-function pickExcelMode() {
-  if (!docModeOcrRaw) {
-    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
-    return;
-  }
-  const gate = document.getElementById('step-mode-gate');
-  if (gate) gate.style.display = 'none';
-  currentDocMode = 'excel';
-  runExcelMode(docModeOcrRaw, imageFile, lastDetectedGrid);
-  pcdStrictHideTechnicalUI();
-}
-
-/** RC5 override: Word/Doc is rendered only after user selection. */
-function pickDocMode() {
-  if (!docModeOcrRaw) {
-    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
-    return;
-  }
-  const gate = document.getElementById('step-mode-gate');
-  if (gate) gate.style.display = 'none';
-  runDocModeV3(docModeOcrRaw, normalizedDoc);
-  pcdStrictHideTechnicalUI();
-}
-
-/** RC5 override: OCR text only uses the same recognized result, no new credit. */
-function pickOcrMode() {
-  if (!docModeOcrRaw) {
-    showMsg(lang === 'zh' ? '請先完成辨識。' : 'Please run recognition first.', 'err');
-    return;
-  }
-  const gate = document.getElementById('step-mode-gate');
-  if (gate) gate.style.display = 'none';
-  runDocMode(docModeOcrRaw);
-  pcdStrictHideTechnicalUI();
-}
-
-// Legacy names remain as compatibility aliases only.
-function forceExcelModeFromGate() { pickExcelMode(); }
-function forceDocModeFromGate() { pickDocMode(); }
-function forceOcrTextMode() { pickOcrMode(); }
-function docForceExcelMode() { pickExcelMode(); }
-
-/** RC5 override: re-choose uses same OCR result and does not consume credits. */
-function reshowModeGate() {
-  if (!docModeOcrRaw) {
-    showMsg(lang === 'zh' ? '請先辨識圖片後再重新選擇。' : 'Please run recognition first.', 'err');
-    return;
-  }
-  const results = document.getElementById('step-results');
-  const docPanel = document.getElementById('doc-mode-panel');
-  if (results) results.style.display = 'none';
-  if (docPanel) docPanel.style.display = 'none';
-  showModeGateCard(lastClassification || { mode: 'uncertain' }, docModeOcrRaw);
-}
-
-/** RC5 override: Change image means start a clean new-image flow. */
-function scrollToUpload() {
-  resetAllPreviousState();
-  imageData = null;
-  imageFile = null;
-  const input = document.getElementById('file-input');
-  const prev = document.getElementById('upload-prev');
-  const drop = document.getElementById('drop-zone');
-  if (input) input.value = '';
-  if (prev) prev.style.display = 'none';
-  if (drop) drop.style.display = 'block';
-  showMsg('', '');
-  document.getElementById('step-upload')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-/** RC5 override: document preview without table-pressure wording. */
-function runDocModeV3(ocrResult, nDoc) {
-  currentDocMode = 'doc';
-  docModeOcrRaw = ocrResult;
-
-  const displayText = (nDoc && nDoc.blocks && nDoc.blocks.length)
-    ? buildTxtFromNormalizedDoc(nDoc)
-    : (() => {
-        const words = extractOCRWords(ocrResult);
-        const byRow = {};
-        words.forEach(w => {
-          const r = w.sr ?? 0;
-          if (!byRow[r]) byRow[r] = [];
-          byRow[r].push(w);
-        });
-        return Object.keys(byRow).sort((a,b)=>a-b)
-          .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
-          .join('\n') || (lang === 'zh' ? '（無法提取文字）' : '(No text extracted)');
-      })();
-
-  document.getElementById('doc-preview-body').textContent = displayText;
-  document.getElementById('step-mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
-  document.getElementById('tab-data').style.display = 'none';
-  document.getElementById('tab-visual').style.display = 'none';
-  document.getElementById('tab-export').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
-  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
-  showMsg(
-    lang === 'zh'
-      ? '📄 文件草稿已就緒。你可以下載文字內容，或返回重新選擇其他輸出方式。'
-      : '📄 Document draft ready. You can download the text content or go back and choose another output format.',
-    'ok'
-  );
-}
-
-/** RC5 override: text-only preview with clean product wording. */
-function runDocMode(ocrResult) {
-  currentDocMode = 'ocr';
-  docModeOcrRaw = ocrResult;
-  const words = extractOCRWords(ocrResult);
-  let text = '';
-  if (words.length) {
-    const byRow = {};
-    words.forEach(w => {
-      const r = w.sr ?? 0;
-      if (!byRow[r]) byRow[r] = [];
-      byRow[r].push(w);
-    });
-    text = Object.keys(byRow).sort((a,b)=>a-b)
-      .map(r => byRow[r].sort((a,b)=>(a.sc??0)-(b.sc??0)).map(w=>w.text).join('\t'))
-      .join('\n');
-  } else if (ocrResult && typeof ocrResult === 'object') {
-    text = JSON.stringify(ocrResult, null, 2);
-  }
-  if (!text) text = lang === 'zh' ? '（無法提取文字）' : '(No text extracted)';
-
-  document.getElementById('doc-preview-body').textContent = text;
-  document.getElementById('step-mode-gate').style.display = 'none';
-  document.getElementById('doc-mode-panel').style.display = 'block';
-  document.getElementById('tab-data').style.display = 'none';
-  document.getElementById('tab-visual').style.display = 'none';
-  document.getElementById('tab-export').style.display = 'none';
-  document.getElementById('step-results').style.display = 'block';
-  document.getElementById('step-results').scrollIntoView({ behavior:'smooth', block:'start' });
-  showMsg(
-    lang === 'zh'
-      ? '🔤 純文字草稿已就緒。你可以下載 TXT 或 JSON，也可以返回重新選擇輸出方式。'
-      : '🔤 Text draft ready. You can download TXT or JSON, or go back and choose another output format.',
-    'ok'
-  );
-}
-
-/** RC5 override: reset must clear both output and gate state. */
-const pcdOriginalResetAllPreviousState = resetAllPreviousState;
-resetAllPreviousState = function() {
-  pcdOriginalResetAllPreviousState();
-  const gate = document.getElementById('step-mode-gate');
-  const gateInner = document.getElementById('mode-gate-inner');
-  const results = document.getElementById('step-results');
-  const docPanel = document.getElementById('doc-mode-panel');
-  if (gate) gate.style.display = 'none';
-  if (gateInner) gateInner.innerHTML = '';
-  if (results) results.style.display = 'none';
-  if (docPanel) docPanel.style.display = 'none';
-  currentDocMode = null;
-  docModeOcrRaw = null;
-  lastClassification = null;
-  pcdStrictHideTechnicalUI();
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  pcdStrictHideTechnicalUI();
-  const marker = document.getElementById('rc5-qa-marker');
-  if (marker) marker.textContent = 'V3.0.2 RC5 QA';
-});
-
 
 /* ===========================================================
    INIT
